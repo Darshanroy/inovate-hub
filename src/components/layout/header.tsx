@@ -3,9 +3,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { Bell, Rocket, Search, User } from "lucide-react";
 import { Input } from "../ui/input";
+import { cookies } from "next/headers";
 
 export function AppHeader() {
-  const isLoggedIn = false;
+  const cookieStore = cookies();
+  const isLoggedIn = cookieStore.get("isLoggedIn")?.value === "true";
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm border-b border-border">
@@ -31,7 +33,7 @@ export function AppHeader() {
         <div className="flex flex-1 justify-end items-center gap-4">
            <div className="relative hidden sm:block w-full max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search" className="pl-9" />
+            <Input placeholder="Search for hackathons" className="pl-9 h-11" />
           </div>
           {isLoggedIn ? (
             <>

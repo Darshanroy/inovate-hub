@@ -38,7 +38,9 @@ export default function LoginPage() {
     e.preventDefault();
     if (email === "user@example.com" && password === "password") {
       // In a real app, you'd set some auth state here (e.g., in context or a cookie)
-      router.push("/profile");
+      document.cookie = "isLoggedIn=true; path=/; max-age=3600";
+      router.push("/");
+      router.refresh();
     } else {
       toast({
         variant: "destructive",
