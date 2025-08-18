@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { UploadCloud, File, X, PlusCircle, Link as LinkIcon, Youtube } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 export default function SubmissionClientPage({ hackathon }: { hackathon: Hackathon }) {
   const [timeLeft, setTimeLeft] = useState({
@@ -20,6 +22,7 @@ export default function SubmissionClientPage({ hackathon }: { hackathon: Hackath
   const { toast } = useToast();
   const [files, setFiles] = useState<File[]>([]);
   const [techStack, setTechStack] = useState<string[]>(["React", "Node.js", "AI"]);
+  const router = useRouter();
 
   const handleSaveDraft = () => {
     toast({
@@ -33,6 +36,7 @@ export default function SubmissionClientPage({ hackathon }: { hackathon: Hackath
         title: "Project Submitted!",
         description: "Your project has been successfully submitted for review.",
     });
+    router.push(`/hackathons/${hackathon.id}`);
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
