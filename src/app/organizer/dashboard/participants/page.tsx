@@ -1,4 +1,4 @@
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
@@ -27,11 +27,7 @@ export default function ParticipantsPage() {
       </p>
 
       <Card>
-        <CardHeader>
-            <CardTitle>Participant List</CardTitle>
-            <CardDescription>A list of all registered participants.</CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
             <Table>
                 <TableHeader>
                     <TableRow>

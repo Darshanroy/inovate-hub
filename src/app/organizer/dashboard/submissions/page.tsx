@@ -1,4 +1,4 @@
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -6,8 +6,8 @@ import { Download } from "lucide-react"
 
 const submissions = [
   { id: 1, team: "AI Avengers", project: "EcoSort AI", link: "#" },
-  { id: 2, name: "Code Crusaders", project: "HealthTrack", link: "#" },
-  { id: 3, name: "Data Dynamos", project: "FinPredict", link: "#" },
+  { id: 2, team: "Code Crusaders", project: "HealthTrack", link: "#" },
+  { id: 3, team: "Data Dynamos", project: "FinPredict", link: "#" },
 ]
 
 export default function SubmissionsPage() {
@@ -25,11 +25,7 @@ export default function SubmissionsPage() {
       </p>
 
       <Card>
-        <CardHeader>
-            <CardTitle>Project Submissions</CardTitle>
-            <CardDescription>A list of all projects submitted by teams.</CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -41,7 +37,7 @@ export default function SubmissionsPage() {
                 <TableBody>
                     {submissions.map(s => (
                         <TableRow key={s.id}>
-                            <TableCell className="font-medium">{s.team || s.name}</TableCell>
+                            <TableCell className="font-medium">{s.team}</TableCell>
                             <TableCell>{s.project}</TableCell>
                             <TableCell className="text-right">
                                 <Button asChild variant="outline" size="sm">

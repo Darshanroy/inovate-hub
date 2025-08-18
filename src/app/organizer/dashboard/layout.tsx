@@ -3,7 +3,6 @@
 import {
   SidebarProvider,
   Sidebar,
-  SidebarTrigger,
   SidebarContent,
   SidebarHeader,
   SidebarMenu,

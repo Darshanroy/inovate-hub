@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { BarChart, Trophy } from "lucide-react"
+import { Trophy } from "lucide-react"
 
 const results = [
   { rank: 1, team: "AI Avengers", project: "EcoSort AI", score: 9.5, prize: "$10,000" },
