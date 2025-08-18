@@ -89,7 +89,10 @@ export default function TeamClientPage({
   }
   
   const removeMember = (memberName: string) => {
-    setTeam(prev => ({...prev, members: prev.members.filter(m => m.name !== memberName)}));
+    setTeam(prev => {
+        if (!prev) return prev;
+        return {...prev, members: prev.members.filter(m => m.name !== memberName)}
+    });
     toast({
         title: "Member Removed",
         description: `${memberName} has been removed from the team.`,
@@ -273,5 +276,3 @@ export default function TeamClientPage({
     </main>
   );
 }
-
-    
