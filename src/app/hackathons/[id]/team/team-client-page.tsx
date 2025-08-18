@@ -1,21 +1,63 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Hackathon, Team, TeamMessage } from "@/lib/data";
-import { MoreVertical, Paperclip, Send } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { MoreVertical, Paperclip, Send, UserPlus } from "lucide-react";
 import Image from "next/image";
 
 export default function TeamClientPage({
   hackathon,
   team,
-  messages,
+  messages: initialMessages,
 }: {
   hackathon: Hackathon;
   team: Team;
   messages: TeamMessage[];
 }) {
+  const [messages, setMessages] = useState<TeamMessage[]>(initialMessages);
+  const [newMessage, setNewMessage] = useState("");
+  const { toast } = useToast();
+
+  const handleSendMessage = () => {
+    if (newMessage.trim() === "") return;
+    const message: TeamMessage = {
+      id: messages.length + 1,
+      author: "Alex Chen",
+      avatar: "https://placehold.co/24x24.png", // This would be the current user's avatar
+      content: newMessage,
+      isSelf: true,
+    };
+    setMessages([...messages, message]);
+    setNewMessage("");
+  };
+  
+  const handleInvite = () => {
+    navigator.clipboard.writeText(`https://hackhub.com/join/${team.id}`);
+    toast({
+      title: "Success",
+      description: "Invite link copied to clipboard!",
+    });
+  }
+
+  const handleMoreOptions = () => {
+     toast({
+      title: "Coming Soon",
+      description: "More chat options are on the way!",
+    });
+  }
+
+  const handleAttachment = () => {
+     toast({
+      title: "Coming Soon",
+      description: "File attachments will be available in a future update.",
+    });
+  }
+
+
   return (
     <main className="container mx-auto px-4 py-8 grid grid-cols-12 gap-8 items-start">
       <div className="col-span-12 lg:col-span-8">
@@ -68,15 +110,10 @@ export default function TeamClientPage({
               ))}
             </div>
           </div>
-          <Button className="absolute bottom-6 right-6 flex items-center justify-center size-14 rounded-2xl bg-primary/80 text-primary-foreground shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-            <svg
-              className="w-6 h-6"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
-            </svg>
+          <Button 
+            onClick={handleInvite}
+            className="absolute bottom-6 right-6 flex items-center justify-center size-14 rounded-2xl bg-primary/80 text-primary-foreground shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+            <UserPlus className="w-6 h-6" />
             <span className="sr-only">Invite Member</span>
           </Button>
         </div>
@@ -85,7 +122,7 @@ export default function TeamClientPage({
         <div className="bg-card text-card-foreground rounded-2xl shadow-lg h-[calc(100vh-10rem)] flex flex-col p-6">
           <div className="flex items-center justify-between pb-4 border-b border-border">
             <h2 className="text-xl font-semibold">Team Chat</h2>
-            <Button variant="ghost" size="icon" className="text-muted-foreground">
+            <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={handleMoreOptions}>
               <MoreVertical className="h-5 w-5" />
             </Button>
           </div>
@@ -122,12 +159,20 @@ export default function TeamClientPage({
                 className="w-full pr-20 resize-none bg-background"
                 placeholder="Type a message..."
                 rows={1}
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
               />
                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
-                 <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                 <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" onClick={handleAttachment}>
                     <Paperclip className="w-5 h-5"/>
                  </Button>
-                <Button className="p-2 rounded-full h-8 w-12 bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button className="p-2 rounded-full h-8 w-12 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleSendMessage}>
                     <Send className="w-5 h-5" />
                 </Button>
                </div>
