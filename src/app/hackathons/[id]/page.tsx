@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { hackathons } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { notFound } from "next/navigation";
