@@ -10,7 +10,7 @@ export function AppFooter() {
           <Link href="#" className="text-sm hover:text-primary transition-colors">Terms of Service</Link>
           <Link href="#" className="text-sm hover:text-primary transition-colors">Privacy Policy</Link>
         </div>
-        <p className="text-xs">© 2024 Innovate. All rights reserved.</p>
+        <p className="text-xs">© 2024 HackHub. All rights reserved.</p>
       </div>
     </footer>
   );

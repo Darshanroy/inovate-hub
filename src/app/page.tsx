@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ListFilter } from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -164,7 +165,9 @@ export default function Home() {
                 </div>
                 </CardContent>
                 <div className="p-4 pt-0">
-                    <Button className="w-full">View Details</Button>
+                    <Button asChild className="w-full">
+                      <Link href={`/hackathons/${hackathon.id}`}>View Details</Link>
+                    </Button>
                 </div>
             </Card>
             ))}

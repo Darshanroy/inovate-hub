@@ -5,7 +5,7 @@ import { AppHeader } from '@/components/layout/header';
 import { AppFooter } from '@/components/layout/footer';
 
 export const metadata: Metadata = {
-  title: 'Innovate - Hackathon Hosting Platform',
+  title: 'HackHub',
   description: 'Empowering developers to build the next generation of solutions through collaborative hackathons.',
 };
 
