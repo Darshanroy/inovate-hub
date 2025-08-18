@@ -1,6 +1,21 @@
 
 
-export const hackathons = [
+export type Hackathon = {
+    id: string;
+    name: string;
+    theme: string;
+    date: string;
+    prize: number;
+    locationType: 'online' | 'offline';
+    image: string;
+    hint: string;
+    description: string;
+    registrationStatus?: 'Confirmed' | 'Pending' | 'Waitlisted';
+    teamId?: string | null;
+}
+
+
+export const hackathons: Hackathon[] = [
   {
     id: "ai-innovation-challenge",
     name: "AI Innovation Challenge",
@@ -90,3 +105,35 @@ export const hackathons = [
     description: "A hackathon for environmental activists and developers to build tools that can help protect our planet. From tracking deforestation to monitoring pollution, we are looking for solutions that can make a difference."
   },
 ];
+
+
+// This would typically come from a database query joining users, registrations, and hackathons.
+export const myHackathons: Hackathon[] = [
+    {
+        ...hackathons.find(h => h.id === 'ai-innovation-challenge')!,
+        registrationStatus: 'Confirmed',
+        teamId: 'team-avengers'
+    },
+    {
+        ...hackathons.find(h => h.id === 'fintech-disruption')!,
+        registrationStatus: 'Confirmed',
+        teamId: null
+    },
+    {
+        ...hackathons.find(h => h.id === 'creative-coding-marathon')!,
+        registrationStatus: 'Confirmed',
+        teamId: 'team-pixel-pushers'
+    },
+    {
+        ...hackathons.find(h => h.id === 'data-science-decathlon')!,
+        registrationStatus: 'Pending',
+        teamId: null,
+        date: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0] // 30 days from now
+    },
+    {
+        ...hackathons.find(h => h.id === 'eco-warriors-hack')!,
+        registrationStatus: 'Confirmed',
+        teamId: 'team-green-code',
+        date: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0] // 30 days ago
+    }
+]

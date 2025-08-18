@@ -40,7 +40,7 @@ export default function LoginPage() {
       // In a real app, you'd set some auth state here (e.g., in context or a cookie)
       document.cookie = "isLoggedIn=true; path=/; max-age=3600";
       document.cookie = "userType=participant; path=/; max-age=3600";
-      router.push("/hackathons");
+      router.push("/hackathons/my");
       router.refresh();
     } else {
       toast({

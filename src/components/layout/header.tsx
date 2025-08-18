@@ -51,7 +51,7 @@ export function AppHeader() {
               Explore
             </Link>
             {isLoggedIn && userType === 'participant' && (
-              <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
+              <Link href="/hackathons/my" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
                 My Hackathons
               </Link>
             )}
