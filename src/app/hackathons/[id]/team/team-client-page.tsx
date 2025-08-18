@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Hackathon, Team, TeamMessage, soloParticipants as allSoloParticipants, SoloParticipant } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { MoreVertical, Paperclip, Send, UserPlus, Pencil, X, Save, Trash2, Expand, Minimize, SendHorizonal, Mail, Check } from "lucide-react";
+import { MoreVertical, Paperclip, Send, UserPlus, Pencil, X, Save, Trash2, Expand, Minimize, Mail, Check } from "lucide-react";
 import Image from "next/image";
 import {
   AlertDialog,
@@ -20,7 +20,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 
@@ -153,7 +153,7 @@ export default function TeamClientPage({
 
   return (
     <>
-     <main className={`container mx-auto px-4 py-8 grid ${isChatFullScreen ? 'grid-cols-12' : 'grid-cols-1 md:grid-cols-12'} gap-8 items-start`}>
+     <main className={`container mx-auto px-4 py-8 grid ${isChatFullScreen ? 'grid-cols-1' : 'md:grid-cols-12'} gap-8 items-start`}>
       <div className={`${isChatFullScreen ? 'hidden' : 'col-span-12 lg:col-span-8'}`}>
         <div className="bg-card text-card-foreground rounded-2xl shadow-lg p-6 relative overflow-hidden">
           <div className="flex items-start justify-between mb-8">
