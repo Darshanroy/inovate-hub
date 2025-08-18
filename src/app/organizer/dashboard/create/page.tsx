@@ -69,7 +69,7 @@ export default function CreateHackathonPage() {
           <CardHeader>
             <CardTitle>Rules & Guidelines</CardTitle>
             <CardDescription>Set the rules and team size limits.</CardDescription>
-          </Header>
+          </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="rules">Rules</Label>
@@ -86,7 +86,7 @@ export default function CreateHackathonPage() {
           <CardHeader>
             <CardTitle>Tracks & Categories</CardTitle>
             <CardDescription>Define the different tracks or categories for submissions.</CardDescription>
-          </Header>
+          </CardHeader>
           <CardContent className="space-y-4">
              <div className="space-y-2">
               <Label htmlFor="tracks">Tracks</Label>
@@ -100,7 +100,7 @@ export default function CreateHackathonPage() {
           <CardHeader>
             <CardTitle>Prizes & Rewards</CardTitle>
             <CardDescription>Showcase the exciting prizes for winners.</CardDescription>
-          </Header>
+          </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="prizes">Prizes Description</Label>
