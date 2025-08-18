@@ -21,7 +21,6 @@ import {
   LogOut,
   Rocket
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"

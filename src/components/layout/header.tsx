@@ -1,9 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
-import { Bell, Rocket, Search, User } from "lucide-react";
+import { Bell, Rocket, Search, User, LogOut } from "lucide-react";
 import { Input } from "../ui/input";
 import { cookies } from "next/headers";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LogoutButton } from "./logout-button";
 
 export function AppHeader() {
   const cookieStore = cookies();
@@ -53,12 +62,26 @@ export function AppHeader() {
                 <Bell className="h-5 w-5" />
                 <span className="sr-only">Notifications</span>
               </Button>
-              <Link href={profileUrl}>
-                <Avatar>
-                  <AvatarImage src="https://placehold.co/40x40.png" alt="User avatar" data-ai-hint="person face" />
-                  <AvatarFallback>U</AvatarFallback>
-                </Avatar>
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                   <Avatar className="cursor-pointer">
+                    <AvatarImage src="https://placehold.co/40x40.png" alt="User avatar" data-ai-hint="person face" />
+                    <AvatarFallback>U</AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                     <Link href={profileUrl}>
+                        <User className="mr-2 h-4 w-4" />
+                        Profile
+                      </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <LogoutButton />
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
              <div className="flex items-center gap-2">
