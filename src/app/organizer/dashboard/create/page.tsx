@@ -1,4 +1,7 @@
 
+"use client";
+
+import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -7,6 +10,8 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function CreateHackathonPage() {
+  const [locationType, setLocationType] = useState<string | undefined>();
+
   return (
     <div>
       <h1 className="text-3xl font-bold mb-2">Create a New Hackathon</h1>
@@ -17,7 +22,7 @@ export default function CreateHackathonPage() {
           <CardHeader>
             <CardTitle>Basic Information</CardTitle>
             <CardDescription>Give your hackathon a name and a brief description.</CardDescription>
-          </CardHeader>
+          </Header>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Hackathon Name</Label>
@@ -40,7 +45,7 @@ export default function CreateHackathonPage() {
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="location-type">Location Type</Label>
-                    <Select>
+                    <Select onValueChange={setLocationType}>
                         <SelectTrigger id="location-type">
                             <SelectValue placeholder="Select location type" />
                         </SelectTrigger>
@@ -50,10 +55,12 @@ export default function CreateHackathonPage() {
                         </SelectContent>
                     </Select>
                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor="location">Location</Label>
-                    <Input id="location" placeholder="e.g. San Francisco, CA" />
-                </div>
+                {locationType === 'offline' && (
+                  <div className="space-y-2">
+                      <Label htmlFor="location">Location</Label>
+                      <Input id="location" placeholder="e.g. San Francisco, CA" />
+                  </div>
+                )}
             </div>
           </CardContent>
         </Card>
