@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 const JoinHackathonDialog = ({ open, onOpenChange, hackathonId }: { open: boolean, onOpenChange: (open: boolean) => void, hackathonId: string }) => {
   const { toast } = useToast();
   const router = useRouter();
+  const [lookingForTeam, setLookingForTeam] = useState(true);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,9 +29,13 @@ const JoinHackathonDialog = ({ open, onOpenChange, hackathonId }: { open: boolea
     });
     onOpenChange(false);
     // In a real app, you would also update the user's registration status
-    // and then redirect.
+    // and then redirect based on their team preference.
     setTimeout(() => {
-      router.push(`/hackathons/${hackathonId}/team`);
+      if (lookingForTeam) {
+        router.push(`/hackathons/${hackathonId}/find-team`);
+      } else {
+        router.push(`/hackathons/${hackathonId}/team`);
+      }
     }, 1000)
   }
   
@@ -50,7 +55,7 @@ const JoinHackathonDialog = ({ open, onOpenChange, hackathonId }: { open: boolea
           </div>
            <div className="space-y-2">
             <Label>Do you have a team?</Label>
-            <RadioGroup defaultValue="no">
+            <RadioGroup defaultValue="no" onValueChange={(value) => setLookingForTeam(value === 'no')}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="yes" id="r-yes" />
                 <Label htmlFor="r-yes">Yes, I have a team code</Label>
@@ -219,5 +224,3 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
     </main>
   );
 }
-
-    

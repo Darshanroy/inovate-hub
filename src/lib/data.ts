@@ -176,6 +176,12 @@ export const team: Team = {
     ]
 }
 
+export const openTeams: Omit<Team, 'description' | 'id'>[] = [
+    { name: "Code Wizards", members: [{ name: "Gandalf", role: "Leader", avatar: "https://placehold.co/32x32.png" }, { name: "Merlin", role: "Developer", avatar: "https://placehold.co/32x32.png" }] },
+    { name: "Pixel Perfect", members: [{ name: "Da Vinci", role: "Leader", avatar: "https://placehold.co/32x32.png" }]},
+    { name: "Data Drivers", members: [{ name: "Ada Lovelace", role: "Leader", avatar: "https://placehold.co/32x32.png" }, { name: "Charles Babbage", role: "Developer", avatar: "https://placehold.co/32x32.png" }, { name: "Grace Hopper", role: "Developer", avatar: "https://placehold.co/32x32.png" }]},
+]
+
 export const teamMessages: TeamMessage[] = [
     { id: 1, author: "Sophia Rodriguez", avatar: "https://placehold.co/24x24.png", content: "Hey team, I've pushed the latest updates for the UI mockups. Let me know what you think!", isSelf: false },
     { id: 2, author: "Alex Chen", avatar: "https://placehold.co/24x24.png", content: "Looks great Sophia! The new color palette is much better. I'll start integrating the backend logic.", isSelf: true },
@@ -190,5 +196,3 @@ export const soloParticipants: SoloParticipant[] = [
     { name: "Grace Hall", avatar: "https://placehold.co/40x40.png", skills: ["iOS", "Swift", "CoreML"] },
     { name: "Henry King", avatar: "https://placehold.co/40x40.png", skills: ["Android", "Kotlin", "Firebase"] },
 ];
-
-    

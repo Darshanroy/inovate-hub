@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Hackathon, Team, TeamMessage, soloParticipants as allSoloParticipants, SoloParticipant } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { MoreVertical, Paperclip, Send, UserPlus, Pencil, X, Save, Trash2, Expand, Minimize, SendHorizonal, Mail } from "lucide-react";
+import { MoreVertical, Paperclip, Send, UserPlus, Pencil, X, Save, Trash2, Expand, Minimize, SendHorizonal, Mail, Check } from "lucide-react";
 import Image from "next/image";
 import {
   AlertDialog,
@@ -331,5 +331,3 @@ export default function TeamClientPage({
     </>
   );
 }
-
-    
