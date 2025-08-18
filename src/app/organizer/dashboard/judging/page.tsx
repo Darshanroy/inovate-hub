@@ -1,70 +1,165 @@
+
+"use client";
+
+import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-const judges = [
-    { name: "Alice Expert", email: "alice@example.com", status: "Accepted" },
-    { name: "Bob Mentor", email: "bob@example.com", status: "Invited" },
-]
+
+type Criterion = {
+  id: number;
+  name: string;
+  weight: number;
+  maxScore: number;
+};
+
+type Judge = {
+  id: number;
+  name: string;
+  email: string;
+  status: "Accepted" | "Invited";
+};
 
 export default function JudgingPanelPage() {
+    const { toast } = useToast();
+    const [criteria, setCriteria] = useState<Criterion[]>([
+        { id: 1, name: "Innovation & Creativity", weight: 2, maxScore: 10 },
+        { id: 2, name: "Technical Feasibility", weight: 2, maxScore: 10 },
+        { id: 3, name: "Impact & Potential", weight: 3, maxScore: 10 },
+        { id: 4, name: "Presentation & Demo", weight: 1, maxScore: 5 },
+    ]);
+    const [judges, setJudges] = useState<Judge[]>([
+        { id: 1, name: "Alice Expert", email: "alice@example.com", status: "Accepted" },
+        { id: 2, name: "Bob Mentor", email: "bob@example.com", status: "Invited" },
+    ]);
+
+    const [newCriterionName, setNewCriterionName] = useState("");
+    const [newCriterionWeight, setNewCriterionWeight] = useState(1);
+    const [newCriterionMaxScore, setNewCriterionMaxScore] = useState(10);
+    const [newJudgeEmail, setNewJudgeEmail] = useState("");
+
+    const handleAddCriterion = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newCriterionName) return;
+        const newCriterion: Criterion = {
+            id: criteria.length + 1,
+            name: newCriterionName,
+            weight: newCriterionWeight,
+            maxScore: newCriterionMaxScore,
+        };
+        setCriteria([...criteria, newCriterion]);
+        setNewCriterionName("");
+        setNewCriterionWeight(1);
+        setNewCriterionMaxScore(10);
+        toast({ title: "Criterion Added", description: `"${newCriterionName}" has been added to the criteria.` });
+    };
+
+    const handleInviteJudge = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newJudgeEmail) return;
+
+        const newJudge: Judge = {
+            id: judges.length + 1,
+            name: "New Judge", // This would be fetched from user data in a real app
+            email: newJudgeEmail,
+            status: "Invited",
+        };
+        setJudges([...judges, newJudge]);
+        setNewJudgeEmail("");
+        toast({ title: "Invitation Sent", description: `An invitation has been sent to ${newJudgeEmail}.` });
+    };
+
   return (
     <div>
       <h1 className="text-3xl font-bold mb-2">Judging Panel Setup</h1>
        <p className="text-muted-foreground mb-8">
-        Define your judging criteria and manage your panel of judges.
+        Define your judging criteria and manage your panel of judges for "AI Innovation Challenge".
       </p>
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        <Card>
-             <CardHeader>
-                <CardTitle>Judging Criteria</CardTitle>
-                <CardDescription>Define the criteria judges will use to score submissions.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="innovation">Innovation & Creativity (1-10)</Label>
-                    <Textarea id="innovation" placeholder="Description of what to look for in terms of innovation." />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="feasibility">Technical Feasibility (1-10)</Label>
-                    <Textarea id="feasibility" placeholder="Description of what to look for in terms of feasibility." />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="impact">Impact & Potential (1-10)</Label>
-                    <Textarea id="impact" placeholder="Description of what to look for in terms of impact." />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="presentation">Presentation & Demo (1-5)</Label>
-                    <Textarea id="presentation" placeholder="Description of what to look for in the presentation." />
-                </div>
-            </CardContent>
-            <CardFooter>
-                <Button>Save Criteria</Button>
-            </CardFooter>
-        </Card>
-        <div className="space-y-8">
+      <div className="grid gap-8 lg:grid-cols-5">
+        <div className="lg:col-span-3">
+             <Card>
+                 <CardHeader>
+                    <CardTitle>Judging Criteria</CardTitle>
+                    <CardDescription>Define the criteria judges will use to score submissions.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead className="w-[80px] text-center">Weight</TableHead>
+                                <TableHead className="w-[100px] text-center">Max Score</TableHead>
+                                <TableHead className="w-[50px]"></TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {criteria.map(c => (
+                                <TableRow key={c.id}>
+                                    <TableCell className="font-medium">{c.name}</TableCell>
+                                    <TableCell className="text-center">{c.weight}</TableCell>
+                                    <TableCell className="text-center">{c.maxScore}</TableCell>
+                                    <TableCell>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                            <Trash2 className="h-4 w-4 text-muted-foreground" />
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+                 <CardFooter className="bg-muted/50 p-6 border-t">
+                    <form onSubmit={handleAddCriterion} className="w-full">
+                        <h4 className="text-sm font-semibold mb-4">Add New Criterion</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                            <div className="space-y-2 sm:col-span-2">
+                                <Label htmlFor="criterion-name">Name</Label>
+                                <Input id="criterion-name" value={newCriterionName} onChange={e => setNewCriterionName(e.target.value)} placeholder="e.g. User Experience" required/>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="criterion-weight">Weight</Label>
+                                <Input id="criterion-weight" type="number" value={newCriterionWeight} onChange={e => setNewCriterionWeight(Number(e.target.value))} min={1} required/>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="criterion-max-score">Max Score</Label>
+                                <Input id="criterion-max-score" type="number" value={newCriterionMaxScore} onChange={e => setNewCriterionMaxScore(Number(e.target.value))} min={1} required/>
+                            </div>
+                        </div>
+                         <Button type="submit" className="mt-4">Add Criterion</Button>
+                    </form>
+                 </CardFooter>
+            </Card>
+        </div>
+        <div className="lg:col-span-2 space-y-8">
             <Card>
                 <CardHeader>
                     <CardTitle>Invite Judges</CardTitle>
                     <CardDescription>Invite judges to your panel by email.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="space-y-2">
+                 <form onSubmit={handleInviteJudge}>
+                    <CardContent className="space-y-2">
                         <Label htmlFor="judge-email">Judge's Email</Label>
-                        <Input id="judge-email" type="email" placeholder="judge@example.com" />
-                    </div>
-                </CardContent>
-                <CardFooter>
-                    <Button>Send Invitation</Button>
-                </CardFooter>
+                        <Input id="judge-email" type="email" placeholder="judge@example.com" value={newJudgeEmail} onChange={e => setNewJudgeEmail(e.target.value)} required/>
+                    </CardContent>
+                    <CardFooter>
+                        <Button type="submit">Send Invitation</Button>
+                    </CardFooter>
+                 </form>
             </Card>
             <Card>
                 <CardHeader>
                     <CardTitle>Current Panel</CardTitle>
+                    <CardDescription>
+                        {judges.length} {judges.length === 1 ? 'judge' : 'judges'} have been invited.
+                    </CardDescription>
                 </CardHeader>
                  <CardContent>
                     <div className="space-y-4">
