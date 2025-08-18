@@ -17,7 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ListFilter, Calendar, Users, FileText, Trophy, ExternalLink, XCircle, Eye } from "lucide-react";
+import { ListFilter, Calendar, Users, FileText, Trophy, ExternalLink, XCircle, Eye, Edit } from "lucide-react";
 import { format, isPast, isFuture } from 'date-fns';
 
 const getEventStatus = (date: string) => {
@@ -78,11 +78,27 @@ export default function MyHackathonsPage() {
                         </Link>
                     </Button>
                 )}
-                 {status === 'Ongoing' && (
+                 {status === 'Ongoing' && (!hackathon.submissionStatus || hackathon.submissionStatus === 'Not Started') && (
                      <Button asChild size="sm">
                         <Link href={`/hackathons/${hackathon.id}/submission`}>
                             <FileText className="mr-2 h-4 w-4"/>
                             Submit Project
+                        </Link>
+                    </Button>
+                )}
+                 {status === 'Ongoing' && hackathon.submissionStatus === 'Draft' && (
+                     <Button asChild size="sm" variant="secondary">
+                        <Link href={`/hackathons/${hackathon.id}/submission`}>
+                            <Edit className="mr-2 h-4 w-4"/>
+                            View/Edit Draft
+                        </Link>
+                    </Button>
+                )}
+                {status === 'Ongoing' && hackathon.submissionStatus === 'Submitted' && (
+                     <Button asChild size="sm" variant="outline" className="text-green-400 border-green-400 hover:bg-green-400/10 hover:text-green-300">
+                        <Link href={`/hackathons/${hackathon.id}/submission`}>
+                            <Check className="mr-2 h-4 w-4"/>
+                            View Submission
                         </Link>
                     </Button>
                 )}

@@ -12,6 +12,7 @@ export type Hackathon = {
     description: string;
     registrationStatus?: 'Confirmed' | 'Pending' | 'Waitlisted';
     teamId?: string | null;
+    submissionStatus?: 'Not Started' | 'Draft' | 'Submitted';
 }
 
 export type TeamMember = {
@@ -138,23 +139,29 @@ export const myHackathons: Hackathon[] = [
     {
         ...hackathons.find(h => h.id === 'ai-innovation-challenge')!,
         registrationStatus: 'Confirmed',
-        teamId: 'team-avengers'
+        teamId: 'team-avengers',
+        date: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split('T')[0], // Yesterday to make it ongoing
+        submissionStatus: 'Draft',
     },
     {
         ...hackathons.find(h => h.id === 'fintech-disruption')!,
         registrationStatus: 'Confirmed',
-        teamId: null
+        teamId: null,
+        date: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0], // Tomorrow to make it ongoing
+        submissionStatus: 'Not Started'
     },
     {
         ...hackathons.find(h => h.id === 'creative-coding-marathon')!,
         registrationStatus: 'Confirmed',
-        teamId: 'team-pixel-pushers'
+        teamId: 'team-pixel-pushers',
+        submissionStatus: 'Submitted'
     },
     {
         ...hackathons.find(h => h.id === 'data-science-decathlon')!,
         registrationStatus: 'Pending',
         teamId: null,
-        date: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0] // 30 days from now
+        date: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0], // 30 days from now
+        submissionStatus: 'Not Started'
     },
     {
         ...hackathons.find(h => h.id === 'eco-warriors-hack')!,
