@@ -1,3 +1,4 @@
+
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -24,7 +25,7 @@ export default function OrganizerDashboard() {
       
       <div className="space-y-6">
         {hackathons.map((hackathon) => {
-          const eventEnded = isPast(new Date(hackathon.date));
+          const eventEnded = isPast(new Date(new Date(hackathon.date).setDate(new Date(hackathon.date).getDate() + 2)));
           return (
             <Card key={hackathon.id}>
               <CardHeader className="flex flex-row justify-between items-start">
@@ -55,8 +56,8 @@ export default function OrganizerDashboard() {
                 </div>
               </CardContent>
               <CardFooter className="justify-end">
-                <Button asChild variant="outline">
-                    <Link href="#">
+                <Button asChild variant="outline" disabled={eventEnded}>
+                    <Link href={`/organizer/dashboard/edit/${hackathon.id}`}>
                         Manage Event <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                 </Button>
