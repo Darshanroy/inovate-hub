@@ -2,9 +2,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import type { Hackathon } from "@/lib/data";
+import type { Hackathon, Submission } from "@/lib/data";
 import { Button } from "@/components/ui/button";
-import { Check, Share } from "lucide-react";
+import { Check, Edit, FileText, Link as LinkIcon, Share, Youtube } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -14,6 +14,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { myHackathons, mySubmission } from "@/lib/data";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 
 const JoinHackathonDialog = ({ open, onOpenChange, hackathonId }: { open: boolean, onOpenChange: (open: boolean) => void, hackathonId: string }) => {
@@ -80,6 +84,96 @@ const JoinHackathonDialog = ({ open, onOpenChange, hackathonId }: { open: boolea
   )
 }
 
+const OverviewTab = ({ hackathon }: { hackathon: Hackathon }) => {
+   const progressSteps = ["Register", "Team", "Submit", "Judge", "Results"];
+   const sponsors = [
+    { name: "Sponsor 1", image: "https://placehold.co/200x80.png", hint: "company logo" },
+    { name: "Sponsor 2", image: "https://placehold.co/200x80.png", hint: "company logo" },
+    { name: "Sponsor 3", image: "https://placehold.co/200x80.png", hint: "company logo" },
+    { name: "Sponsor 4", image: "https://placehold.co/200x80.png", hint: "company logo" },
+  ]
+  return (
+    <div className="space-y-12">
+       <div className="pt-12">
+          <h2 className="text-2xl font-semibold text-foreground">Hackathon Progress</h2>
+          <div className="mt-6 flex items-center space-x-4">
+             {progressSteps.map((step, index) => (
+                <React.Fragment key={step}>
+                <div className={`flex flex-col items-center ${index === 0 ? 'text-primary' : 'text-muted-foreground'}`}>
+                    <div className={`flex size-10 items-center justify-center rounded-full ${index === 0 ? 'bg-primary text-primary-foreground' : 'border-2 border-border'}`}>
+                    {index === 0 ? <Check className="h-5 w-5" /> : index + 1}
+                    </div>
+                    <div className="mt-2 text-sm font-medium">{step}</div>
+                </div>
+                {index < progressSteps.length - 1 && <div className="flex-1 border-t-2 border-dashed border-border"></div>}
+                </React.Fragment>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h2 className="text-2xl font-semibold text-foreground">About the Challenge</h2>
+          <p className="mt-4 text-base text-muted-foreground">
+           {hackathon.description}
+          </p>
+        </div>
+        <div>
+          <h2 className="text-2xl font-semibold text-foreground">Sponsors</h2>
+          <div className="mt-6 grid grid-cols-2 gap-8 md:grid-cols-4">
+            {sponsors.map(sponsor => (
+                 <div key={sponsor.name} className="bg-secondary rounded-lg flex items-center justify-center p-4">
+                    <Image src={sponsor.image} alt={sponsor.name} width={200} height={80} className="object-contain saturate-0" data-ai-hint={sponsor.hint}/>
+                </div>
+            ))}
+          </div>
+        </div>
+    </div>
+  )
+}
+
+const MySubmissionTab = ({ submission, hackathonId }: { submission: Submission, hackathonId: string }) => {
+    return (
+        <div className="pt-12">
+            <h2 className="text-2xl font-semibold text-foreground mb-6">My Submission</h2>
+             <Card className="bg-secondary/50">
+                <CardContent className="p-8 space-y-6">
+                     <div className="flex justify-between items-center">
+                        <h3 className="text-xl font-bold">{submission.title}</h3>
+                        <Badge variant={submission.status === 'draft' ? 'secondary' : 'default'}>{submission.status}</Badge>
+                    </div>
+                    <p className="text-muted-foreground">{submission.description}</p>
+                    <div>
+                        <h4 className="font-semibold mb-2">Tech Stack</h4>
+                        <div className="flex flex-wrap gap-2">
+                           {submission.techStack.map(tech => <Badge key={tech} variant="outline">{tech}</Badge>)}
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                         <h4 className="font-semibold">Links</h4>
+                        <div className="flex items-center gap-2">
+                             <LinkIcon className="h-4 w-4 text-muted-foreground" />
+                             <Link href={submission.githubUrl} className="text-sm text-accent hover:underline" target="_blank">{submission.githubUrl}</Link>
+                        </div>
+                         <div className="flex items-center gap-2">
+                             <Youtube className="h-4 w-4 text-muted-foreground" />
+                              <Link href={submission.videoUrl} className="text-sm text-accent hover:underline" target="_blank">{submission.videoUrl}</Link>
+                        </div>
+                    </div>
+                     {submission.status === 'draft' && (
+                        <div className="border-t border-border pt-6 flex justify-end">
+                            <Button asChild>
+                                <Link href={`/hackathons/${hackathonId}/submission`}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Edit Submission
+                                </Link>
+                            </Button>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
+
 export default function HackathonDetailClientPage({ hackathon }: { hackathon: Hackathon }) {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
@@ -88,6 +182,8 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
     seconds: 0,
   });
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
+  
+  const isRegistered = myHackathons.some(myHackathon => myHackathon.id === hackathon.id && myHackathon.registrationStatus === "Confirmed");
 
 
   useEffect(() => {
@@ -118,15 +214,7 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
     return () => clearInterval(timer);
   }, [hackathon]);
 
-  
-  const progressSteps = ["Register", "Team", "Submit", "Judge", "Results"];
-
-  const sponsors = [
-    { name: "Sponsor 1", image: "https://placehold.co/200x80.png", hint: "company logo" },
-    { name: "Sponsor 2", image: "https://placehold.co/200x80.png", hint: "company logo" },
-    { name: "Sponsor 3", image: "https://placehold.co/200x80.png", hint: "company logo" },
-    { name: "Sponsor 4", image: "https://placehold.co/200x80.png", hint: "company logo" },
-  ]
+  const navLinks = ["Rules", "Tracks", "Timeline", "Prizes", "Sponsors", "FAQ"];
 
   return (
     <main className="container mx-auto max-w-7xl flex-1 px-4 py-8">
@@ -146,9 +234,18 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
         </div>
         <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <Button onClick={() => setIsJoinDialogOpen(true)} className="h-10 px-6 text-sm font-bold">
-              Join Now
-            </Button>
+            {isRegistered ? (
+               <Button asChild className="h-10 px-6 text-sm font-bold">
+                  <Link href={`/hackathons/${hackathon.id}/submission`}>
+                    <FileText className="mr-2 h-4 w-4" />
+                    Go to Submission
+                  </Link>
+                </Button>
+            ) : (
+                <Button onClick={() => setIsJoinDialogOpen(true)} className="h-10 px-6 text-sm font-bold">
+                  Join Now
+                </Button>
+            )}
             <Button variant="secondary" className="h-10 px-6 text-sm font-bold">
               <Share className="mr-2 h-4 w-4" />
               Share
@@ -176,49 +273,25 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
             </div>
           </div>
         </div>
-        <div className="mt-8 border-b border-border">
-          <nav className="-mb-px flex space-x-8">
-            <a className="whitespace-nowrap border-b-2 border-primary px-1 py-4 text-sm font-medium text-primary" href="#">Overview</a>
-            <a className="whitespace-nowrap border-b-2 border-transparent px-1 py-4 text-sm font-medium text-muted-foreground hover:border-gray-300 hover:text-foreground" href="#">Rules</a>
-            <a className="whitespace-nowrap border-b-2 border-transparent px-1 py-4 text-sm font-medium text-muted-foreground hover:border-gray-300 hover:text-foreground" href="#">Tracks</a>
-            <a className="whitespace-nowrap border-b-2 border-transparent px-1 py-4 text-sm font-medium text-muted-foreground hover:border-gray-300 hover:text-foreground" href="#">Timeline</a>
-            <a className="whitespace-nowrap border-b-2 border-transparent px-1 py-4 text-sm font-medium text-muted-foreground hover:border-gray-300 hover:text-foreground" href="#">Prizes</a>
-            <a className="whitespace-nowrap border-b-2 border-transparent px-1 py-4 text-sm font-medium text-muted-foreground hover:border-gray-300 hover:text-foreground" href="#">Sponsors</a>
-            <a className="whitespace-nowrap border-b-2 border-transparent px-1 py-4 text-sm font-medium text-muted-foreground hover:border-gray-300 hover:text-foreground" href="#">FAQ</a>
-          </nav>
-        </div>
-        <div className="py-12">
-          <h2 className="text-2xl font-semibold text-foreground">Hackathon Progress</h2>
-          <div className="mt-6 flex items-center space-x-4">
-             {progressSteps.map((step, index) => (
-                <React.Fragment key={step}>
-                <div className={`flex flex-col items-center ${index === 0 ? 'text-primary' : 'text-muted-foreground'}`}>
-                    <div className={`flex size-10 items-center justify-center rounded-full ${index === 0 ? 'bg-primary text-primary-foreground' : 'border-2 border-border'}`}>
-                    {index === 0 ? <Check className="h-5 w-5" /> : index + 1}
-                    </div>
-                    <div className="mt-2 text-sm font-medium">{step}</div>
-                </div>
-                {index < progressSteps.length - 1 && <div className="flex-1 border-t-2 border-dashed border-border"></div>}
-                </React.Fragment>
+         <Tabs defaultValue="overview" className="mt-8">
+           <TabsList className="border-b border-border w-full justify-start rounded-none bg-transparent p-0">
+            <TabsTrigger value="overview" className="relative rounded-none border-b-2 border-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Overview</TabsTrigger>
+             {navLinks.map(link => (
+                 <TabsTrigger key={link} value={link.toLowerCase()} disabled className="relative rounded-none border-b-2 border-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">{link}</TabsTrigger>
             ))}
-          </div>
-        </div>
-        <div className="py-8">
-          <h2 className="text-2xl font-semibold text-foreground">About the Challenge</h2>
-          <p className="mt-4 text-base text-muted-foreground">
-           {hackathon.description}
-          </p>
-        </div>
-        <div className="py-8">
-          <h2 className="text-2xl font-semibold text-foreground">Sponsors</h2>
-          <div className="mt-6 grid grid-cols-2 gap-8 md:grid-cols-4">
-            {sponsors.map(sponsor => (
-                 <div key={sponsor.name} className="bg-secondary rounded-lg flex items-center justify-center p-4">
-                    <Image src={sponsor.image} alt={sponsor.name} width={200} height={80} className="object-contain saturate-0" data-ai-hint={sponsor.hint}/>
-                </div>
-            ))}
-          </div>
-        </div>
+             {isRegistered && (
+                 <TabsTrigger value="submission" className="relative rounded-none border-b-2 border-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">My Submission</TabsTrigger>
+            )}
+           </TabsList>
+            <TabsContent value="overview">
+                <OverviewTab hackathon={hackathon} />
+            </TabsContent>
+            {isRegistered && (
+                <TabsContent value="submission">
+                    <MySubmissionTab submission={mySubmission} hackathonId={hackathon.id} />
+                </TabsContent>
+            )}
+        </Tabs>
       </div>
       <JoinHackathonDialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen} hackathonId={hackathon.id} />
     </main>

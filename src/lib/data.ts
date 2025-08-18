@@ -42,6 +42,15 @@ export type SoloParticipant = {
     skills: string[];
 }
 
+export type Submission = {
+    title: string;
+    description: string;
+    techStack: string[];
+    githubUrl: string;
+    videoUrl: string;
+    status: 'draft' | 'submitted';
+}
+
 export const hackathons: Hackathon[] = [
   {
     id: "ai-innovation-challenge",
@@ -203,3 +212,12 @@ export const soloParticipants: SoloParticipant[] = [
     { name: "Grace Hall", avatar: "https://placehold.co/40x40.png", skills: ["iOS", "Swift", "CoreML"] },
     { name: "Henry King", avatar: "https://placehold.co/40x40.png", skills: ["Android", "Kotlin", "Firebase"] },
 ];
+
+export const mySubmission: Submission = {
+    title: "AI-Powered Code Assistant",
+    description: "An intelligent code assistant that provides real-time suggestions, error checking, and code generation to improve developer productivity. Built with Next.js, Genkit, and a fine-tuned language model.",
+    techStack: ["Next.js", "React", "TypeScript", "Genkit", "Tailwind CSS"],
+    githubUrl: "https://github.com/sophiachen/ai-code-assistant",
+    videoUrl: "https://youtube.com/watch?v=example",
+    status: 'draft',
+}
