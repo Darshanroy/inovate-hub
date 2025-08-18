@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { soloParticipants, openTeams } from "@/lib/data"
 import Image from "next/image"
-import { Search, UserPlus, Users, Check, Mail } from "lucide-react"
+import { Search, UserPlus, Users, Check, Mail, KeyRound } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
@@ -28,7 +28,6 @@ const CreateTeamDialog = ({ open, onOpenChange }: { open: boolean, onOpenChange:
             description: "You can now invite members and start collaborating.",
         })
         onOpenChange(false);
-        // In a real app, this would create the team and then navigate.
         router.push(`/hackathons/${hackathonId}/team`);
     }
     return (
@@ -66,6 +65,8 @@ export default function FindTeamPage() {
     const [isCreateTeamOpen, setIsCreateTeamOpen] = useState(false);
     const [requestedTeams, setRequestedTeams] = useState<string[]>([]);
     const [invitedParticipants, setInvitedParticipants] = useState<string[]>([]);
+    const router = useRouter();
+    const params = useParams();
 
     const handleRequestToJoin = (teamName: string) => {
         setRequestedTeams(prev => [...prev, teamName]);
@@ -81,6 +82,17 @@ export default function FindTeamPage() {
             title: "Invitation Sent",
             description: `Your invitation to ${participantName} has been sent.`
         })
+    }
+
+    const handleJoinWithCode = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const code = formData.get("team-code");
+        toast({
+            title: "Joined Team!",
+            description: `You have successfully joined the team with code: ${code}.`
+        });
+        router.push(`/hackathons/${params.id}/team`);
     }
 
     const filteredTeams = openTeams.filter(team => 
@@ -100,13 +112,23 @@ export default function FindTeamPage() {
                 <p className="text-muted-foreground mt-2">Connect with other participants or join an existing team.</p>
             </div>
             
-            <div className="flex justify-center gap-4 mb-8">
-                <Button onClick={() => setIsCreateTeamOpen(true)} size="lg">
-                    <UserPlus className="mr-2 h-5 w-5" /> Create a New Team
-                </Button>
-            </div>
-
             <div className="max-w-4xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                     <Button onClick={() => setIsCreateTeamOpen(true)} size="lg" className="w-full">
+                        <UserPlus className="mr-2 h-5 w-5" /> Create a New Team
+                    </Button>
+                    <Card className="bg-secondary/50">
+                        <CardContent className="p-4">
+                            <form className="flex items-center gap-2" onSubmit={handleJoinWithCode}>
+                                <KeyRound className="h-5 w-5 text-muted-foreground" />
+                                <Input name="team-code" placeholder="Enter team code to join..." className="bg-transparent border-0 focus-visible:ring-0" required/>
+                                <Button type="submit">Join</Button>
+                            </form>
+                        </CardContent>
+                    </Card>
+                </div>
+
+
                  <div className="flex items-center gap-2 bg-secondary p-1 rounded-lg mb-6 max-w-sm mx-auto">
                     <Button 
                         variant={filter === 'teams' ? 'default' : 'ghost'} 

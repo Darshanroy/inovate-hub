@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Hackathon, Team, TeamMessage, soloParticipants as allSoloParticipants, SoloParticipant } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { MoreVertical, Paperclip, Send, UserPlus, Pencil, X, Save, Trash2, Expand, Minimize, Mail, Check } from "lucide-react";
+import { MoreVertical, Paperclip, Send, UserPlus, Pencil, X, Save, Trash2, Expand, Minimize, Mail, Check, Copy, Search } from "lucide-react";
 import Image from "next/image";
 import {
   AlertDialog,
@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 const InviteDialog = ({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) => {
     const { toast } = useToast();
     const [invited, setInvited] = useState<string[]>([]);
+    const [searchTerm, setSearchTerm] = useState("");
     
     const handleInvite = (participant: SoloParticipant) => {
         setInvited(prev => [...prev, participant.name]);
@@ -36,6 +37,11 @@ const InviteDialog = ({ open, onOpenChange }: { open: boolean, onOpenChange: (op
             description: `${participant.name} has been invited to join your team.`
         })
     }
+
+    const filteredParticipants = allSoloParticipants.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.skills.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -46,9 +52,18 @@ const InviteDialog = ({ open, onOpenChange }: { open: boolean, onOpenChange: (op
                         Browse participants who are looking for a team and send them an invitation.
                     </DialogDescription>
                 </DialogHeader>
+                 <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                        placeholder="Search by name or skill..." 
+                        className="pl-9"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
                 <ScrollArea className="h-96">
                 <div className="space-y-4 pr-6">
-                    {allSoloParticipants.map(participant => (
+                    {filteredParticipants.map(participant => (
                         <div key={participant.name} className="flex items-center justify-between p-4 border rounded-lg bg-background">
                             <div className="flex items-center gap-4">
                                 <Image src={participant.avatar} alt={participant.name} width={40} height={40} className="rounded-full" data-ai-hint="person face" />
@@ -111,6 +126,15 @@ export default function TeamClientPage({
     setIsInviteDialogOpen(true);
   }
 
+  const handleCopyInviteCode = () => {
+    const inviteCode = team.id.slice(0, 8).toUpperCase();
+    navigator.clipboard.writeText(inviteCode);
+    toast({
+        title: "Invite Code Copied!",
+        description: "The team invite code has been copied to your clipboard."
+    })
+  }
+
   const handleMoreOptions = () => {
      toast({
       title: "Coming Soon",
@@ -156,7 +180,7 @@ export default function TeamClientPage({
      <main className={`container mx-auto px-4 py-8 grid ${isChatFullScreen ? 'grid-cols-1' : 'md:grid-cols-12'} gap-8 items-start`}>
       <div className={`${isChatFullScreen ? 'hidden' : 'col-span-12 lg:col-span-8'}`}>
         <div className="bg-card text-card-foreground rounded-2xl shadow-lg p-6 relative overflow-hidden">
-          <div className="flex items-start justify-between mb-8">
+          <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-6">
                 <div className="flex-shrink-0 size-24 bg-secondary rounded-lg flex items-center justify-center">
                 <div className="w-12 h-12 text-primary">
@@ -193,6 +217,16 @@ export default function TeamClientPage({
                     <Pencil className="w-5 h-5"/>
                 </Button>
              )}
+          </div>
+          <div className="mb-4 p-3 bg-secondary rounded-lg flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-sm text-muted-foreground">INVITE CODE:</span>
+              <span className="font-mono text-sm font-bold text-accent">{team.id.slice(0,8).toUpperCase()}</span>
+            </div>
+            <Button size="sm" variant="outline" onClick={handleCopyInviteCode}>
+              <Copy className="w-4 h-4 mr-2" />
+              Copy
+            </Button>
           </div>
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4">Team Members</h2>
@@ -244,19 +278,13 @@ export default function TeamClientPage({
                   </p>
                 </div>
               ))}
-               {isEditing && (
-                 <button onClick={handleInvite} className="flex flex-col items-center justify-center size-16 rounded-full border-2 border-dashed border-border hover:bg-secondary transition-colors">
-                    <UserPlus className="w-6 h-6 text-muted-foreground" />
-                 </button>
-               )}
+              
+               <button onClick={handleInvite} className="flex flex-col items-center justify-center size-16 rounded-full border-2 border-dashed border-border hover:bg-secondary transition-colors">
+                  <UserPlus className="w-6 h-6 text-muted-foreground" />
+               </button>
+               
             </div>
           </div>
-         {!isEditing && <Button 
-            onClick={handleInvite}
-            className="absolute bottom-6 right-6 flex items-center justify-center size-14 rounded-2xl bg-primary/80 text-primary-foreground shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-            <UserPlus className="w-6 h-6" />
-            <span className="sr-only">Invite Member</span>
-          </Button>}
         </div>
       </div>
       <div className={`${isChatFullScreen ? 'col-span-12 h-[calc(100vh-10rem)]' : 'col-span-12 lg:col-span-4'}`}>
