@@ -17,7 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ListFilter, Calendar, Users, FileText, Trophy, ExternalLink, XCircle } from "lucide-react";
+import { ListFilter, Calendar, Users, FileText, Trophy, ExternalLink, XCircle, Eye } from "lucide-react";
 import { format, isPast, isFuture } from 'date-fns';
 
 const getEventStatus = (date: string) => {
@@ -55,8 +55,8 @@ export default function MyHackathonsPage() {
             <div className="flex flex-col sm:flex-row gap-2 mt-4">
                 <Button asChild variant="outline" size="sm">
                     <Link href={`/hackathons/${hackathon.id}`}>
-                        <Calendar className="mr-2 h-4 w-4"/>
-                        Event Details
+                        <Eye className="mr-2 h-4 w-4"/>
+                        View Details
                     </Link>
                 </Button>
                 {status === 'Not Started' && hackathon.teamId && (

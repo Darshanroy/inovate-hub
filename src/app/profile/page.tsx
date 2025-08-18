@@ -35,18 +35,21 @@ const initialSkills = [
 
 const hackathons = [
     {
+        id: "ai-for-good-challenge",
         name: "AI for Good Challenge",
         description: "Developed an AI-powered solution for environmental sustainability.",
         image: "https://placehold.co/600x400.png",
         hint: "AI environment"
     },
     {
+        id: "healthcare-innovation-hackathon",
         name: "Healthcare Innovation Hackathon",
         description: "Created a machine learning model for early disease detection.",
         image: "https://placehold.co/600x400.png",
         hint: "healthcare technology"
     },
     {
+        id: "smart-city-solutions",
         name: "Smart City Solutions",
         description: "Designed an intelligent traffic management system using AI.",
         image: "https://placehold.co/600x400.png",
@@ -227,7 +230,9 @@ export default function ProfilePage() {
                                         </div>
                                     </CardContent>
                                     <div className="p-4 pt-0">
-                                      <Button variant="outline" className="w-full">View Details</Button>
+                                      <Button asChild variant="outline" className="w-full">
+                                        <Link href={`/hackathons/${hackathon.id}`}>View Details</Link>
+                                      </Button>
                                     </div>
                                 </Card>
                            ))}
