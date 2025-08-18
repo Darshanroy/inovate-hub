@@ -1,9 +1,11 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
-import { Bell, Rocket, Search, User, LogOut } from "lucide-react";
+import { Bell, Rocket, Search, User } from "lucide-react";
 import { Input } from "../ui/input";
-import { cookies } from "next/headers";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,11 +16,26 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogoutButton } from "./logout-button";
 
-export function AppHeader() {
-  const cookieStore = cookies();
-  const isLoggedIn = cookieStore.get("isLoggedIn")?.value === "true";
-  const userType = cookieStore.get("userType")?.value;
+// Helper function to get cookie value by name
+const getCookie = (name: string): string | undefined => {
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift();
+};
 
+
+export function AppHeader() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userType, setUserType] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    setIsLoggedIn(getCookie("isLoggedIn") === "true");
+    setUserType(getCookie("userType"));
+  }, []);
+  
   const profileUrl = userType === "organizer" ? "/organizer/dashboard" : "/profile";
 
   return (
