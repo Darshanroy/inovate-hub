@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
-import { Bell, Rocket, Search, User } from "lucide-react";
+import { Bell, Search, User, FileText } from "lucide-react";
 import { Input } from "../ui/input";
 import {
   DropdownMenu,
@@ -26,6 +26,11 @@ const getCookie = (name: string): string | undefined => {
   if (parts.length === 2) return parts.pop()?.split(';').shift();
 };
 
+const InnovateHubIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" {...props}>
+        <path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z" fill="currentColor"></path>
+    </svg>
+)
 
 export function AppHeader() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -43,8 +48,8 @@ export function AppHeader() {
       <div className="container mx-auto flex items-center justify-between px-6 py-3">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-3">
-            <Rocket className="h-8 w-8 text-primary" />
-            <h2 className="text-2xl font-bold font-headline">HackHub</h2>
+            <InnovateHubIcon className="h-8 w-8 text-primary" />
+            <h2 className="text-2xl font-bold font-headline">InnovateHub</h2>
           </Link>
            <nav className="hidden items-center gap-8 md:flex">
             <Link href="/hackathons" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">

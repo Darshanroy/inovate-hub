@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Hackathon, Team, TeamMessage, soloParticipants as allSoloParticipants, SoloParticipant } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { MoreVertical, Paperclip, Send, UserPlus, Pencil, X, Save, Trash2, Expand, Minimize, Mail, Check, Copy, Search } from "lucide-react";
+import { MoreVertical, Paperclip, Send, UserPlus, Pencil, X, Save, Trash2, Expand, Minimize, Mail, Check, Copy, Search, FileText } from "lucide-react";
 import Image from "next/image";
 import {
   AlertDialog,
@@ -23,6 +23,7 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 
 const InviteDialog = ({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) => {
@@ -228,7 +229,7 @@ export default function TeamClientPage({
               Copy
             </Button>
           </div>
-          <div className="mb-8">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold mb-4">Team Members</h2>
             <div className="flex items-center gap-6 flex-wrap">
               {team.members.map((member) => (
@@ -284,6 +285,14 @@ export default function TeamClientPage({
                </button>
                
             </div>
+          </div>
+           <div className="border-t border-border pt-6">
+             <Button asChild className="w-full" size="lg">
+                <Link href={`/hackathons/${hackathon.id}/submission`}>
+                    <FileText className="mr-2 h-5 w-5" />
+                    Submit Project
+                </Link>
+             </Button>
           </div>
         </div>
       </div>
