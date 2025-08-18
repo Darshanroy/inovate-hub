@@ -8,6 +8,12 @@ import { notFound } from "next/navigation";
 import { Check, Share } from "lucide-react";
 import Image from "next/image";
 
+export function generateStaticParams() {
+  return hackathons.map((hackathon) => ({
+    id: hackathon.id,
+  }));
+}
+
 // Helper to add Material Symbols link
 const useMaterialSymbols = () => {
   useEffect(() => {
