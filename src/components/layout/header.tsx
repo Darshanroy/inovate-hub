@@ -10,6 +10,7 @@ export function AppHeader() {
   const isLoggedIn = cookieStore.get("isLoggedIn")?.value === "true";
   const userType = cookieStore.get("userType")?.value;
 
+  const profileUrl = userType === "organizer" ? "/organizer/dashboard" : "/profile";
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm border-b border-border">
@@ -50,7 +51,7 @@ export function AppHeader() {
                 <Bell className="h-5 w-5" />
                 <span className="sr-only">Notifications</span>
               </Button>
-              <Link href="/profile">
+              <Link href={profileUrl}>
                 <Avatar>
                   <AvatarImage src="https://placehold.co/40x40.png" alt="User avatar" data-ai-hint="person face" />
                   <AvatarFallback>U</AvatarFallback>
