@@ -1,0 +1,140 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Hackathon, Team, TeamMessage } from "@/lib/data";
+import { MoreVertical, Paperclip, Send } from "lucide-react";
+import Image from "next/image";
+
+export default function TeamClientPage({
+  hackathon,
+  team,
+  messages,
+}: {
+  hackathon: Hackathon;
+  team: Team;
+  messages: TeamMessage[];
+}) {
+  return (
+    <main className="container mx-auto px-4 py-8 grid grid-cols-12 gap-8 items-start">
+      <div className="col-span-12 lg:col-span-8">
+        <div className="bg-card text-card-foreground rounded-2xl shadow-lg p-6 relative overflow-hidden">
+          <div className="flex items-center gap-6 mb-8">
+            <div className="flex-shrink-0 size-24 bg-secondary rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 text-primary">
+                <svg
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93s3.05-7.44 7-7.93v15.86zm2-15.86c1.03.13 2 .45 2.87.93H13v-.93zM13 7h5.24c.25.31.48.65.68 1H13V7zm0 3h6.74c.08.33.15.66.19 1H13v-1zm0 3h6.43c-.18.64-.44 1.25-.79 1.82l-1.42-1.42c.1-.29.18-.59.22-.9h-4.44v.01zM11 5.07V5h.13c-1.1.22-2.1.66-2.98 1.28L9.6 7.72c.45-.33.95-.59 1.5-.75zM5.26 8.74L6.7 10.18c-.2.48-.35 1-.45 1.54H5.22c.04-.52.14-1.03.24-1.54zM7.21 16c.36.42.77.79 1.23 1.1l-1.47 1.47C6.05 17.65 5.25 16.39 5.07 15H7.21v1zm8.01.21c.21-.69.32-1.41.32-2.14s-.11-1.45-.32-2.14l1.45-1.45c.4.88.67 1.85.71 2.87s-.2 2.01-.6 2.89l-1.55-1.17z"></path>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold mb-1">{team.name}</h1>
+              <p className="text-muted-foreground">{team.description}</p>
+            </div>
+          </div>
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">Team Members</h2>
+            <div className="flex items-center gap-6">
+              {team.members.map((member) => (
+                <div key={member.name} className="text-center">
+                  <Image
+                    alt={member.name}
+                    className={`size-16 rounded-full mx-auto mb-2 ${
+                      member.role === "Leader"
+                        ? "border-2 border-accent"
+                        : ""
+                    }`}
+                    height={64}
+                    src={member.avatar}
+                    width={64}
+                    data-ai-hint="person face"
+                  />
+                  <p className="font-semibold text-sm">{member.name}</p>
+                  <p
+                    className={`text-xs font-medium ${
+                      member.role === "Leader"
+                        ? "text-accent"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {member.role}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <Button className="absolute bottom-6 right-6 flex items-center justify-center size-14 rounded-2xl bg-primary/80 text-primary-foreground shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+            <svg
+              className="w-6 h-6"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
+            </svg>
+            <span className="sr-only">Invite Member</span>
+          </Button>
+        </div>
+      </div>
+      <div className="col-span-12 lg:col-span-4">
+        <div className="bg-card text-card-foreground rounded-2xl shadow-lg h-[calc(100vh-10rem)] flex flex-col p-6">
+          <div className="flex items-center justify-between pb-4 border-b border-border">
+            <h2 className="text-xl font-semibold">Team Chat</h2>
+            <Button variant="ghost" size="icon" className="text-muted-foreground">
+              <MoreVertical className="h-5 w-5" />
+            </Button>
+          </div>
+          <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-2">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex gap-3 items-end max-w-[85%] ${
+                  message.isSelf ? "flex-row-reverse ml-auto" : ""
+                }`}
+              >
+                <Image
+                  alt={message.author}
+                  className="size-6 rounded-full"
+                  height={24}
+                  src={message.avatar}
+                  width={24}
+                />
+                <div
+                  className={`p-3 rounded-2xl ${
+                    message.isSelf
+                      ? "bg-primary/20 rounded-br-none"
+                      : "bg-secondary rounded-bl-none"
+                  }`}
+                >
+                  <p className="text-sm">{message.content}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="pt-4 mt-auto border-t border-border">
+            <div className="relative">
+              <Textarea
+                className="w-full pr-20 resize-none bg-background"
+                placeholder="Type a message..."
+                rows={1}
+              />
+               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
+                 <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                    <Paperclip className="w-5 h-5"/>
+                 </Button>
+                <Button className="p-2 rounded-full h-8 w-12 bg-primary text-primary-foreground hover:bg-primary/90">
+                    <Send className="w-5 h-5" />
+                </Button>
+               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}

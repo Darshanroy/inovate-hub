@@ -14,6 +14,26 @@ export type Hackathon = {
     teamId?: string | null;
 }
 
+export type TeamMember = {
+    name: string;
+    role: "Leader" | "Developer" | "Designer";
+    avatar: string;
+};
+
+export type Team = {
+    id: string;
+    name: string;
+    description: string;
+    members: TeamMember[];
+};
+
+export type TeamMessage = {
+    id: number;
+    author: string;
+    avatar: string;
+    content: string;
+    isSelf: boolean;
+};
 
 export const hackathons: Hackathon[] = [
   {
@@ -136,4 +156,23 @@ export const myHackathons: Hackathon[] = [
         teamId: 'team-green-code',
         date: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0] // 30 days ago
     }
+]
+
+export const team: Team = {
+    id: "quantum-leap-ai",
+    name: "Team QuantumLeap AI",
+    description: "Building the future of AI-powered solutions.",
+    members: [
+        { name: "Alex Chen", role: "Leader", avatar: "https://placehold.co/64x64.png" },
+        { name: "Sophia Rodriguez", role: "Developer", avatar: "https://placehold.co/64x64.png" },
+        { name: "Ben Carter", role: "Developer", avatar: "https://placehold.co/64x64.png" },
+        { name: "Olivia Martinez", role: "Designer", avatar: "https://placehold.co/64x64.png" },
+    ]
+}
+
+export const teamMessages: TeamMessage[] = [
+    { id: 1, author: "Sophia Rodriguez", avatar: "https://placehold.co/24x24.png", content: "Hey team, I've pushed the latest updates for the UI mockups. Let me know what you think!", isSelf: false },
+    { id: 2, author: "Alex Chen", avatar: "https://placehold.co/24x24.png", content: "Looks great Sophia! The new color palette is much better. I'll start integrating the backend logic.", isSelf: true },
+    { id: 3, author: "Olivia Martinez", avatar: "https://placehold.co/24x24.png", content: "I love it! The user flow feels much more intuitive now. Good job!", isSelf: false },
+    { id: 4, author: "Ben Carter", avatar: "https://placehold.co/24x24.png", content: "The API endpoints are ready for integration. Let me know if you run into any issues.", isSelf: false },
 ]

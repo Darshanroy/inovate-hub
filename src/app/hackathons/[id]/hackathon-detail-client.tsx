@@ -5,6 +5,7 @@ import type { Hackathon } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { Check, Share } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 // Helper to add Material Symbols link
 const useMaterialSymbols = () => {
@@ -85,7 +86,9 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
         </div>
         <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <Button className="h-10 px-6 text-sm font-bold">Join Now</Button>
+            <Button asChild className="h-10 px-6 text-sm font-bold">
+              <Link href={`/hackathons/${hackathon.id}/team`}>Join Now</Link>
+            </Button>
             <Button variant="secondary" className="h-10 px-6 text-sm font-bold">
               <Share className="mr-2 h-4 w-4" />
               Share
