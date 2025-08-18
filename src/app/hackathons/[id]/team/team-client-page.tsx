@@ -1,12 +1,13 @@
+
 "use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Hackathon, Team, TeamMessage } from "@/lib/data";
+import { Hackathon, Team, TeamMessage, soloParticipants as allSoloParticipants, SoloParticipant } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { MoreVertical, Paperclip, Send, UserPlus, Pencil, X, Save, Trash2, Expand, Minimize } from "lucide-react";
+import { MoreVertical, Paperclip, Send, UserPlus, Pencil, X, Save, Trash2, Expand, Minimize, SendHorizonal, Mail } from "lucide-react";
 import Image from "next/image";
 import {
   AlertDialog,
@@ -18,7 +19,61 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+
+
+const InviteDialog = ({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) => {
+    const { toast } = useToast();
+    const [invited, setInvited] = useState<string[]>([]);
+    
+    const handleInvite = (participant: SoloParticipant) => {
+        setInvited(prev => [...prev, participant.name]);
+        toast({
+            title: "Invitation Sent!",
+            description: `${participant.name} has been invited to join your team.`
+        })
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Invite Members</DialogTitle>
+                    <DialogDescription>
+                        Browse participants who are looking for a team and send them an invitation.
+                    </DialogDescription>
+                </DialogHeader>
+                <ScrollArea className="h-96">
+                <div className="space-y-4 pr-6">
+                    {allSoloParticipants.map(participant => (
+                        <div key={participant.name} className="flex items-center justify-between p-4 border rounded-lg bg-background">
+                            <div className="flex items-center gap-4">
+                                <Image src={participant.avatar} alt={participant.name} width={40} height={40} className="rounded-full" data-ai-hint="person face" />
+                                <div>
+                                    <h4 className="font-semibold">{participant.name}</h4>
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                        {participant.skills.map(skill => <Badge key={skill} variant="secondary">{skill}</Badge>)}
+                                    </div>
+                                </div>
+                            </div>
+                            <Button size="sm" onClick={() => handleInvite(participant)} disabled={invited.includes(participant.name)}>
+                                {invited.includes(participant.name) ? (
+                                    <> <Check className="mr-2 h-4 w-4" /> Invited</>
+                                ) : (
+                                    <> <Mail className="mr-2 h-4 w-4"/> Send Invitation</>
+                                )}
+                            </Button>
+                        </div>
+                    ))}
+                </div>
+                </ScrollArea>
+            </DialogContent>
+        </Dialog>
+    )
+}
 
 export default function TeamClientPage({
   hackathon,
@@ -36,6 +91,7 @@ export default function TeamClientPage({
   const [editedName, setEditedName] = useState(initialTeam.name);
   const [editedDescription, setEditedDescription] = useState(initialTeam.description);
   const [isChatFullScreen, setIsChatFullScreen] = useState(false);
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const handleSendMessage = () => {
@@ -52,11 +108,7 @@ export default function TeamClientPage({
   };
   
   const handleInvite = () => {
-    navigator.clipboard.writeText(`https://hackhub.com/join/${team.id}`);
-    toast({
-      title: "Success",
-      description: "Invite link copied to clipboard!",
-    });
+    setIsInviteDialogOpen(true);
   }
 
   const handleMoreOptions = () => {
@@ -100,6 +152,7 @@ export default function TeamClientPage({
   }
 
   return (
+    <>
      <main className={`container mx-auto px-4 py-8 grid ${isChatFullScreen ? 'grid-cols-12' : 'grid-cols-1 md:grid-cols-12'} gap-8 items-start`}>
       <div className={`${isChatFullScreen ? 'hidden' : 'col-span-12 lg:col-span-8'}`}>
         <div className="bg-card text-card-foreground rounded-2xl shadow-lg p-6 relative overflow-hidden">
@@ -274,5 +327,9 @@ export default function TeamClientPage({
         </div>
       </div>
     </main>
+    <InviteDialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen} />
+    </>
   );
 }
+
+    

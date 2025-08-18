@@ -35,6 +35,12 @@ export type TeamMessage = {
     isSelf: boolean;
 };
 
+export type SoloParticipant = {
+    name: string;
+    avatar: string;
+    skills: string[];
+}
+
 export const hackathons: Hackathon[] = [
   {
     id: "ai-innovation-challenge",
@@ -176,3 +182,13 @@ export const teamMessages: TeamMessage[] = [
     { id: 3, author: "Olivia Martinez", avatar: "https://placehold.co/24x24.png", content: "I love it! The user flow feels much more intuitive now. Good job!", isSelf: false },
     { id: 4, author: "Ben Carter", avatar: "https://placehold.co/24x24.png", content: "The API endpoints are ready for integration. Let me know if you run into any issues.", isSelf: false },
 ]
+
+export const soloParticipants: SoloParticipant[] = [
+    { name: "David Lee", avatar: "https://placehold.co/40x40.png", skills: ["React", "Node.js", "GraphQL"] },
+    { name: "Emily White", avatar: "https://placehold.co/40x40.png", skills: ["UX/UI Design", "Figma", "Prototyping"] },
+    { name: "Frank Green", avatar: "https://placehold.co/40x40.png", skills: ["Python", "Django", "PostgreSQL"] },
+    { name: "Grace Hall", avatar: "https://placehold.co/40x40.png", skills: ["iOS", "Swift", "CoreML"] },
+    { name: "Henry King", avatar: "https://placehold.co/40x40.png", skills: ["Android", "Kotlin", "Firebase"] },
+];
+
+    

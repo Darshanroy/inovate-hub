@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -6,29 +7,83 @@ import { Button } from "@/components/ui/button";
 import { Check, Share } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
-// Helper to add Material Symbols link
-const useMaterialSymbols = () => {
-  useEffect(() => {
-    const link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-    return () => {
-      document.head.removeChild(link);
-    };
-  }, []);
-};
 
+const JoinHackathonDialog = ({ open, onOpenChange, hackathonId }: { open: boolean, onOpenChange: (open: boolean) => void, hackathonId: string }) => {
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast({
+      title: "Registration Submitted!",
+      description: "Your request to join has been sent to the organizers.",
+    });
+    onOpenChange(false);
+    // In a real app, you would also update the user's registration status
+    // and then redirect.
+    setTimeout(() => {
+      router.push(`/hackathons/${hackathonId}/team`);
+    }, 1000)
+  }
+  
+  return (
+     <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Join Hackathon</DialogTitle>
+          <DialogDescription>
+            Complete your registration to join this event.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="motivation">Why do you want to join this hackathon?</Label>
+            <Textarea id="motivation" placeholder="I'm excited to build..." required />
+          </div>
+           <div className="space-y-2">
+            <Label>Do you have a team?</Label>
+            <RadioGroup defaultValue="no">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="yes" id="r-yes" />
+                <Label htmlFor="r-yes">Yes, I have a team code</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="no" id="r-no" />
+                <Label htmlFor="r-no">No, I'm looking for a team</Label>
+              </div>
+            </RadioGroup>
+          </div>
+           <div className="space-y-2">
+            <Label htmlFor="portfolio">Portfolio/Resume Link (Optional)</Label>
+            <Input id="portfolio" placeholder="https://linkedin.com/in/..." />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="submit">Submit Registration</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 export default function HackathonDetailClientPage({ hackathon }: { hackathon: Hackathon }) {
-  useMaterialSymbols();
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
   });
+  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
+
 
   useEffect(() => {
     if (!hackathon) return;
@@ -86,8 +141,8 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
         </div>
         <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <Button asChild className="h-10 px-6 text-sm font-bold">
-              <Link href={`/hackathons/${hackathon.id}/team`}>Join Now</Link>
+            <Button onClick={() => setIsJoinDialogOpen(true)} className="h-10 px-6 text-sm font-bold">
+              Join Now
             </Button>
             <Button variant="secondary" className="h-10 px-6 text-sm font-bold">
               <Share className="mr-2 h-4 w-4" />
@@ -160,6 +215,9 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
           </div>
         </div>
       </div>
+      <JoinHackathonDialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen} hackathonId={hackathon.id} />
     </main>
   );
 }
+
+    
