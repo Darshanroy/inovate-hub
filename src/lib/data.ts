@@ -26,6 +26,7 @@ export type Team = {
     name: string;
     description: string;
     members: TeamMember[];
+    avatar: string;
 };
 
 export type TeamMessage = {
@@ -50,6 +51,14 @@ export type Submission = {
     videoUrl: string;
     status: 'draft' | 'submitted';
 }
+
+export type Result = {
+    rank: number;
+    team: Team;
+    projectTitle: string;
+    score: number;
+};
+
 
 export const hackathons: Hackathon[] = [
   {
@@ -156,13 +165,14 @@ export const myHackathons: Hackathon[] = [
         ...hackathons.find(h => h.id === 'fintech-disruption')!,
         registrationStatus: 'Confirmed',
         teamId: null,
-        date: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0], // Tomorrow to make it ongoing
+        date: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0], // Tomorrow to make it not started
         submissionStatus: 'Not Started'
     },
     {
         ...hackathons.find(h => h.id === 'creative-coding-marathon')!,
         registrationStatus: 'Confirmed',
         teamId: 'team-pixel-pushers',
+        date: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString().split('T')[0], // 2 days ago to be ongoing
         submissionStatus: 'Submitted'
     },
     {
@@ -184,6 +194,7 @@ export const team: Team = {
     id: "quantum-leap-ai",
     name: "Team QuantumLeap AI",
     description: "Building the future of AI-powered solutions.",
+    avatar: "https://placehold.co/192x192.png",
     members: [
         { name: "Alex Chen", role: "Leader", avatar: "https://placehold.co/64x64.png" },
         { name: "Sophia Rodriguez", role: "Developer", avatar: "https://placehold.co/64x64.png" },
@@ -192,7 +203,7 @@ export const team: Team = {
     ]
 }
 
-export const openTeams: Omit<Team, 'description' | 'id'>[] = [
+export const openTeams: Omit<Team, 'description' | 'id' | 'avatar'>[] = [
     { name: "Code Wizards", members: [{ name: "Gandalf", role: "Leader", avatar: "https://placehold.co/32x32.png" }, { name: "Merlin", role: "Developer", avatar: "https://placehold.co/32x32.png" }] },
     { name: "Pixel Perfect", members: [{ name: "Da Vinci", role: "Leader", avatar: "https://placehold.co/32x32.png" }]},
     { name: "Data Drivers", members: [{ name: "Ada Lovelace", role: "Leader", avatar: "https://placehold.co/32x32.png" }, { name: "Charles Babbage", role: "Developer", avatar: "https://placehold.co/32x32.png" }, { name: "Grace Hopper", role: "Developer", avatar: "https://placehold.co/32x32.png" }]},
@@ -221,3 +232,44 @@ export const mySubmission: Submission = {
     videoUrl: "https://youtube.com/watch?v=example",
     status: 'draft',
 }
+
+const teamsForResults: Team[] = [
+    {
+        id: "1",
+        name: "AI Avengers",
+        description: "AI for the win!",
+        avatar: "https://placehold.co/192x192.png",
+        members: []
+    },
+    {
+        id: "2",
+        name: "Data Dynamos",
+        description: "In data we trust.",
+        avatar: "https://placehold.co/192x192.png",
+        members: []
+    },
+    {
+        id: "3",
+        name: "Code Crusaders",
+        description: "Crusading for clean code.",
+        avatar: "https://placehold.co/192x192.png",
+        members: []
+    },
+    { ...team, id: '4', name: "Team QuantumLeap AI", avatar: "https://placehold.co/192x192.png" }, // User's team
+    {
+        id: "5",
+        name: "Bug Busters",
+        description: "No bug is safe.",
+        avatar: "https://placehold.co/192x192.png",
+        members: []
+    },
+];
+
+
+export const results: Result[] = [
+    { rank: 1, team: teamsForResults[0], projectTitle: "EcoSort AI", score: 95 },
+    { rank: 2, team: teamsForResults[1], projectTitle: "FinPredict", score: 92 },
+    { rank: 3, team: teamsForResults[2], projectTitle: "HealthTrack", score: 88 },
+    { rank: 4, team: teamsForResults[3], projectTitle: "Intelligent Code Assistant", score: 85 },
+    { rank: 5, team: teamsForResults[4], projectTitle: "AgriGrow", score: 82 },
+]

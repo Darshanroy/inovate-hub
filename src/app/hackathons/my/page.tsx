@@ -17,7 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ListFilter, Calendar, Users, FileText, Trophy, ExternalLink, XCircle, Eye, Edit } from "lucide-react";
+import { ListFilter, Calendar, Users, FileText, Trophy, ExternalLink, XCircle, Eye, Edit, Check } from "lucide-react";
 import { format, isPast, isFuture } from 'date-fns';
 
 const getEventStatus = (date: string) => {
