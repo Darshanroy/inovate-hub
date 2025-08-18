@@ -21,7 +21,7 @@ export function AppHeader() {
             <h2 className="text-2xl font-bold font-headline">HackHub</h2>
           </Link>
            <nav className="hidden items-center gap-8 md:flex">
-            <Link href="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
+            <Link href="/hackathons" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
               Explore
             </Link>
             {isLoggedIn && userType === 'participant' && (
