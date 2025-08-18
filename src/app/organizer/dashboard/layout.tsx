@@ -18,7 +18,8 @@ import {
   FileText,
   Award,
   BarChart,
-  LogOut
+  LogOut,
+  Rocket
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -72,33 +73,30 @@ export default function OrganizerDashboardLayout({
   return (
     <SidebarProvider>
       <div className="flex min-h-screen bg-background">
-        <Sidebar>
-          <SidebarContent className="p-2">
-            <SidebarHeader>
-              <div className="flex items-center gap-2">
-                <Avatar>
-                  <AvatarImage src="https://placehold.co/40x40.png" alt="Organizer"/>
-                  <AvatarFallback>O</AvatarFallback>
-                </Avatar>
-                <div className="group-data-[collapsible=icon]:hidden">
-                    <p className="font-semibold">Organizer</p>
-                    <p className="text-xs text-muted-foreground">Admin</p>
-                </div>
+        <Sidebar className="border-r border-border/20">
+          <SidebarContent className="p-4 flex flex-col">
+            <SidebarHeader className="p-0">
+               <div className="flex items-center justify-between">
+                <Link href="/" className="flex items-center gap-3">
+                  <Rocket className="h-8 w-8 text-primary" />
+                  <h2 className="text-2xl font-bold font-headline">HackHub</h2>
+                </Link>
               </div>
             </SidebarHeader>
-            <SidebarMenu>
+            <SidebarMenu className="mt-8 flex-1">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
                   <Link href={item.href} legacyBehavior passHref>
                     <SidebarMenuButton
                       isActive={pathname === item.href}
+                      className="text-base h-11 justify-start"
                       tooltip={{
                         children: item.label,
                         side: "right",
                         align: "center",
                       }}
                     >
-                      <item.icon />
+                      <item.icon className="h-5 w-5" />
                       <span className="group-data-[collapsible=icon]:hidden">
                         {item.label}
                       </span>
@@ -107,22 +105,35 @@ export default function OrganizerDashboardLayout({
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
+             <SidebarFooter>
+              <SidebarMenu>
+                 <SidebarMenuItem>
+                  <div className="flex items-center gap-3 p-2">
+                    <Avatar>
+                      <AvatarImage src="https://placehold.co/40x40.png" alt="Organizer"/>
+                      <AvatarFallback>O</AvatarFallback>
+                    </Avatar>
+                    <div className="group-data-[collapsible=icon]:hidden">
+                        <p className="font-semibold">Organizer</p>
+                        <p className="text-xs text-muted-foreground">organizer@example.com</p>
+                    </div>
+                  </div>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton onClick={handleLogout}
+                    className="text-base h-11 justify-start"
+                    tooltip={{
+                          children: "Logout",
+                          side: "right",
+                          align: "center",
+                        }}>
+                      <LogOut className="h-5 w-5"/>
+                      <span className="group-data-[collapsible=icon]:hidden">Logout</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarFooter>
           </SidebarContent>
-          <SidebarFooter>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                 <SidebarMenuButton onClick={handleLogout}
-                  tooltip={{
-                        children: "Logout",
-                        side: "right",
-                        align: "center",
-                      }}>
-                    <LogOut/>
-                    <span className="group-data-[collapsible=icon]:hidden">Logout</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarFooter>
         </Sidebar>
         <SidebarInset>
             <div className="p-4 sm:p-6 lg:p-8">
