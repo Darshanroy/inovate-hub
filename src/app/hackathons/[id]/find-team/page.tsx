@@ -13,9 +13,13 @@ import { useToast } from "@/hooks/use-toast"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { useParams, useRouter } from "next/navigation"
 
 const CreateTeamDialog = ({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) => {
     const { toast } = useToast();
+    const router = useRouter();
+    const params = useParams();
+    const hackathonId = params.id;
 
     const handleCreateTeam = (e: React.FormEvent) => {
         e.preventDefault();
@@ -24,6 +28,8 @@ const CreateTeamDialog = ({ open, onOpenChange }: { open: boolean, onOpenChange:
             description: "You can now invite members and start collaborating.",
         })
         onOpenChange(false);
+        // In a real app, this would create the team and then navigate.
+        router.push(`/hackathons/${hackathonId}/team`);
     }
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
