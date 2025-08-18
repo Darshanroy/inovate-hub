@@ -1,124 +1,37 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState } from "react";
 import type { Hackathon } from "@/lib/data";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BasicInfoTab } from "./_components/basic-info-tab";
+import { JudgingPanelTab } from "./_components/judging-panel-tab";
+
 
 export default function EditHackathonClientPage({ hackathon }: { hackathon: Hackathon }) {
-  const [locationType, setLocationType] = useState<string | undefined>(hackathon.locationType);
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-2">Edit Hackathon</h1>
-      <p className="text-muted-foreground mb-8">Update the details for your event.</p>
-      
-      <div className="space-y-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-            <CardDescription>Update your hackathon's name and description.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Hackathon Name</Label>
-              <Input id="name" placeholder="e.g. AI for Good Challenge" defaultValue={hackathon.name} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea id="description" placeholder="Describe the main goals and theme of your hackathon." defaultValue={hackathon.description} />
-            </div>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="start-date">Start Date</Label>
-                    <Input id="start-date" type="date" defaultValue={new Date(hackathon.date).toISOString().split('T')[0]} />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="end-date">End Date</Label>
-                    <Input id="end-date" type="date" />
-                </div>
-            </div>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="location-type">Location Type</Label>
-                    <Select onValueChange={setLocationType} defaultValue={hackathon.locationType}>
-                        <SelectTrigger id="location-type">
-                            <SelectValue placeholder="Select location type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="online">Online</SelectItem>
-                            <SelectItem value="offline">Offline</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                {locationType === 'offline' && (
-                  <div className="space-y-2">
-                      <Label htmlFor="location">Location</Label>
-                      <Input id="location" placeholder="e.g. San Francisco, CA" />
-                  </div>
-                )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Rules & Guidelines</CardTitle>
-            <CardDescription>Update the rules and team size limits.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="rules">Rules</Label>
-              <Textarea id="rules" placeholder="Detail the rules of participation, submission guidelines, etc." rows={6}/>
-            </div>
-             <div className="space-y-2">
-              <Label htmlFor="team-size">Team Size Limit</Label>
-              <Input id="team-size" type="number" placeholder="e.g. 4" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Tracks & Categories</CardTitle>
-            <CardDescription>Update the different tracks or categories for submissions.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-             <div className="space-y-2">
-              <Label htmlFor="tracks">Tracks</Label>
-              <Input id="tracks" placeholder="e.g. Healthcare, FinTech, Sustainability (comma-separated)" defaultValue={hackathon.theme} />
-              <p className="text-xs text-muted-foreground">Separate multiple tracks with a comma.</p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Prizes & Rewards</CardTitle>
-            <CardDescription>Update the exciting prizes for winners.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-             <div className="space-y-2">
-              <Label htmlFor="total-prize">Total Prize Pool ($)</Label>
-              <Input id="total-prize" type="number" placeholder="e.g. 20000" defaultValue={hackathon.prize} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="prizes">Prizes Description</Label>
-              <Textarea id="prizes" placeholder="Describe the prize structure, e.g., 1st Place: $10,000, 2nd Place: $5,000" rows={4}/>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-end gap-2">
-            <Button variant="outline">Cancel</Button>
-            <Button>Save Changes</Button>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Manage "{hackathon.name}"</h1>
+        <p className="text-muted-foreground">Update event details, manage judges, and more.</p>
       </div>
+      
+      <Tabs defaultValue="basic-info">
+        <TabsList className="grid w-full grid-cols-5 mb-6">
+            <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
+            <TabsTrigger value="judging">Judging Panel</TabsTrigger>
+            <TabsTrigger value="participants" disabled>Participants</TabsTrigger>
+            <TabsTrigger value="submissions" disabled>Submissions</TabsTrigger>
+            <TabsTrigger value="results" disabled>Results</TabsTrigger>
+        </TabsList>
+        <TabsContent value="basic-info">
+            <BasicInfoTab hackathon={hackathon} />
+        </TabsContent>
+        <TabsContent value="judging">
+            <JudgingPanelTab />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

@@ -5,13 +5,11 @@ import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
 
 type Criterion = {
   id: number;
@@ -27,7 +25,7 @@ type Judge = {
   status: "Accepted" | "Invited";
 };
 
-export default function JudgingPanelPage() {
+export function JudgingPanelTab() {
     const { toast } = useToast();
     const [criteria, setCriteria] = useState<Criterion[]>([
         { id: 1, name: "Innovation & Creativity", weight: 2, maxScore: 10 },
@@ -77,12 +75,6 @@ export default function JudgingPanelPage() {
     };
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-2">Judging Panel Setup</h1>
-       <p className="text-muted-foreground mb-8">
-        Define your judging criteria and manage your panel of judges for "AI Innovation Challenge".
-      </p>
-
       <div className="grid gap-8 lg:grid-cols-5">
         <div className="lg:col-span-3">
              <Card>
@@ -177,6 +169,5 @@ export default function JudgingPanelPage() {
             </Card>
         </div>
       </div>
-    </div>
   )
 }
