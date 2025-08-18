@@ -23,7 +23,10 @@ import { format, isPast, isFuture } from 'date-fns';
 const getEventStatus = (date: string) => {
     const eventDate = new Date(date);
     const now = new Date();
-    if (isPast(eventDate) && !isPast(new Date(eventDate).setDate(eventDate.getDate() + 2))) {
+
+    // The event is considered "Ongoing" if the start date is in the past,
+    // but the end date (start date + 2 days, for example) is in the future.
+    if (isPast(eventDate) && isFuture(new Date(eventDate).setDate(eventDate.getDate() + 2))) {
         return "Ongoing";
     }
     if (isPast(eventDate)) {
@@ -32,7 +35,7 @@ const getEventStatus = (date: string) => {
     if (isFuture(eventDate)) {
         return "Not Started";
     }
-    return "Ongoing";
+    return "Ongoing"; // Fallback
 }
 
 
@@ -69,7 +72,7 @@ export default function MyHackathonsPage() {
                 )}
                  {status === 'Not Started' && !hackathon.teamId && (
                      <Button asChild variant="secondary" size="sm">
-                        <Link href={`/hackathons/${hackathon.id}/team`}>
+                        <Link href={`/hackathons/${hackathon.id}/find-team`}>
                             <Users className="mr-2 h-4 w-4"/>
                             Join a Team
                         </Link>
