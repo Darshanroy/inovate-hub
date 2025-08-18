@@ -138,7 +138,7 @@ const MySubmissionTab = ({ submission, hackathonId }: { submission: Submission, 
                 <CardContent className="p-8 space-y-6">
                      <div className="flex justify-between items-center">
                         <h3 className="text-xl font-bold">{submission.title}</h3>
-                        <Badge variant={submission.status === 'draft' ? 'secondary' : 'default'}>{submission.status}</Badge>
+                        <Badge variant={submission.status === 'draft' ? 'secondary' : 'default'} className="capitalize">{submission.status}</Badge>
                     </div>
                     <p className="text-muted-foreground">{submission.description}</p>
                     <div>
