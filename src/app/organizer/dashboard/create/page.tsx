@@ -1,8 +1,10 @@
+
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function CreateHackathonPage() {
   return (
@@ -35,6 +37,24 @@ export default function CreateHackathonPage() {
                     <Input id="end-date" type="date" />
                 </div>
             </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="location-type">Location Type</Label>
+                    <Select>
+                        <SelectTrigger id="location-type">
+                            <SelectValue placeholder="Select location type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="online">Online</SelectItem>
+                            <SelectItem value="offline">Offline</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input id="location" placeholder="e.g. San Francisco, CA" />
+                </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -42,7 +62,7 @@ export default function CreateHackathonPage() {
           <CardHeader>
             <CardTitle>Rules & Guidelines</CardTitle>
             <CardDescription>Set the rules and team size limits.</CardDescription>
-          </CardHeader>
+          </Header>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="rules">Rules</Label>
@@ -59,7 +79,7 @@ export default function CreateHackathonPage() {
           <CardHeader>
             <CardTitle>Tracks & Categories</CardTitle>
             <CardDescription>Define the different tracks or categories for submissions.</CardDescription>
-          </CardHeader>
+          </Header>
           <CardContent className="space-y-4">
              <div className="space-y-2">
               <Label htmlFor="tracks">Tracks</Label>
@@ -73,7 +93,7 @@ export default function CreateHackathonPage() {
           <CardHeader>
             <CardTitle>Prizes & Rewards</CardTitle>
             <CardDescription>Showcase the exciting prizes for winners.</CardDescription>
-          </CardHeader>
+          </Header>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="prizes">Prizes Description</Label>
