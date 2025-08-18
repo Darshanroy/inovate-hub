@@ -1,5 +1,3 @@
-import { AppHeader } from '@/components/layout/header';
-import { AppFooter } from '@/components/layout/footer';
 import { HeroSection } from '@/components/landing/hero-section';
 import { UpcomingHackathons } from '@/components/landing/upcoming-hackathons';
 import { FeaturesSection } from '@/components/landing/features-section';
@@ -10,7 +8,6 @@ import { Testimonials } from '@/components/landing/testimonials';
 export default function Home() {
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden">
-      <AppHeader />
       <main className="flex-grow">
         <HeroSection />
         <UpcomingHackathons />
@@ -19,7 +16,6 @@ export default function Home() {
         <TrustedBy />
         <Testimonials />
       </main>
-      <AppFooter />
     </div>
   );
 }

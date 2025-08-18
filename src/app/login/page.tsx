@@ -1,6 +1,11 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} viewBox="0 0 24 24">
@@ -24,6 +29,25 @@ const LinkedInIcon = (props: React.SVGProps<SVGSVGElement>) => (
 )
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email === "user@example.com" && password === "password") {
+      // In a real app, you'd set some auth state here (e.g., in context or a cookie)
+      router.push("/profile");
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: "Invalid email or password.",
+      });
+    }
+  };
+
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       <div className="absolute inset-0 z-0">
@@ -36,14 +60,14 @@ export default function LoginPage() {
             <h2 className="text-3xl font-bold">Welcome Back</h2>
             <p className="text-muted-foreground mt-2">Sign in to continue your journey.</p>
           </div>
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleLogin}>
             <div>
               <label className="sr-only" htmlFor="email">Email</label>
-              <Input id="email" placeholder="Email Address" type="email" />
+              <Input id="email" placeholder="Email Address (user@example.com)" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div>
               <label className="sr-only" htmlFor="password">Password</label>
-              <Input id="password" placeholder="Password" type="password" />
+              <Input id="password" placeholder="Password (password)" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
             <div className="text-right">
               <Link className="text-sm text-muted-foreground hover:text-accent hover:underline" href="#">Forgot password?</Link>
