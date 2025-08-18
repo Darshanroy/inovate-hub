@@ -22,7 +22,7 @@ export default function CreateHackathonPage() {
           <CardHeader>
             <CardTitle>Basic Information</CardTitle>
             <CardDescription>Give your hackathon a name and a brief description.</CardDescription>
-          </Header>
+          </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Hackathon Name</Label>
