@@ -109,10 +109,19 @@ export default function OrganizerDashboardLayout({
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter>
-            <Button variant="ghost" onClick={handleLogout} className="w-full justify-start gap-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:p-0">
-               <LogOut className="h-4 w-4"/>
-               <span className="group-data-[collapsible=icon]:hidden">Logout</span>
-            </Button>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                 <SidebarMenuButton onClick={handleLogout}
+                  tooltip={{
+                        children: "Logout",
+                        side: "right",
+                        align: "center",
+                      }}>
+                    <LogOut/>
+                    <span className="group-data-[collapsible=icon]:hidden">Logout</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>

@@ -30,13 +30,15 @@ export function AppHeader() {
               </Link>
             )}
              {isLoggedIn && userType === 'organizer' && (
-              <Link href="/organizer/dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
-                Dashboard
-              </Link>
+              <>
+                <Link href="/organizer/dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
+                  Dashboard
+                </Link>
+                 <Link href="/organizer/dashboard/create" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
+                  Create
+                </Link>
+              </>
             )}
-            <Link href="/organizer/dashboard/create" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
-              Create
-            </Link>
           </nav>
         </div>
        
