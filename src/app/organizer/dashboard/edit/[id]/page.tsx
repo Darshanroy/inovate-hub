@@ -11,6 +11,12 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { hackathons, type Hackathon } from "@/lib/data";
 
+export function generateStaticParams() {
+  return hackathons.map((hackathon) => ({
+    id: hackathon.id,
+  }));
+}
+
 export default function EditHackathonPage() {
   const [locationType, setLocationType] = useState<string | undefined>();
   const [hackathon, setHackathon] = useState<Hackathon | null>(null);
