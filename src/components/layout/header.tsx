@@ -8,6 +8,8 @@ import { cookies } from "next/headers";
 export function AppHeader() {
   const cookieStore = cookies();
   const isLoggedIn = cookieStore.get("isLoggedIn")?.value === "true";
+  const userType = cookieStore.get("userType")?.value;
+
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm border-b border-border">
@@ -21,10 +23,17 @@ export function AppHeader() {
             <Link href="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
               Explore
             </Link>
-            <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
-              My Hackathons
-            </Link>
-            <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
+            {isLoggedIn && userType === 'participant' && (
+              <Link href="#" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
+                My Hackathons
+              </Link>
+            )}
+             {isLoggedIn && userType === 'organizer' && (
+              <Link href="/organizer/dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
+                Dashboard
+              </Link>
+            )}
+            <Link href="/organizer/dashboard/create" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
               Create
             </Link>
           </nav>

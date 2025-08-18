@@ -39,7 +39,8 @@ export default function OrganizerLoginPage() {
     if (email === "organizer@example.com" && password === "password") {
       // In a real app, you'd set some auth state here (e.g., in context or a cookie)
       document.cookie = "isLoggedIn=true; path=/; max-age=3600";
-      router.push("/");
+      document.cookie = "userType=organizer; path=/; max-age=3600";
+      router.push("/organizer/dashboard");
       router.refresh();
     } else {
       toast({
