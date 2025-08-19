@@ -123,7 +123,7 @@ export default function JudgeProfilePage() {
                                     <Button type="button" variant="ghost" onClick={() => { setIsEditing(false); form.reset(); }}>Cancel</Button>
                                     <Button type="submit" disabled={isSubmitting}>
                                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                        Save Changes
+                                        {isSubmitting ? "Saving..." : "Save Changes"}
                                     </Button>
                                 </div>
                             )}
@@ -134,4 +134,3 @@ export default function JudgeProfilePage() {
         </div>
     );
 }
-
