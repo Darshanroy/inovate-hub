@@ -96,7 +96,7 @@ export default function JudgeDashboard() {
                       </Link>
                   </Button>
                 </CardFooter>
-              </Card>>
+              </Card>
             ))}
           </div>
         </CardContent>
