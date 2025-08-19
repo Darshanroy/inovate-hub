@@ -5,19 +5,10 @@ import type { Hackathon } from "@/lib/data";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BasicInfoTab } from "./_components/basic-info-tab";
 import { JudgingPanelTab } from "./_components/judging-panel-tab";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResultsTab } from "./_components/results-tab";
+import { ParticipantsTab } from "./_components/participants-tab";
+import { SubmissionsTab } from "./_components/submissions-tab";
 
-const PlaceholderTab = ({ title }: { title: string }) => (
-    <Card>
-        <CardHeader>
-            <CardTitle>{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <p>This is a placeholder for the {title} management section. Functionality will be added in a future step.</p>
-        </CardContent>
-    </Card>
-)
 
 export default function EditHackathonClientPage({ hackathon }: { hackathon: Hackathon }) {
 
@@ -25,7 +16,7 @@ export default function EditHackathonClientPage({ hackathon }: { hackathon: Hack
     <div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Manage "{hackathon.name}"</h1>
-        <p className="text-muted-foreground">Update event details, manage judges, and more.</p>
+        <p className="text-muted-foreground">Update event details, manage participants, and more.</p>
       </div>
       
       <Tabs defaultValue="basic-info" className="w-full">
@@ -40,10 +31,10 @@ export default function EditHackathonClientPage({ hackathon }: { hackathon: Hack
             <BasicInfoTab hackathon={hackathon} />
         </TabsContent>
          <TabsContent value="participants">
-            <PlaceholderTab title="Participants" />
+            <ParticipantsTab />
         </TabsContent>
          <TabsContent value="submissions">
-            <PlaceholderTab title="Submissions" />
+            <SubmissionsTab />
         </TabsContent>
         <TabsContent value="judging">
             <JudgingPanelTab />
