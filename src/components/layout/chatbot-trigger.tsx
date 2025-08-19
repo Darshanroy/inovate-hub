@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { Chatbot } from "./chatbot";
 
 const AiChatIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -31,6 +31,12 @@ export function ChatbotTrigger() {
                 </Button>
             </SheetTrigger>
             <SheetContent side="bottom" className="h-[85vh] max-h-[700px] w-[min(500px,90vw)] rounded-t-2xl p-0 right-6 left-auto bottom-28 border-white/20 bg-background/80 backdrop-blur-xl">
+               <SheetHeader className="sr-only">
+                 <SheetTitle>AI Chatbot</SheetTitle>
+                 <SheetDescription>
+                    Chat with an AI assistant to get help with hackathons, teams, and more.
+                 </SheetDescription>
+               </SheetHeader>
                <Chatbot />
             </SheetContent>
         </Sheet>
