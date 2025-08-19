@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} viewBox="0 0 24 24">
@@ -32,6 +33,7 @@ const LinkedInIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function OrganizerLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { setAuthStatus } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isJudgeLogin, setIsJudgeLogin] = useState(false);
@@ -42,6 +44,7 @@ export default function OrganizerLoginPage() {
       if(email === 'judge@example.com' && password === 'password') {
         document.cookie = "isLoggedIn=true; path=/; max-age=3600";
         document.cookie = "userType=judge; path=/; max-age=3600";
+        setAuthStatus(true, 'judge');
         router.push("/judge/dashboard");
         router.refresh();
       } else {
@@ -55,6 +58,7 @@ export default function OrganizerLoginPage() {
       if (email === "organizer@example.com" && password === "password") {
         document.cookie = "isLoggedIn=true; path=/; max-age=3600";
         document.cookie = "userType=organizer; path=/; max-age=3600";
+        setAuthStatus(true, 'organizer');
         router.push("/organizer/dashboard");
         router.refresh();
       } else {
@@ -78,7 +82,7 @@ export default function OrganizerLoginPage() {
           <div className="w-full max-w-md rounded-2xl p-8 shadow-2xl bg-secondary/50 backdrop-blur-xl border border-white/10">
             <div className="mb-8 text-center">
               <h2 className="text-3xl font-bold">{isJudgeLogin ? 'Welcome, Judge' : 'Welcome Back, Organizer'}</h2>
-              <p className="text-muted-foreground mt-2">{isJudgeLogin ? 'Sign in to start evaluating submissions.' : 'Sign in to manage your hackathons.'}</p>
+              <p className="text-muted-foreground mt-2">{isJudgeLogin ? 'Sign in with the credentials provided by the organizer.' : 'Sign in to manage your hackathons.'}</p>
             </div>
             <form className="space-y-6" onSubmit={handleLogin}>
               <div>
@@ -96,30 +100,49 @@ export default function OrganizerLoginPage() {
                 <Button className="w-full font-bold" type="submit">Sign In</Button>
               </div>
             </form>
-            <div className="my-6 flex items-center">
-              <hr className="w-full border-t border-gray-600" />
-              <span className="px-2 text-muted-foreground">OR</span>
-              <hr className="w-full border-t border-gray-600" />
-            </div>
-            <div className="space-y-4">
-              <Button variant="secondary" className="w-full">
-                <GoogleIcon className="h-5 w-5 mr-3" />
-                Continue with Google
-              </Button>
-              <Button variant="secondary" className="w-full">
-                <GitHubIcon className="h-5 w-5 mr-3" />
-                Continue with GitHub
-              </Button>
-              <Button variant="secondary" className="w-full">
-                <LinkedInIcon className="h-5 w-5 mr-3 fill-current" />
-                Continue with LinkedIn
-              </Button>
-            </div>
+            
+            {!isJudgeLogin && (
+                 <div className="my-6 flex items-center">
+                    <hr className="w-full border-t border-gray-600" />
+                    <span className="px-2 text-muted-foreground">OR</span>
+                    <hr className="w-full border-t border-gray-600" />
+                </div>
+            )}
+            {!isJudgeLogin && (
+                <div className="space-y-4">
+                <Button variant="secondary" className="w-full">
+                    <GoogleIcon className="h-5 w-5 mr-3" />
+                    Continue with Google
+                </Button>
+                <Button variant="secondary" className="w-full">
+                    <GitHubIcon className="h-5 w-5 mr-3" />
+                    Continue with GitHub
+                </Button>
+                <Button variant="secondary" className="w-full">
+                    <LinkedInIcon className="h-5 w-5 mr-3 fill-current" />
+                    Continue with LinkedIn
+                </Button>
+                </div>
+            )}
+
             <p className="mt-8 text-center text-muted-foreground">
-              {isJudgeLogin ? 'Not a judge?' : 'Not an organizer?'}{' '}
-              <button className="font-semibold text-accent hover:underline" onClick={() => setIsJudgeLogin(!isJudgeLogin)}>
-                  {isJudgeLogin ? 'Sign in as an organizer' : 'Sign in as a judge'}
-              </button>
+                {isJudgeLogin ? (
+                    <span>Not a judge?{' '}
+                         <button className="font-semibold text-accent hover:underline" onClick={() => setIsJudgeLogin(false)}>
+                            Sign in as an organizer
+                        </button>
+                    </span>
+                ) : (
+                    <span>
+                        <button className="font-semibold text-accent hover:underline" onClick={() => setIsJudgeLogin(true)}>
+                            Sign in as a judge
+                        </button>
+                         <span className="mx-2">|</span>
+                        <Link className="font-semibold text-accent hover:underline" href="/organizer/signup">
+                            Create an account
+                        </Link>
+                    </span>
+                )}
             </p>
           </div>
         </main>

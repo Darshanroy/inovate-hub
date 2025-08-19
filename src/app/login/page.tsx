@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} viewBox="0 0 24 24">
@@ -31,15 +33,16 @@ const LinkedInIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { setAuthStatus } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (email === "user@example.com" && password === "password") {
-      // In a real app, you'd set some auth state here (e.g., in context or a cookie)
       document.cookie = "isLoggedIn=true; path=/; max-age=3600";
       document.cookie = "userType=participant; path=/; max-age=3600";
+      setAuthStatus(true, 'participant');
       router.push("/hackathons/my");
       router.refresh();
     } else {
