@@ -4,7 +4,10 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { updateProfile, type ProfileFormValues } from "@/app/actions";
+import { type ProfileFormValues } from "@/app/actions";
+import { apiService } from "@/lib/api";
+import { getCookie } from "@/hooks/use-auth";
+import { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,34 +33,7 @@ const profileFormSchema = z.object({
 });
 
 
-const initialSkills = [
-    "Python", "Machine Learning", "Data Analysis", "Cloud Computing", 
-    "Deep Learning", "Natural Language Processing", "Computer Vision", "TensorFlow"
-];
-
-const hackathons = [
-    {
-        id: "ai-for-good-challenge",
-        name: "AI for Good Challenge",
-        description: "Developed an AI-powered solution for environmental sustainability.",
-        image: "https://placehold.co/600x400.png",
-        hint: "AI environment"
-    },
-    {
-        id: "healthcare-innovation-hackathon",
-        name: "Healthcare Innovation Hackathon",
-        description: "Created a machine learning model for early disease detection.",
-        image: "https://placehold.co/600x400.png",
-        hint: "healthcare technology"
-    },
-    {
-        id: "smart-city-solutions",
-        name: "Smart City Solutions",
-        description: "Designed an intelligent traffic management system using AI.",
-        image: "https://placehold.co/600x400.png",
-        hint: "smart city"
-    }
-]
+const hackathons: Array<{ id: string; name: string; description: string; image: string; hint: string }> = []
 
 export default function ProfilePage() {
     const [isEditing, setIsEditing] = useState(false);
@@ -66,34 +42,53 @@ export default function ProfilePage() {
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileFormSchema),
         defaultValues: {
-            name: "Sophia Chen",
-            tagline: "Software Engineer | AI Enthusiast",
-            location: "San Francisco, CA",
-            bio: "Passionate software engineer with a focus on AI and machine learning. Experienced in developing innovative solutions and participating in hackathons to push the boundaries of technology.",
-            skills: initialSkills.join(", "),
-            linkedin: "https://linkedin.com/in/sophiachen",
-            github: "https://github.com/sophiachen"
+            name: "",
+            tagline: "",
+            location: "",
+            bio: "",
+            skills: "",
+            linkedin: "",
+            github: ""
         }
     });
 
     const { isSubmitting } = form.formState;
 
     const onSubmit = async (values: ProfileFormValues) => {
-        const result = await updateProfile(values);
-        if (result.success) {
-            toast({
-                title: "Success",
-                description: result.success,
-            });
+        const token = getCookie('authToken');
+        if (!token) {
+            toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
+            return;
+        }
+        try {
+            await apiService.updateProfile({ token, profile: values as any });
+            toast({ title: 'Success', description: 'Profile saved.' });
             setIsEditing(false);
-        } else {
-             toast({
-                variant: "destructive",
-                title: "Error",
-                description: result.error,
-            });
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Error', description: error?.message || 'Failed to save profile.' });
         }
     }
+
+    useEffect(() => {
+        const token = getCookie('authToken');
+        if (!token) return;
+        (async () => {
+            try {
+                const res = await apiService.getProfile(token);
+                if (res?.profile) {
+                    form.reset({
+                        name: res.profile.name || "",
+                        tagline: res.profile.tagline || "",
+                        location: res.profile.location || "",
+                        bio: res.profile.bio || "",
+                        skills: res.profile.skills || "",
+                        linkedin: res.profile.linkedin || "",
+                        github: res.profile.github || "",
+                    });
+                }
+            } catch {}
+        })();
+    }, [form]);
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -121,13 +116,13 @@ export default function ProfilePage() {
                                     {isEditing ? (
                                         <>
                                             <FormField control={form.control} name="name" render={({ field }) => (
-                                                <FormItem><FormLabel className="sr-only">Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                                <FormItem><FormLabel className="sr-only">Name</FormLabel><FormControl><Input placeholder="Your full name" {...field} /></FormControl><FormMessage /></FormItem>
                                             )} />
                                              <FormField control={form.control} name="tagline" render={({ field }) => (
-                                                <FormItem><FormLabel className="sr-only">Tagline</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                                <FormItem><FormLabel className="sr-only">Tagline</FormLabel><FormControl><Input placeholder="One-line tagline (e.g., Full‑stack developer)" {...field} /></FormControl><FormMessage /></FormItem>
                                             )} />
                                              <FormField control={form.control} name="location" render={({ field }) => (
-                                                <FormItem><FormLabel className="sr-only">Location</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                                <FormItem><FormLabel className="sr-only">Location</FormLabel><FormControl><Input placeholder="City, Country" {...field} /></FormControl><FormMessage /></FormItem>
                                             )} />
                                         </>
                                     ) : (
@@ -138,12 +133,12 @@ export default function ProfilePage() {
                                         </>
                                     )}
                                 </div>
-                                {!isEditing && <Button className="w-full md:w-auto md:ml-auto">Download Résumé</Button>}
+                                {!isEditing && <></>}
                             </div>
                             
                             {isEditing ? (
                                 <FormField control={form.control} name="bio" render={({ field }) => (
-                                    <FormItem className="pt-6"><FormLabel>Bio</FormLabel><FormControl><Textarea {...field} rows={4} /></FormControl><FormMessage /></FormItem>
+                                    <FormItem className="pt-6"><FormLabel>Bio</FormLabel><FormControl><Textarea placeholder="Tell us about yourself, your interests, and what you like to build." {...field} rows={4} /></FormControl><FormMessage /></FormItem>
                                 )} />
                             ) : (
                                 <p className="text-muted-foreground pt-6">{form.getValues("bio")}</p>
@@ -153,14 +148,18 @@ export default function ProfilePage() {
                                 <h3 className="text-xl font-semibold mb-3">Skills</h3>
                                 {isEditing ? (
                                      <FormField control={form.control} name="skills" render={({ field }) => (
-                                        <FormItem><FormLabel className="sr-only">Skills</FormLabel><FormControl><Input placeholder="Comma-separated skills" {...field} /></FormControl><FormMessage /></FormItem>
+                                        <FormItem><FormLabel className="sr-only">Skills</FormLabel><FormControl><Input placeholder="Comma-separated skills (e.g., React, Node.js, Tailwind)" {...field} /></FormControl><FormMessage /></FormItem>
                                     )} />
                                 ) : (
-                                    <div className="flex gap-2 flex-wrap">
-                                        {form.getValues("skills").split(',').map(skill => (
-                                            <Badge key={skill.trim()} variant="secondary">{skill.trim()}</Badge>
-                                        ))}
-                                    </div>
+                                    form.getValues("skills") ? (
+                                        <div className="flex gap-2 flex-wrap">
+                                            {form.getValues("skills").split(',').map(skill => (
+                                                <Badge key={skill.trim()} variant="secondary">{skill.trim()}</Badge>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-muted-foreground">No skills added yet.</p>
+                                    )
                                 )}
                             </div>
                             <div className="mt-6">
@@ -175,20 +174,28 @@ export default function ProfilePage() {
                                         )} />
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col sm:flex-row gap-2">
-                                        <Button asChild variant="outline" className="w-full justify-start">
-                                            <Link href={form.getValues("linkedin")} target="_blank">
-                                                <Linkedin className="mr-2 h-4 w-4" />
-                                                LinkedIn
-                                            </Link>
-                                        </Button>
-                                        <Button asChild variant="outline" className="w-full justify-start">
-                                            <Link href={form.getValues("github")} target="_blank">
-                                                <Github className="mr-2 h-4 w-4" />
-                                                GitHub
-                                            </Link>
-                                        </Button>
-                                    </div>
+                                    form.getValues("linkedin") || form.getValues("github") ? (
+                                        <div className="flex flex-col sm:flex-row gap-2">
+                                            {form.getValues("linkedin") && (
+                                                <Button asChild variant="outline" className="w-full justify-start">
+                                                    <Link href={form.getValues("linkedin")} target="_blank">
+                                                        <Linkedin className="mr-2 h-4 w-4" />
+                                                        LinkedIn
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                            {form.getValues("github") && (
+                                                <Button asChild variant="outline" className="w-full justify-start">
+                                                    <Link href={form.getValues("github")} target="_blank">
+                                                        <Github className="mr-2 h-4 w-4" />
+                                                        GitHub
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <p className="text-muted-foreground">No social links added yet.</p>
+                                    )
                                 )}
                             </div>
 

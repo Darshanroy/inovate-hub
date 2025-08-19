@@ -4,7 +4,10 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { updateOrganizerProfile, type OrganizerProfileFormValues } from "@/app/actions";
+import { type OrganizerProfileFormValues } from "@/app/actions";
+import { apiService } from "@/lib/api";
+import { getCookie } from "@/hooks/use-auth";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Github, Linkedin, Loader2, Pencil } from "lucide-react";
@@ -32,32 +35,46 @@ export default function OrganizerProfilePage() {
     const form = useForm<OrganizerProfileFormValues>({
         resolver: zodResolver(organizerProfileFormSchema),
         defaultValues: {
-            name: "Organizer Name",
-            organization: "HackHub Inc.",
-            bio: "Passionate about empowering innovators and organizing world-class hackathons. Let's build the future together.",
-            linkedin: "https://linkedin.com/in/organizer",
-            github: "https://github.com/organizer"
+            name: "",
+            organization: "",
+            bio: "",
+            linkedin: "",
+            github: ""
         }
     });
 
     const { isSubmitting } = form.formState;
 
     const onSubmit = async (values: OrganizerProfileFormValues) => {
-        const result = await updateOrganizerProfile(values);
-        if (result.success) {
-            toast({
-                title: "Success",
-                description: result.success,
-            });
+        const token = getCookie('authToken');
+        if (!token) { toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' }); return; }
+        try {
+            await apiService.updateProfile({ token, profile: { role: 'organizer', ...values } as any });
+            toast({ title: 'Success', description: 'Profile saved.' });
             setIsEditing(false);
-        } else {
-             toast({
-                variant: "destructive",
-                title: "Error",
-                description: result.error,
-            });
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Error', description: error?.message || 'Failed to save profile.' });
         }
     }
+
+    useEffect(() => {
+        const token = getCookie('authToken');
+        if (!token) return;
+        (async () => {
+            try {
+                const res = await apiService.getProfile(token);
+                if (res?.profile) {
+                    form.reset({
+                        name: res.profile.name || "",
+                        organization: res.profile.organization || "",
+                        bio: res.profile.bio || "",
+                        linkedin: res.profile.linkedin || "",
+                        github: res.profile.github || "",
+                    });
+                }
+            } catch {}
+        })();
+    }, [form]);
 
     return (
         <div className="container mx-auto px-4 py-8">

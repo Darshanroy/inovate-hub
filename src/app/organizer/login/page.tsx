@@ -47,7 +47,16 @@ export default function OrganizerLoginPage() {
         document.cookie = `authToken=${res.token}; path=/; max-age=3600`;
         const type = res.user_type || (isJudgeLogin ? 'judge' : 'organizer');
         setAuthStatus(true, type);
-        router.push(isJudgeLogin ? "/judge/dashboard" : "/organizer/dashboard");
+        try {
+          const prof = await apiService.getProfile(res.token);
+          if (!prof.exists) {
+            router.push(type === 'judge' ? "/judge/profile" : "/organizer/profile");
+          } else {
+            router.push(isJudgeLogin ? "/judge/dashboard" : "/organizer/dashboard");
+          }
+        } catch {
+          router.push(type === 'judge' ? "/judge/profile" : "/organizer/profile");
+        }
         router.refresh();
       } else {
         throw new Error(res.message || 'Login failed');

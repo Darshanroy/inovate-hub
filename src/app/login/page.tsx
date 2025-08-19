@@ -45,7 +45,17 @@ export default function LoginPage() {
       if (res.token) {
         document.cookie = `authToken=${res.token}; path=/; max-age=3600`;
         setAuthStatus(true, res.user_type || 'participant');
-        router.push("/hackathons/my");
+        // If profile not completed, force user to fill it
+        try {
+          const prof = await apiService.getProfile(res.token);
+          if (!prof.exists) {
+            router.push("/profile");
+          } else {
+            router.push("/hackathons/my");
+          }
+        } catch {
+          router.push("/profile");
+        }
         router.refresh();
       } else {
         throw new Error(res.message || 'Login failed');

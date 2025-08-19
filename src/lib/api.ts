@@ -39,6 +39,16 @@ export interface UserInfo {
   name: string;
 }
 
+export interface ProfileGetResponse {
+  profile: Record<string, any>;
+  exists: boolean;
+}
+
+export interface ProfileUpdateRequest {
+  token: string;
+  profile: Record<string, any>;
+}
+
 class ApiService {
   private baseUrl: string;
 
@@ -106,6 +116,20 @@ class ApiService {
   async logout(): Promise<{ message: string }> {
     return this.request<{ message: string }>('/auth/logout', {
       method: 'POST',
+    });
+  }
+
+  async getProfile(token: string): Promise<ProfileGetResponse> {
+    return this.request<ProfileGetResponse>('/auth/profile/get', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  async updateProfile(data: ProfileUpdateRequest): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/auth/profile/update', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   }
 }

@@ -7,6 +7,7 @@ from pymongo import MongoClient, ASCENDING
 from pymongo.errors import DuplicateKeyError
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
+from bson import ObjectId
 
 
 # Blueprint for auth routes
@@ -24,9 +25,11 @@ JWT_EXPIRES_MINUTES = int(os.environ.get('JWT_EXPIRES_MINUTES', '60'))
 mongo_client = MongoClient(MONGODB_URI)
 db = mongo_client[MONGODB_DB]
 users_col = db['users']
+profiles_col = db['profiles']
 
-# Ensure unique index on email
+# Ensure unique index on email for users, and unique user_id for profiles
 users_col.create_index([('email', ASCENDING)], unique=True)
+profiles_col.create_index([('user_id', ASCENDING)], unique=True)
 
 
 def create_jwt(user_id: str, email: str, user_type: str, name: str) -> str:
@@ -83,6 +86,7 @@ def signup():
         'user_type': user_type,
         'email': email,
         'name': name,
+        'user_id': user_id,
     }), 201
 
 
@@ -106,6 +110,7 @@ def login():
         'user_type': user.get('user_type', 'participant'),
         'email': user['email'],
         'name': user.get('name', ''),
+        'user_id': str(user['_id']),
     }), 200
 
 
@@ -133,3 +138,60 @@ def verify():
 def logout():
     # Stateless JWT logout handled on client by clearing cookie
     return jsonify({'message': 'Logged out'}), 200
+
+
+@auth_bp.route('/profile/get', methods=['POST'])
+def get_profile():
+    data = request.get_json(force=True) or {}
+    token = data.get('token')
+    if not token:
+        return jsonify({'message': 'Token is required'}), 400
+
+    decoded = decode_jwt(token)
+    if not decoded:
+        return jsonify({'message': 'Invalid or expired token'}), 401
+
+    user_id = decoded.get('sub')
+    try:
+        prof = profiles_col.find_one({'user_id': ObjectId(user_id)})
+    except Exception:
+        prof = None
+
+    profile_data = (prof or {}).get('data') or {}
+    exists = bool(profile_data)
+    return jsonify({'profile': profile_data, 'exists': exists}), 200
+
+
+@auth_bp.route('/profile/update', methods=['POST'])
+def update_profile():
+    data = request.get_json(force=True) or {}
+    token = data.get('token')
+    profile = data.get('profile') or {}
+
+    if not token:
+        return jsonify({'message': 'Token is required'}), 400
+
+    decoded = decode_jwt(token)
+    if not decoded:
+        return jsonify({'message': 'Invalid or expired token'}), 401
+
+    user_id = decoded.get('sub')
+    # Basic server-side validation to prevent empty saves
+    if not isinstance(profile, dict) or not profile:
+        return jsonify({'message': 'Profile data is required'}), 400
+
+    now = datetime.utcnow()
+    try:
+        profiles_col.update_one(
+            {'user_id': ObjectId(user_id)},
+            {
+                '$set': {'data': profile, 'updated_at': now},
+                '$setOnInsert': {'created_at': now, 'user_id': ObjectId(user_id)},
+            },
+            upsert=True,
+        )
+        users_col.update_one({'_id': ObjectId(user_id)}, {'$set': {'profile_completed': True, 'updated_at': now}})
+    except Exception as e:
+        return jsonify({'message': f'Failed to update profile: {e}'}), 500
+
+    return jsonify({'message': 'Profile updated successfully'}), 200

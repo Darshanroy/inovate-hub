@@ -4,7 +4,10 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { updateJudgeProfile, type JudgeProfileFormValues } from "@/app/actions";
+import { type JudgeProfileFormValues } from "@/app/actions";
+import { apiService } from "@/lib/api";
+import { getCookie } from "@/hooks/use-auth";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Linkedin, Loader2, Pencil } from "lucide-react";
@@ -32,31 +35,44 @@ export default function JudgeProfilePage() {
     const form = useForm<JudgeProfileFormValues>({
         resolver: zodResolver(judgeProfileFormSchema),
         defaultValues: {
-            name: "Dr. Alan Grant",
-            specialization: "AI & Machine Learning",
-            bio: "Seasoned expert in AI with over 15 years of experience in research and development. Passionate about fostering innovation and mentoring the next generation of tech leaders.",
-            linkedin: "https://linkedin.com/in/alangrant"
+            name: "",
+            specialization: "",
+            bio: "",
+            linkedin: ""
         }
     });
 
     const { isSubmitting } = form.formState;
 
     const onSubmit = async (values: JudgeProfileFormValues) => {
-        const result = await updateJudgeProfile(values);
-        if (result.success) {
-            toast({
-                title: "Success",
-                description: result.success,
-            });
+        const token = getCookie('authToken');
+        if (!token) { toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' }); return; }
+        try {
+            await apiService.updateProfile({ token, profile: { role: 'judge', ...values } as any });
+            toast({ title: 'Success', description: 'Profile saved.' });
             setIsEditing(false);
-        } else {
-             toast({
-                variant: "destructive",
-                title: "Error",
-                description: result.error,
-            });
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Error', description: error?.message || 'Failed to save profile.' });
         }
     }
+
+    useEffect(() => {
+        const token = getCookie('authToken');
+        if (!token) return;
+        (async () => {
+            try {
+                const res = await apiService.getProfile(token);
+                if (res?.profile) {
+                    form.reset({
+                        name: res.profile.name || "",
+                        specialization: res.profile.specialization || "",
+                        bio: res.profile.bio || "",
+                        linkedin: res.profile.linkedin || "",
+                    });
+                }
+            } catch {}
+        })();
+    }, [form]);
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -85,10 +101,10 @@ export default function JudgeProfilePage() {
                                     {isEditing ? (
                                         <>
                                             <FormField control={form.control} name="name" render={({ field }) => (
-                                                <FormItem><FormLabel>Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                                <FormItem><FormLabel>Name</FormLabel><FormControl><Input placeholder="Your full name" {...field} /></FormControl><FormMessage /></FormItem>
                                             )} />
                                              <FormField control={form.control} name="specialization" render={({ field }) => (
-                                                <FormItem><FormLabel>Specialization</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                                <FormItem><FormLabel>Specialization</FormLabel><FormControl><Input placeholder="Your area of expertise (e.g., AI/ML, FinTech)" {...field} /></FormControl><FormMessage /></FormItem>
                                             )} />
                                         </>
                                     ) : (
@@ -101,14 +117,14 @@ export default function JudgeProfilePage() {
                             </div>
                             
                             <FormField control={form.control} name="bio" render={({ field }) => (
-                                <FormItem className="pt-6"><FormLabel>Bio</FormLabel><FormControl><Textarea {...field} rows={4} readOnly={!isEditing} /></FormControl><FormMessage /></FormItem>
+                                <FormItem className="pt-6"><FormLabel>Bio</FormLabel><FormControl><Textarea placeholder="Your professional background and judging experience." {...field} rows={4} readOnly={!isEditing} /></FormControl><FormMessage /></FormItem>
                             )} />
                             
                             <div className="mt-6">
                                 <h3 className="text-xl font-semibold mb-3">Social Links</h3>
                                 {isEditing ? (
                                     <FormField control={form.control} name="linkedin" render={({ field }) => (
-                                        <FormItem className="w-full"><FormLabel>LinkedIn</FormLabel><FormControl><Input placeholder="https://linkedin.com/in/..." {...field} /></FormControl><FormMessage /></FormItem>
+                                        <FormItem className="w-full"><FormLabel>LinkedIn</FormLabel><FormControl><Input placeholder="https://linkedin.com/in/your-profile" {...field} /></FormControl><FormMessage /></FormItem>
                                     )} />
                                 ) : (
                                     <Button asChild variant="outline" className="w-full sm:w-auto justify-start">
