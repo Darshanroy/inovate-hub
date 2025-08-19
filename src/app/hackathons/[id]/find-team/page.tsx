@@ -60,16 +60,14 @@ const CreateTeamDialog = ({ open, onOpenChange, hackathonId }: { open: boolean, 
 
       toast({ 
         title: 'Team created successfully!', 
-        description: `Your team code is: ${res.code}. Share this code with others to invite them.` 
+        description: `Your team code is: ${res.code}. Redirecting to team dashboard...` 
       });
       onOpenChange(false);
       setTeamName("");
       setDescription("");
       
-      // Redirect to team management page after a short delay
-      setTimeout(() => {
-        router.push(`/hackathons/${hackathonId}/team`);
-      }, 1500);
+      // Redirect to team dashboard immediately
+      router.push(`/hackathons/${hackathonId}/team`);
     } catch (error: any) {
       console.error('Create team error:', error);
       toast({ 

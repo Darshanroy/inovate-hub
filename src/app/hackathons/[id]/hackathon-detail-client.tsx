@@ -418,6 +418,7 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [hasTeam, setHasTeam] = useState(false);
+  const router = useRouter();
 
   const getTargetDate = () => {
     if (hackathon.rounds && hackathon.rounds.length > 0) {
@@ -510,18 +511,14 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
                   </Link>
                 </Button>
                 {hasTeam ? (
-                  <Button asChild variant="outline" className="h-10 px-6 text-sm font-bold">
-                    <Link href={`/hackathons/${hackathon.id}/team`}>
-                      <Users className="mr-2 h-4 w-4" />
-                      Manage Team
-                    </Link>
+                  <Button onClick={() => router.push(`/hackathons/${hackathon.id}/team`)} variant="outline" className="h-10 px-6 text-sm font-bold">
+                    <Users className="mr-2 h-4 w-4" />
+                    Manage Team
                   </Button>
                 ) : (
-                  <Button asChild variant="outline" className="h-10 px-6 text-sm font-bold">
-                    <Link href={`/hackathons/${hackathon.id}/find-team`}>
-                      <Users className="mr-2 h-4 w-4" />
-                      Find Team
-                    </Link>
+                  <Button onClick={() => router.push(`/hackathons/${hackathon.id}/find-team`)} variant="outline" className="h-10 px-6 text-sm font-bold">
+                    <Users className="mr-2 h-4 w-4" />
+                    Find Team
                   </Button>
                 )}
               </div>
@@ -609,11 +606,9 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
                             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                             <h3 className="text-lg font-semibold mb-2">Team Management</h3>
                             <p className="text-muted-foreground mb-4">Manage your team, view members, and handle team requests.</p>
-                            <Button asChild>
-                                <Link href={`/hackathons/${hackathon.id}/team`}>
-                                    <Users className="mr-2 h-4 w-4" />
-                                    Go to Team Dashboard
-                                </Link>
+                            <Button onClick={() => router.push(`/hackathons/${hackathon.id}/team`)}>
+                                <Users className="mr-2 h-4 w-4" />
+                                Go to Team Dashboard
                             </Button>
                         </div>
                     </div>
