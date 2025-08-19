@@ -1,5 +1,5 @@
 
-import { hackathons, results, team } from "@/lib/data";
+import { hackathons, results, mySubmission } from "@/lib/data";
 import { notFound } from "next/navigation";
 import JudgeEventClientPage from "./_components/judge-event-client-page";
 import type { Submission } from "@/lib/data";
