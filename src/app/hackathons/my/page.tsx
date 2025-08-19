@@ -1,8 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
-import { myHackathons as allMyHackathons, Hackathon, Round } from "@/lib/data";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +18,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ListFilter, Calendar, Users, FileText, Trophy, ExternalLink, XCircle, Eye, Edit, Check } from "lucide-react";
 import { format, isPast, isFuture, parseISO } from 'date-fns';
+import { apiService } from "@/lib/api";
+import { getCookie } from "@/hooks/use-auth";
+
+export type Round = { name: string; date: string; description: string };
+export type Hackathon = { id: string; name: string; rounds?: Round[]; date: string; image: string; hint: string; description: string; locationType: 'online'|'offline'; registrationStatus?: 'Confirmed'|'Pending'|'Waitlisted'; teamId?: string|null; submissionStatus?: 'Not Started'|'Draft'|'Submitted' };
 
 const getEventStatus = (hackathon: Hackathon) => {
     const now = new Date();
@@ -34,29 +38,42 @@ const getEventStatus = (hackathon: Hackathon) => {
     // Fallback for single-date hackathons
     const eventDate = parseISO(hackathon.date);
     const eventEndDate = new Date(eventDate);
-    eventEndDate.setDate(eventEndDate.getDate() + 2); // Assume 2 days duration for old format
+    eventEndDate.setDate(eventEndDate.getDate() + 2);
 
     if (isPast(eventEndDate)) return "Ended";
     if (isFuture(eventDate)) return "Not Started";
     return "Ongoing";
 }
 
-
 export default function MyHackathonsPage() {
     const [statusFilter, setStatusFilter] = useState("All");
+    const [hackathons, setHackathons] = useState<Hackathon[]>([]);
+
+    useEffect(() => {
+        (async () => {
+            const token = getCookie('authToken');
+            if (!token) return;
+            try {
+                const res = await apiService.myRegistrations(token);
+                setHackathons((res.hackathons as any[]) as Hackathon[]);
+            } catch {
+                setHackathons([]);
+            }
+        })();
+    }, []);
 
     const filteredHackathons = useMemo(() => {
-        let hackathons = allMyHackathons;
+        let list = hackathons.slice();
         if (statusFilter !== "All") {
-            hackathons = hackathons.filter(h => getEventStatus(h) === statusFilter);
+            list = list.filter(h => getEventStatus(h) === statusFilter);
         }
-        return hackathons.sort((a,b) => {
-            const dateA = a.rounds ? new Date(a.rounds[0].date) : new Date(a.date);
-            const dateB = b.rounds ? new Date(b.rounds[0].date) : new Date(b.date);
+        return list.sort((a,b) => {
+            const dateA = a.rounds && a.rounds[0] ? new Date(a.rounds[0].date) : new Date(a.date);
+            const dateB = b.rounds && b.rounds[0] ? new Date(b.rounds[0].date) : new Date(b.date);
             return dateB.getTime() - dateA.getTime();
         });
 
-    }, [statusFilter]);
+    }, [hackathons, statusFilter]);
 
     const ActionButtons = ({ hackathon }: { hackathon: Hackathon }) => {
         const status = getEventStatus(hackathon);
@@ -187,10 +204,10 @@ export default function MyHackathonsPage() {
                                              <span>|</span>
                                              <div className="flex items-center gap-2">
                                                 <span>Registration:</span>
-                                                <RegistrationBadge status={hackathon.registrationStatus} />
+                                                <RegistrationBadge status={hackathon.registrationStatus || 'Confirmed'} />
                                              </div>
                                         </div>
-                                        <p className="text-muted-foreground mt-3 text-sm max-w-prose">{hackathon.description.substring(0, 150)}...</p>
+                                        <p className="text-muted-foreground mt-3 text-sm max-w-prose">{(hackathon.description || '').substring(0, 150)}...</p>
                                         <ActionButtons hackathon={hackathon} />
                                     </div>
                                     {hackathon.registrationStatus === 'Confirmed' && (

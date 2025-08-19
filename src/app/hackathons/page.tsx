@@ -1,12 +1,12 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { hackathons as allHackathons } from "@/lib/data";
+import { apiService } from "@/lib/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,50 +27,62 @@ export default function HackathonsPage() {
     prize: "All",
     location: "All",
   });
+  const [hackathons, setHackathons] = useState<any[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await apiService.listHackathons();
+        setHackathons(res.hackathons || []);
+      } catch {
+        setHackathons([]);
+      }
+    })();
+  }, []);
 
   const filteredHackathons = useMemo(() => {
-    let hackathons = allHackathons;
+    let list = hackathons.slice();
 
     // Search filter
     if (searchTerm) {
-      hackathons = hackathons.filter((h) =>
-        h.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        h.theme.toLowerCase().includes(searchTerm.toLowerCase())
+      list = list.filter((h) =>
+        (h.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (h.theme || "").toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // Theme filter
     if (filters.theme !== "All") {
-      hackathons = hackathons.filter((h) => h.theme === filters.theme);
+      list = list.filter((h) => h.theme === filters.theme);
     }
     
     // Location filter
     if (filters.location !== "All") {
-      hackathons = hackathons.filter((h) => h.locationType === filters.location.toLowerCase());
+      list = list.filter((h) => h.locationType === filters.location.toLowerCase());
     }
 
     // Prize filter
     if (filters.prize !== "All") {
-       hackathons = hackathons.sort((a, b) => {
-        if (filters.prize === 'Highest') return b.prize - a.prize;
-        if (filters.prize === 'Lowest') return a.prize - b.prize;
+       list = list.sort((a, b) => {
+        if (filters.prize === 'Highest') return (b.prize || 0) - (a.prize || 0);
+        if (filters.prize === 'Lowest') return (a.prize || 0) - (b.prize || 0);
         return 0;
       });
     }
     
      // Date filter
     if (filters.date !== 'All') {
-      hackathons = hackathons.sort((a, b) => {
-        const dateA = new Date(a.date).getTime();
-        const dateB = new Date(b.date).getTime();
+      list = list.sort((a, b) => {
+        const dateA = new Date(a.date || 0).getTime();
+        const dateB = new Date(b.date || 0).getTime();
         if (filters.date === 'Newest') return dateB - dateA;
-        if (filters.date === 'Oldest') return a.dateB - dateA;
+        if (filters.date === 'Oldest') return dateA - dateB;
         return 0;
       });
     }
 
-    return hackathons;
-  }, [searchTerm, filters]);
+    return list;
+  }, [hackathons, searchTerm, filters]);
 
   const handleFilterChange = (type: string, value: string) => {
     setFilters((prev) => ({ ...prev, [type]: value }));
@@ -160,8 +172,8 @@ export default function HackathonsPage() {
                 <div>
                     <h3 className="text-lg font-bold leading-tight">{hackathon.name}</h3>
                     <p className="text-sm text-muted-foreground mt-1">Theme: {hackathon.theme}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Date: {new Date(hackathon.date).toLocaleDateString()}</p>
-                    <p className="text-sm font-bold text-accent mt-2">Prize: ${hackathon.prize.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Date: {hackathon.date ? new Date(hackathon.date).toLocaleDateString() : 'TBA'}</p>
+                    <p className="text-sm font-bold text-accent mt-2">Prize: ${Number(hackathon.prize || 0).toLocaleString()}</p>
                 </div>
                 </CardContent>
                 <div className="p-4 pt-0">

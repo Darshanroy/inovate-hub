@@ -2,7 +2,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import type { Hackathon, Submission, Round } from "@/lib/data";
+type Round = { name: string; date: string; description: string };
+type Hackathon = { id: string; name: string; theme: string; date: string; rounds?: Round[]; prize: number; locationType: 'online'|'offline'; image: string; hint: string; description: string };
+type Submission = { title: string; description: string; techStack: string[]; githubUrl: string; videoUrl: string; status: 'draft'|'submitted' };
 import { Button } from "@/components/ui/button";
 import { Check, Edit, FileText, Link as LinkIcon, Share, Youtube, CalendarDays } from "lucide-react";
 import Image from "next/image";
@@ -14,7 +16,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { myHackathons, mySubmission } from "@/lib/data";
+import { apiService } from "@/lib/api";
+import { getCookie } from "@/hooks/use-auth";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -208,7 +211,7 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
   });
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
   
-  const isRegistered = myHackathons.some(myHackathon => myHackathon.id === hackathon.id && myHackathon.registrationStatus === "Confirmed");
+  const [isRegistered, setIsRegistered] = useState(false);
 
   const getTargetDate = () => {
     if (hackathon.rounds && hackathon.rounds.length > 0) {
@@ -217,6 +220,19 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
     }
     return new Date(hackathon.date);
   }
+
+  useEffect(() => {
+    if (!hackathon) return;
+    (async () => {
+      try {
+        const token = getCookie('authToken');
+        if (!token) return;
+        const res = await apiService.myRegistrations(token);
+        const found = (res.hackathons || []).some((h: any) => h.id === hackathon.id);
+        setIsRegistered(found);
+      } catch {}
+    })();
+  }, [hackathon]);
 
   useEffect(() => {
     if (!hackathon) return;
@@ -249,6 +265,7 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
   }, [hackathon]);
 
   const navLinks = ["Rules", "Tracks", "Prizes", "Sponsors", "FAQ"];
+  const submission: Submission = { title: "", description: "", techStack: [], githubUrl: "", videoUrl: "", status: 'draft' };
   const hasTimeline = hackathon.rounds && hackathon.rounds.length > 0;
 
   return (
@@ -277,7 +294,7 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
                   </Link>
                 </Button>
             ) : (
-                <Button onClick={() => setIsJoinDialogOpen(true)} className="h-10 px-6 text-sm font-bold">
+                <Button onClick={async () => { try { const t = getCookie('authToken'); if (!t) return setIsJoinDialogOpen(true); await apiService.registerForHackathon(t, hackathon.id); setIsRegistered(true);} catch {} }} className="h-10 px-6 text-sm font-bold">
                   Join Now
                 </Button>
             )}

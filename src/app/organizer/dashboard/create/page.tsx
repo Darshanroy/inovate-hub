@@ -10,10 +10,27 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PlusCircle, Trash2 } from "lucide-react";
 import type { Round } from "@/lib/data";
+import { apiService } from "@/lib/api";
+import { getCookie } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CreateHackathonPage() {
   const [locationType, setLocationType] = useState<string | undefined>();
   const [rounds, setRounds] = useState<Partial<Round>[]>([{}]);
+  const { toast } = useToast();
+
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+  const [tracks, setTracks] = useState("");
+  const [rules, setRules] = useState("");
+  const [teamSize, setTeamSize] = useState("");
+  const [prize, setPrize] = useState("");
+  const [date, setDate] = useState("");
+  const [image, setImage] = useState("");
+  const [prizesDetail, setPrizesDetail] = useState("");
+  const [sponsors, setSponsors] = useState("");
+  const [faq, setFaq] = useState("");
 
   const handleAddRound = () => {
     setRounds([...rounds, {}]);
@@ -29,6 +46,36 @@ export default function CreateHackathonPage() {
     setRounds(newRounds);
   }
 
+  const handlePublish = async () => {
+    const token = getCookie('authToken');
+    if (!token) { toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' }); return; }
+    try {
+      const payload = {
+        name,
+        description,
+        theme: "General",
+        locationType: locationType || 'online',
+        location: locationType === 'offline' ? location : undefined,
+        date,
+        rounds: rounds.filter(r => r.name && r.date).map(r => ({ name: r.name!, date: r.date!, description: r.description || '' })),
+        prize: Number(prize || 0),
+        image: image || undefined,
+        hint: 'hackathon banner',
+        tracks: tracks ? tracks.split(',').map(t => t.trim()).filter(Boolean) : [],
+        rules,
+        prizes: prizesDetail,
+        sponsors: sponsors ? sponsors.split(',').map(s => s.trim()).filter(Boolean) : [],
+        faq: faq ? faq.split('\n').map(q => q.trim()).filter(Boolean) : [],
+        team_size: Number(teamSize || 0),
+      };
+      await apiService.createHackathon(token, payload);
+      toast({ title: 'Success', description: 'Hackathon published.' });
+      setName(""); setDescription(""); setLocation(""); setTracks(""); setRules(""); setTeamSize(""); setPrize(""); setDate(""); setImage(""); setLocationType(undefined); setRounds([{}]); setPrizesDetail(""); setSponsors(""); setFaq("");
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error', description: e?.message || 'Failed to publish hackathon.' });
+    }
+  };
+
   return (
     <div>
       <h1 className="text-3xl font-bold mb-2">Create a New Hackathon</h1>
@@ -43,11 +90,11 @@ export default function CreateHackathonPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Hackathon Name</Label>
-              <Input id="name" placeholder="e.g. AI for Good Challenge" />
+              <Input id="name" placeholder="e.g. AI for Good Challenge" value={name} onChange={e => setName(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea id="description" placeholder="Describe the main goals and theme of your hackathon." />
+              <Textarea id="description" placeholder="Describe the main goals and theme of your hackathon." value={description} onChange={e => setDescription(e.target.value)} />
             </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -65,10 +112,26 @@ export default function CreateHackathonPage() {
                 {locationType === 'offline' && (
                   <div className="space-y-2">
                       <Label htmlFor="location">Location</Label>
-                      <Input id="location" placeholder="e.g. San Francisco, CA" />
+                      <Input id="location" placeholder="e.g. San Francisco, CA" value={location} onChange={e => setLocation(e.target.value)} />
                   </div>
                 )}
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="date">Event Date</Label>
+                  <Input id="date" type="date" value={date} onChange={e => setDate(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="prize">Prize Pool (USD)</Label>
+                  <Input id="prize" type="number" placeholder="e.g. 10000" value={prize} onChange={e => setPrize(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="image">Banner Image URL</Label>
+                  <Input id="image" placeholder="https://..." value={image} onChange={e => setImage(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="team-size">Team Size Limit</Label>
+                  <Input id="team-size" type="number" placeholder="e.g. 4" value={teamSize} onChange={e => setTeamSize(e.target.value)} />
+                </div>
+             </div>
           </CardContent>
         </Card>
 
@@ -116,11 +179,7 @@ export default function CreateHackathonPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="rules">Rules</Label>
-              <Textarea id="rules" placeholder="Detail the rules of participation, submission guidelines, etc." rows={6}/>
-            </div>
-             <div className="space-y-2">
-              <Label htmlFor="team-size">Team Size Limit</Label>
-              <Input id="team-size" type="number" placeholder="e.g. 4" />
+              <Textarea id="rules" placeholder="Detail the rules of participation, submission guidelines, etc." rows={6} value={rules} onChange={e => setRules(e.target.value)} />
             </div>
           </CardContent>
         </Card>
@@ -133,12 +192,12 @@ export default function CreateHackathonPage() {
           <CardContent className="space-y-4">
              <div className="space-y-2">
               <Label htmlFor="tracks">Tracks</Label>
-              <Input id="tracks" placeholder="e.g. Healthcare, FinTech, Sustainability (comma-separated)" />
+              <Input id="tracks" placeholder="e.g. Healthcare, FinTech, Sustainability (comma-separated)" value={tracks} onChange={e => setTracks(e.target.value)} />
               <p className="text-xs text-muted-foreground">Separate multiple tracks with a comma.</p>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Prizes & Rewards</CardTitle>
@@ -147,14 +206,22 @@ export default function CreateHackathonPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="prizes">Prizes Description</Label>
-              <Textarea id="prizes" placeholder="Describe the prize structure, e.g., 1st Place: $10,000, 2nd Place: $5,000" rows={4}/>
+              <Textarea id="prizes" placeholder="Describe the prize structure, e.g., 1st Place: $10,000, 2nd Place: $5,000" rows={4} value={prizesDetail} onChange={e => setPrizesDetail(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sponsors">Sponsors (comma-separated)</Label>
+              <Input id="sponsors" placeholder="Acme Corp, Globex, Initech" value={sponsors} onChange={e => setSponsors(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="faq">FAQ (one question per line)</Label>
+              <Textarea id="faq" placeholder={"What is the team size?\nHow do I submit?"} rows={4} value={faq} onChange={e => setFaq(e.target.value)} />
             </div>
           </CardContent>
         </Card>
-
+        
         <div className="flex justify-end gap-2">
             <Button variant="ghost">Save Draft</Button>
-            <Button>Publish Hackathon</Button>
+            <Button onClick={handlePublish}>Publish Hackathon</Button>
         </div>
       </div>
     </div>

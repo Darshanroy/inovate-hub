@@ -132,6 +132,50 @@ class ApiService {
       body: JSON.stringify(data),
     });
   }
+
+  // Hackathons
+  async listHackathons(): Promise<{ hackathons: any[] }> {
+    return this.request<{ hackathons: any[] }>('/hackathons/list');
+  }
+
+  async getHackathon(id: string): Promise<any> {
+    return this.request<any>(`/hackathons/get/${id}`);
+  }
+
+  async createHackathon(token: string, hackathon: any): Promise<{ id: string; message: string }> {
+    return this.request<{ id: string; message: string }>(`/hackathons/create`, {
+      method: 'POST',
+      body: JSON.stringify({ token, hackathon }),
+    });
+  }
+
+  async updateHackathon(token: string, id: string, hackathon: any): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/update/${id}`, {
+      method: 'POST',
+      body: JSON.stringify({ token, hackathon }),
+    });
+  }
+
+  async deleteHackathon(token: string, id: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/delete/${id}`, {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  async registerForHackathon(token: string, id: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/register/${id}`, {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  async myRegistrations(token: string): Promise<{ hackathons: any[] }> {
+    return this.request<{ hackathons: any[] }>(`/hackathons/my-registrations`, {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  }
 }
 
 export const apiService = new ApiService(API_BASE_URL);
