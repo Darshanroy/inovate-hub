@@ -5,9 +5,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { PlusCircle, ArrowRight } from "lucide-react"
-import { hackathons } from "@/lib/data"
+import { hackathons, Hackathon } from "@/lib/data"
 import { Badge } from "@/components/ui/badge"
-import { format, isPast } from "date-fns"
+import { format, isPast, isFuture, parseISO } from "date-fns"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import {
@@ -25,18 +25,29 @@ export default function OrganizerDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  const getEventStatus = (date: string) => {
-    const eventEndDate = new Date(date);
-    eventEndDate.setDate(eventEndDate.getDate() + 2); // Assuming hackathon lasts 2 days
+  const getEventStatus = (hackathon: Hackathon) => {
+    if (hackathon.rounds && hackathon.rounds.length > 0) {
+        const firstRoundDate = parseISO(hackathon.rounds[0].date);
+        const lastRoundDate = parseISO(hackathon.rounds[hackathon.rounds.length - 1].date);
+        
+        if (isPast(lastRoundDate)) return "Ended";
+        if (isFuture(firstRoundDate)) return "Upcoming";
+        return "Ongoing";
+    }
+    // Fallback for single-date hackathons
+    const eventDate = parseISO(hackathon.date);
+    const eventEndDate = new Date(eventDate);
+    eventEndDate.setDate(eventEndDate.getDate() + 2); // Assume 2 days duration
+
     if (isPast(eventEndDate)) return "Ended";
-    if (isPast(new Date(date)) && !isPast(eventEndDate)) return "Ongoing";
+    if (isPast(eventDate)) return "Ongoing";
     return "Upcoming";
   }
 
   const filteredHackathons = hackathons
     .filter(h => {
         if (statusFilter === "All") return true;
-        return getEventStatus(h.date) === statusFilter;
+        return getEventStatus(h) === statusFilter;
     })
     .filter(h => 
         h.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -44,7 +55,7 @@ export default function OrganizerDashboard() {
 
   const totalHackathons = hackathons.length;
   const totalParticipants = 128; // mock data
-  const upcomingDeadlines = hackathons.filter(h => getEventStatus(h.date) === 'Upcoming').length;
+  const upcomingDeadlines = hackathons.filter(h => getEventStatus(h) === 'Upcoming').length;
 
 
   return (
@@ -125,13 +136,14 @@ export default function OrganizerDashboard() {
           </div>
           <div className="space-y-4">
             {filteredHackathons.map((hackathon) => {
-              const status = getEventStatus(hackathon.date)
+              const status = getEventStatus(hackathon);
+              const displayDate = hackathon.rounds && hackathon.rounds.length > 0 ? hackathon.rounds[0].date : hackathon.date;
               return (
                 <Card key={hackathon.id} className="bg-secondary">
                   <CardHeader className="flex flex-row justify-between items-start">
                     <div>
                       <CardTitle className="text-xl">{hackathon.name}</CardTitle>
-                      <CardDescription>{format(new Date(hackathon.date), "PPP")}</CardDescription>
+                      <CardDescription>{format(new Date(displayDate), "PPP")}</CardDescription>
                     </div>
                      <Badge variant={status === "Ended" ? "secondary" : status === 'Ongoing' ? "destructive" : "default"}>{status}</Badge>
                   </CardHeader>

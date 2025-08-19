@@ -2,9 +2,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import type { Hackathon, Submission } from "@/lib/data";
+import type { Hackathon, Submission, Round } from "@/lib/data";
 import { Button } from "@/components/ui/button";
-import { Check, Edit, FileText, Link as LinkIcon, Share, Youtube } from "lucide-react";
+import { Check, Edit, FileText, Link as LinkIcon, Share, Youtube, CalendarDays } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -18,6 +18,7 @@ import { myHackathons, mySubmission } from "@/lib/data";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
 
 
 const JoinHackathonDialog = ({ open, onOpenChange, hackathonId }: { open: boolean, onOpenChange: (open: boolean) => void, hackathonId: string }) => {
@@ -130,6 +131,30 @@ const OverviewTab = ({ hackathon }: { hackathon: Hackathon }) => {
   )
 }
 
+const TimelineTab = ({ rounds }: { rounds: Round[] }) => {
+    return (
+        <div className="pt-12">
+            <h2 className="text-2xl font-semibold text-foreground mb-8">Event Timeline</h2>
+            <div className="relative pl-6 after:absolute after:inset-y-0 after:left-0 after:w-px after:bg-border">
+                {rounds.map((round, index) => (
+                    <div key={index} className="relative pl-8 py-4 grid md:grid-cols-[1fr_2fr] gap-6">
+                         <div className="absolute -left-7 top-6 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                            <CalendarDays className="h-4 w-4" />
+                        </div>
+                        <div className="text-right pr-8">
+                             <time className="block text-sm font-semibold uppercase tracking-wider text-primary">{format(new Date(round.date), "dd MMMM yyyy")}</time>
+                             <h3 className="text-lg font-bold text-foreground">{round.name}</h3>
+                        </div>
+                        <div>
+                             <p className="text-muted-foreground">{round.description}</p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}
+
 const MySubmissionTab = ({ submission, hackathonId }: { submission: Submission, hackathonId: string }) => {
     return (
         <div className="pt-12">
@@ -185,12 +210,21 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
   
   const isRegistered = myHackathons.some(myHackathon => myHackathon.id === hackathon.id && myHackathon.registrationStatus === "Confirmed");
 
+  const getTargetDate = () => {
+    if (hackathon.rounds && hackathon.rounds.length > 0) {
+        // Use the first round's date for countdown
+        return new Date(hackathon.rounds[0].date);
+    }
+    return new Date(hackathon.date);
+  }
 
   useEffect(() => {
     if (!hackathon) return;
 
+    const targetDate = getTargetDate();
+
     const calculateTimeLeft = () => {
-      const difference = +new Date(hackathon.date) - +new Date();
+      const difference = +targetDate - +new Date();
       let timeLeft = { days: 0, hours: 0, minutes: 0, seconds: 0 };
 
       if (difference > 0) {
@@ -214,7 +248,8 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
     return () => clearInterval(timer);
   }, [hackathon]);
 
-  const navLinks = ["Rules", "Tracks", "Timeline", "Prizes", "Sponsors", "FAQ"];
+  const navLinks = ["Rules", "Tracks", "Prizes", "Sponsors", "FAQ"];
+  const hasTimeline = hackathon.rounds && hackathon.rounds.length > 0;
 
   return (
     <main className="container mx-auto max-w-7xl flex-1 px-4 py-8">
@@ -276,6 +311,9 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
          <Tabs defaultValue="overview" className="mt-8">
            <TabsList className="border-b border-border w-full justify-start rounded-none bg-transparent p-0">
             <TabsTrigger value="overview" className="relative rounded-none border-b-2 border-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Overview</TabsTrigger>
+             {hasTimeline && (
+                <TabsTrigger value="timeline" className="relative rounded-none border-b-2 border-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Timeline</TabsTrigger>
+             )}
              {navLinks.map(link => (
                  <TabsTrigger key={link} value={link.toLowerCase()} disabled className="relative rounded-none border-b-2 border-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">{link}</TabsTrigger>
             ))}
@@ -286,6 +324,11 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
             <TabsContent value="overview">
                 <OverviewTab hackathon={hackathon} />
             </TabsContent>
+             {hasTimeline && (
+                <TabsContent value="timeline">
+                    <TimelineTab rounds={hackathon.rounds!} />
+                </TabsContent>
+            )}
             {isRegistered && (
                 <TabsContent value="submission">
                     <MySubmissionTab submission={mySubmission} hackathonId={hackathon.id} />

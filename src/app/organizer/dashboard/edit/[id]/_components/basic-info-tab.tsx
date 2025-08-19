@@ -8,10 +8,27 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { Hackathon } from "@/lib/data";
+import type { Hackathon, Round } from "@/lib/data";
+import { PlusCircle, Trash2 } from "lucide-react";
 
 export function BasicInfoTab({ hackathon }: { hackathon: Hackathon }) {
   const [locationType, setLocationType] = useState<string | undefined>(hackathon.locationType);
+  const [rounds, setRounds] = useState<Partial<Round>[]>(hackathon.rounds || [{ name: hackathon.name, date: hackathon.date, description: hackathon.description }]);
+
+  const handleAddRound = () => {
+    setRounds([...rounds, {}]);
+  }
+  
+  const handleRemoveRound = (index: number) => {
+    setRounds(rounds.filter((_, i) => i !== index));
+  }
+  
+  const handleRoundChange = (index: number, field: keyof Round, value: string) => {
+    const newRounds = [...rounds];
+    newRounds[index] = { ...newRounds[index], [field]: value };
+    setRounds(newRounds);
+  }
+
 
   return (
       <div className="space-y-8">
@@ -28,16 +45,6 @@ export function BasicInfoTab({ hackathon }: { hackathon: Hackathon }) {
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea id="description" placeholder="Describe the main goals and theme of your hackathon." defaultValue={hackathon.description} />
-            </div>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="start-date">Start Date</Label>
-                    <Input id="start-date" type="date" defaultValue={new Date(hackathon.date).toISOString().split('T')[0]} />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="end-date">End Date</Label>
-                    <Input id="end-date" type="date" />
-                </div>
             </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -60,6 +67,42 @@ export function BasicInfoTab({ hackathon }: { hackathon: Hackathon }) {
                 )}
             </div>
           </CardContent>
+        </Card>
+        
+        <Card>
+            <CardHeader>
+                <CardTitle>Rounds & Timeline</CardTitle>
+                <CardDescription>Define the structure of your event. Add or remove rounds as needed.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                {rounds.map((round, index) => (
+                    <div key={index} className="space-y-4 p-4 border rounded-lg relative">
+                        <Label className="font-semibold">Round {index + 1}</Label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div className="space-y-2">
+                                <Label htmlFor={`round-name-${index}`}>Round Name</Label>
+                                <Input id={`round-name-${index}`} placeholder="e.g., Final Presentations" value={round.name || ''} onChange={e => handleRoundChange(index, 'name', e.target.value)} />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor={`round-date-${index}`}>Date</Label>
+                                <Input id={`round-date-${index}`} type="date" value={round.date ? new Date(round.date).toISOString().split('T')[0] : ''} onChange={e => handleRoundChange(index, 'date', e.target.value)}/>
+                            </div>
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor={`round-desc-${index}`}>Description</Label>
+                            <Textarea id={`round-desc-${index}`} placeholder="Describe this round" value={round.description || ''} onChange={e => handleRoundChange(index, 'description', e.target.value)} />
+                        </div>
+                        {rounds.length > 1 && (
+                            <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => handleRemoveRound(index)}>
+                                <Trash2 className="w-4 h-4 text-muted-foreground" />
+                            </Button>
+                        )}
+                    </div>
+                ))}
+                <Button type="button" variant="outline" onClick={handleAddRound}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Round
+                </Button>
+            </CardContent>
         </Card>
 
         <Card>

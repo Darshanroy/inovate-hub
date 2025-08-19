@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { myHackathons as allMyHackathons, Hackathon } from "@/lib/data";
+import { myHackathons as allMyHackathons, Hackathon, Round } from "@/lib/data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,24 +18,27 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ListFilter, Calendar, Users, FileText, Trophy, ExternalLink, XCircle, Eye, Edit, Check } from "lucide-react";
-import { format, isPast, isFuture } from 'date-fns';
+import { format, isPast, isFuture, parseISO } from 'date-fns';
 
-const getEventStatus = (date: string) => {
-    const eventDate = new Date(date);
+const getEventStatus = (hackathon: Hackathon) => {
     const now = new Date();
-
-    // The event is considered "Ongoing" if the start date is in the past,
-    // but the end date (start date + 2 days, for example) is in the future.
-    if (isPast(eventDate) && isFuture(new Date(eventDate).setDate(eventDate.getDate() + 2))) {
+    if (hackathon.rounds && hackathon.rounds.length > 0) {
+        const firstRoundDate = parseISO(hackathon.rounds[0].date);
+        const lastRoundDate = parseISO(hackathon.rounds[hackathon.rounds.length - 1].date);
+        
+        if (isPast(lastRoundDate)) return "Ended";
+        if (isFuture(firstRoundDate)) return "Not Started";
         return "Ongoing";
     }
-    if (isPast(eventDate)) {
-        return "Ended";
-    }
-    if (isFuture(eventDate)) {
-        return "Not Started";
-    }
-    return "Ongoing"; // Fallback
+
+    // Fallback for single-date hackathons
+    const eventDate = parseISO(hackathon.date);
+    const eventEndDate = new Date(eventDate);
+    eventEndDate.setDate(eventEndDate.getDate() + 2); // Assume 2 days duration for old format
+
+    if (isPast(eventEndDate)) return "Ended";
+    if (isFuture(eventDate)) return "Not Started";
+    return "Ongoing";
 }
 
 
@@ -45,14 +48,18 @@ export default function MyHackathonsPage() {
     const filteredHackathons = useMemo(() => {
         let hackathons = allMyHackathons;
         if (statusFilter !== "All") {
-            hackathons = hackathons.filter(h => getEventStatus(h.date) === statusFilter);
+            hackathons = hackathons.filter(h => getEventStatus(h) === statusFilter);
         }
-        return hackathons.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return hackathons.sort((a,b) => {
+            const dateA = a.rounds ? new Date(a.rounds[0].date) : new Date(a.date);
+            const dateB = b.rounds ? new Date(b.rounds[0].date) : new Date(b.date);
+            return dateB.getTime() - dateA.getTime();
+        });
 
     }, [statusFilter]);
 
     const ActionButtons = ({ hackathon }: { hackathon: Hackathon }) => {
-        const status = getEventStatus(hackathon.date);
+        const status = getEventStatus(hackathon);
         
         return (
             <div className="flex flex-col sm:flex-row gap-2 mt-4">
@@ -147,7 +154,11 @@ export default function MyHackathonsPage() {
             
             {filteredHackathons.length > 0 ? (
                  <div className="space-y-6">
-                    {filteredHackathons.map(hackathon => (
+                    {filteredHackathons.map(hackathon => {
+                        const status = getEventStatus(hackathon);
+                        const displayDate = hackathon.rounds && hackathon.rounds.length > 0 ? hackathon.rounds[0].date : hackathon.date;
+
+                        return (
                          <Card key={hackathon.id} className="bg-secondary border-white/10 overflow-hidden">
                             <CardContent className="p-6">
                                 <div className="flex flex-col md:flex-row gap-6">
@@ -163,14 +174,14 @@ export default function MyHackathonsPage() {
                                         <div className="flex flex-col sm:flex-row justify-between items-start">
                                             <h2 className="text-2xl font-bold">{hackathon.name}</h2>
                                             <Badge variant={
-                                                getEventStatus(hackathon.date) === 'Ongoing' ? 'destructive' :
-                                                getEventStatus(hackathon.date) === 'Ended' ? 'secondary' : 'default'
+                                                status === 'Ongoing' ? 'destructive' :
+                                                status === 'Ended' ? 'secondary' : 'default'
                                             }>
-                                                {getEventStatus(hackathon.date)}
+                                                {status}
                                             </Badge>
                                         </div>
                                         <div className="flex items-center gap-4 text-muted-foreground text-sm mt-2">
-                                            <span>{format(new Date(hackathon.date), 'PPP')}</span>
+                                            <span>{format(new Date(displayDate), 'PPP')}</span>
                                             <span>|</span>
                                             <span>{hackathon.locationType === 'online' ? 'Online' : 'Offline'}</span>
                                              <span>|</span>
@@ -191,7 +202,8 @@ export default function MyHackathonsPage() {
                                 </div>
                             </CardContent>
                          </Card>
-                    ))}
+                        )
+                    })}
                  </div>
             ) : (
                 <div className="text-center py-20 bg-secondary rounded-lg border-2 border-dashed border-border">

@@ -1,10 +1,16 @@
 
+export type Round = {
+    name: string;
+    date: string;
+    description: string;
+};
 
 export type Hackathon = {
     id: string;
-    name: string;
+    name:string;
     theme: string;
-    date: string;
+    date: string; // Keep for backward compatibility/simplicity for single-day events, but rounds will take precedence
+    rounds?: Round[];
     prize: number;
     locationType: 'online' | 'offline';
     image: string;
@@ -82,6 +88,11 @@ export const hackathons: Hackathon[] = [
     name: "AI Innovation Challenge",
     theme: "Artificial Intelligence",
     date: "2024-08-15",
+    rounds: [
+        { name: "Round 1: Ideation & Pitch", date: "2024-08-15", description: "Submit your initial idea and a short pitch video."},
+        { name: "Round 2: Prototyping", date: "2024-08-20", description: "Build a working prototype of your solution."},
+        { name: "Round 3: Final Judging", date: "2024-08-25", description: "Present your final project to the judges."},
+    ],
     prize: 20000,
     locationType: "online",
     image: "https://placehold.co/600x400.png",
