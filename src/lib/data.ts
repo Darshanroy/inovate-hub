@@ -59,6 +59,15 @@ export type Result = {
     score: number;
 };
 
+export type JudgeEvent = {
+    id: string;
+    title: string;
+    startDate: string;
+    endDate: string;
+    status: 'Ongoing' | 'Closed';
+    submissionsToJudge: number;
+}
+
 
 export const hackathons: Hackathon[] = [
   {
@@ -272,4 +281,31 @@ export const results: Result[] = [
     { rank: 3, team: teamsForResults[2], projectTitle: "HealthTrack", score: 88 },
     { rank: 4, team: teamsForResults[3], projectTitle: "Intelligent Code Assistant", score: 85 },
     { rank: 5, team: teamsForResults[4], projectTitle: "AgriGrow", score: 82 },
+]
+
+export const judgeEvents: JudgeEvent[] = [
+    {
+        id: "ai-innovation-challenge",
+        title: "AI Innovation Challenge",
+        startDate: "2024-08-15",
+        endDate: "2024-08-17",
+        status: "Ongoing",
+        submissionsToJudge: 8,
+    },
+    {
+        id: "sustainable-solutions-hackathon",
+        title: "Sustainable Solutions Hackathon",
+        startDate: "2024-09-01",
+        endDate: "2024-09-03",
+        status: "Ongoing",
+        submissionsToJudge: 12,
+    },
+    {
+        id: "fintech-disruption",
+        title: "FinTech Disruption",
+        startDate: "2024-09-20",
+        endDate: "2024-09-22",
+        status: "Closed",
+        submissionsToJudge: 0,
+    }
 ]

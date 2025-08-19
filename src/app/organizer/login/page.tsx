@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -33,21 +34,36 @@ export default function OrganizerLoginPage() {
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isJudgeLogin, setIsJudgeLogin] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === "organizer@example.com" && password === "password") {
-      // In a real app, you'd set some auth state here (e.g., in context or a cookie)
-      document.cookie = "isLoggedIn=true; path=/; max-age=3600";
-      document.cookie = "userType=organizer; path=/; max-age=3600";
-      router.push("/organizer/dashboard");
-      router.refresh();
+    if (isJudgeLogin) {
+      if(email === 'judge@example.com' && password === 'password') {
+        document.cookie = "isLoggedIn=true; path=/; max-age=3600";
+        document.cookie = "userType=judge; path=/; max-age=3600";
+        router.push("/judge/dashboard");
+        router.refresh();
+      } else {
+         toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: "Invalid judge email or password.",
+        });
+      }
     } else {
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: "Invalid email or password.",
-      });
+      if (email === "organizer@example.com" && password === "password") {
+        document.cookie = "isLoggedIn=true; path=/; max-age=3600";
+        document.cookie = "userType=organizer; path=/; max-age=3600";
+        router.push("/organizer/dashboard");
+        router.refresh();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: "Invalid organizer email or password.",
+        });
+      }
     }
   };
 
@@ -60,13 +76,13 @@ export default function OrganizerLoginPage() {
       <main className="container mx-auto flex h-screen items-center justify-center p-4">
         <div className="w-full max-w-md rounded-2xl p-8 shadow-2xl bg-secondary/50 backdrop-blur-xl border border-white/10">
           <div className="mb-8 text-center">
-            <h2 className="text-3xl font-bold">Welcome Back, Organizer</h2>
-            <p className="text-muted-foreground mt-2">Sign in to manage your hackathons.</p>
+            <h2 className="text-3xl font-bold">{isJudgeLogin ? 'Welcome, Judge' : 'Welcome Back, Organizer'}</h2>
+            <p className="text-muted-foreground mt-2">{isJudgeLogin ? 'Sign in to start evaluating submissions.' : 'Sign in to manage your hackathons.'}</p>
           </div>
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
               <label className="sr-only" htmlFor="email">Email</label>
-              <Input id="email" placeholder="Email Address (organizer@example.com)" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input id="email" placeholder={isJudgeLogin ? "Email (judge@example.com)" : "Email (organizer@example.com)"} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div>
               <label className="sr-only" htmlFor="password">Password</label>
@@ -98,12 +114,15 @@ export default function OrganizerLoginPage() {
               Continue with LinkedIn
             </Button>
           </div>
-          <p className="mt-8 text-center text-muted-foreground">
-            Don't have an organizer account?
-            <Link className="font-semibold text-accent hover:underline ml-1" href="/organizer/signup">Sign Up</Link>
+           <p className="mt-8 text-center text-muted-foreground">
+             {isJudgeLogin ? 'Not a judge?' : 'Not an organizer?'}{' '}
+             <button className="font-semibold text-accent hover:underline" onClick={() => setIsJudgeLogin(!isJudgeLogin)}>
+                {isJudgeLogin ? 'Sign in as an organizer' : 'Sign in as a judge'}
+             </button>
           </p>
         </div>
       </main>
     </div>
   );
 }
+
