@@ -58,7 +58,7 @@ export async function updateProfile(values: ProfileFormValues) {
 
   // In a real application, you would save this data to a database.
   console.log("Profile updated:", validatedFields.data);
-
+  await new Promise(resolve => setTimeout(resolve, 1000));
   return { success: "Profile updated successfully!" };
 }
 
@@ -80,6 +80,7 @@ export async function updateOrganizerProfile(values: OrganizerProfileFormValues)
   }
 
   console.log("Organizer Profile updated:", validatedFields.data);
+  await new Promise(resolve => setTimeout(resolve, 1000));
   return { success: "Profile updated successfully!" };
 }
 
@@ -101,5 +102,42 @@ export async function updateJudgeProfile(values: JudgeProfileFormValues) {
     }
     
     console.log("Judge Profile updated:", validatedFields.data);
+    await new Promise(resolve => setTimeout(resolve, 1000));
     return { success: "Profile updated successfully!" };
+}
+
+
+const signupFormSchema = z.object({
+    name: z.string().min(2, "Name must be at least 2 characters."),
+    email: z.string().email("Please enter a valid email address."),
+    password: z.string().min(8, "Password must be at least 8 characters."),
+});
+
+export type SignupFormValues = z.infer<typeof signupFormSchema>;
+
+export async function signupParticipant(values: SignupFormValues) {
+    const validatedFields = signupFormSchema.safeParse(values);
+
+    if (!validatedFields.success) {
+        return { error: "Invalid input." };
+    }
+
+    console.log("New participant signup:", validatedFields.data);
+    // In a real app, create user in Firebase Auth and database.
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    return { success: "Account created successfully! You can now log in." };
+}
+
+export async function signupOrganizer(values: SignupFormValues) {
+    const validatedFields = signupFormSchema.safeParse(values);
+
+    if (!validatedFields.success) {
+        return { error: "Invalid input." };
+    }
+
+    console.log("New organizer signup:", validatedFields.data);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    return { success: "Organizer account created successfully! You can now log in." };
 }

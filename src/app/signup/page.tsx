@@ -1,6 +1,24 @@
+
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signupParticipant, type SignupFormValues } from "@/app/actions";
+import { z } from "zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
+
+const signupFormSchema = z.object({
+    name: z.string().min(2, "Name must be at least 2 characters."),
+    email: z.string().email("Please enter a valid email address."),
+    password: z.string().min(8, "Password must be at least 8 characters."),
+});
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} viewBox="0 0 24 24">
@@ -24,8 +42,40 @@ const LinkedInIcon = (props: React.SVGProps<SVGSVGElement>) => (
 )
 
 export default function SignUpPage() {
+    const { toast } = useToast();
+    const router = useRouter();
+
+    const form = useForm<SignupFormValues>({
+        resolver: zodResolver(signupFormSchema),
+        defaultValues: {
+            name: "",
+            email: "",
+            password: "",
+        },
+    });
+
+    const { isSubmitting } = form.formState;
+
+    const onSubmit = async (values: SignupFormValues) => {
+        const result = await signupParticipant(values);
+        if (result.success) {
+            toast({
+                title: "Success",
+                description: result.success,
+            });
+            router.push("/login");
+        } else {
+             toast({
+                variant: "destructive",
+                title: "Error",
+                description: result.error,
+            });
+        }
+    }
+
   return (
     <div className="flex-1">
+      {isSubmitting && <LoadingOverlay message="Creating your account..." />}
       <div className="relative min-h-full w-full overflow-hidden">
         <div className="absolute inset-0 z-0">
           <div className="absolute -top-1/4 -left-1/4 h-1/2 w-1/2 rounded-full bg-gradient-to-br from-purple-600 via-blue-500 to-teal-400 opacity-20 blur-3xl filter"></div>
@@ -37,23 +87,55 @@ export default function SignUpPage() {
               <h2 className="text-3xl font-bold">Create an Account</h2>
               <p className="text-muted-foreground mt-2">Join the community and start innovating.</p>
             </div>
-            <form className="space-y-6">
+             <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+               <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="sr-only">Full Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Full Name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="sr-only">Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Email Address" type="email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="sr-only">Password</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Password" type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <div>
-                <label className="sr-only" htmlFor="name">Full Name</label>
-                <Input id="name" placeholder="Full Name" type="text" />
-              </div>
-              <div>
-                <label className="sr-only" htmlFor="email">Email</label>
-                <Input id="email" placeholder="Email Address" type="email" />
-              </div>
-              <div>
-                <label className="sr-only" htmlFor="password">Password</label>
-                <Input id="password" placeholder="Password" type="password" />
-              </div>
-              <div>
-                <Button className="w-full font-bold" type="submit">Sign Up</Button>
+                <Button className="w-full font-bold" type="submit" disabled={isSubmitting}>
+                   {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                   {isSubmitting ? 'Creating Account...' : 'Sign Up'}
+                </Button>
               </div>
             </form>
+            </Form>
             <div className="my-6 flex items-center">
               <hr className="w-full border-t border-gray-600" />
               <span className="px-2 text-muted-foreground">OR</span>
