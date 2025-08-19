@@ -2,7 +2,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Chatbot } from "./chatbot";
 
 const AiChatIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
@@ -17,25 +18,21 @@ const AiChatIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 )
 
-
 export function ChatbotTrigger() {
-    const { toast } = useToast();
-
-    const handleClick = () => {
-        toast({
-            title: "AI Chatbot Coming Soon!",
-            description: "We're working on an AI assistant to help you navigate HackHub.",
-        });
-    }
-
     return (
-        <Button 
-            size="icon" 
-            className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-2xl z-50 glowing-cta"
-            onClick={handleClick}
-        >
-            <AiChatIcon className="h-8 w-8" />
-            <span className="sr-only">Open AI Chatbot</span>
-        </Button>
+        <Sheet>
+            <SheetTrigger asChild>
+                 <Button 
+                    size="icon" 
+                    className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-2xl z-50 glowing-cta"
+                >
+                    <AiChatIcon className="h-8 w-8" />
+                    <span className="sr-only">Open AI Chatbot</span>
+                </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-[85vh] max-h-[700px] w-[min(500px,90vw)] rounded-t-2xl p-0 right-6 left-auto bottom-28 border-white/20 bg-background/80 backdrop-blur-xl">
+               <Chatbot />
+            </SheetContent>
+        </Sheet>
     )
 }
