@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signupParticipant, type SignupFormValues } from "@/app/actions";
+import { type SignupFormValues } from "@/app/actions";
+import { apiService } from "@/lib/api";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
@@ -57,18 +58,20 @@ export default function SignUpPage() {
     const { isSubmitting } = form.formState;
 
     const onSubmit = async (values: SignupFormValues) => {
-        const result = await signupParticipant(values);
-        if (result.success) {
-            toast({
-                title: "Success",
-                description: result.success,
+        try {
+            const res = await apiService.signup({
+                name: values.name,
+                email: values.email,
+                password: values.password,
+                user_type: 'participant',
             });
+            toast({ title: "Success", description: res.message || "Account created successfully!" });
             router.push("/login");
-        } else {
-             toast({
+        } catch (error: any) {
+            toast({
                 variant: "destructive",
                 title: "Error",
-                description: result.error,
+                description: error?.message || "Failed to sign up.",
             });
         }
     }

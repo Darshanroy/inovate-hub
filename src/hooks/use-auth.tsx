@@ -2,6 +2,7 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { apiService } from '@/lib/api';
 
 export const getCookie = (name: string): string | undefined => {
   if (typeof window === "undefined") {
@@ -26,10 +27,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userType, setUserType] = useState<string | undefined>(undefined);
 
   const checkLoginStatus = useCallback(() => {
-    const loggedInCookie = getCookie("isLoggedIn") === "true";
-    const userTypeCookie = getCookie("userType");
-    setIsLoggedIn(loggedInCookie);
-    setUserType(userTypeCookie);
+    const token = getCookie("authToken");
+    const hasToken = Boolean(token);
+    setIsLoggedIn(hasToken);
+    if (hasToken && token) {
+      apiService.verifyToken({ token }).then((info) => {
+        if (info?.valid) {
+          setUserType(info.user_type);
+        }
+      }).catch(() => {
+        setIsLoggedIn(false);
+        setUserType(undefined);
+      });
+    } else {
+      setUserType(undefined);
+    }
   }, []);
 
   const setAuthStatus = (loggedIn: boolean, type?: string) => {

@@ -1,66 +1,135 @@
-import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import auth
-from flask import Flask, request, jsonify
+from datetime import datetime, timedelta, timezone
+import os
+from typing import Optional
 
-# Initialize Firebase Admin SDK
-# Replace 'path/to/your/serviceAccountKey.json' with the actual path to your Firebase service account key file
-try:
-    cred = credentials.Certificate('inovatehub-1bfed-firebase-adminsdk-fbsvc-44d0b994c1.json')
-    firebase_admin.initialize_app(cred)
-except Exception as e:
-    print(f"Error initializing Firebase Admin SDK: {e}")
-    exit()
+from flask import Blueprint, jsonify, request
+from pymongo import MongoClient, ASCENDING
+from pymongo.errors import DuplicateKeyError
+from werkzeug.security import generate_password_hash, check_password_hash
+import jwt
 
 
-app = Flask(__name__)
+# Blueprint for auth routes
+auth_bp = Blueprint('auth', __name__)
 
-@app.route('/signup', methods=['POST'])
+
+# --- Configuration ---
+MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017')
+MONGODB_DB = os.environ.get('MONGODB_DB', 'inovatehub')
+JWT_SECRET = os.environ.get('JWT_SECRET', 'change_me_dev_secret')
+JWT_EXPIRES_MINUTES = int(os.environ.get('JWT_EXPIRES_MINUTES', '60'))
+
+
+# --- Database Setup ---
+mongo_client = MongoClient(MONGODB_URI)
+db = mongo_client[MONGODB_DB]
+users_col = db['users']
+
+# Ensure unique index on email
+users_col.create_index([('email', ASCENDING)], unique=True)
+
+
+def create_jwt(user_id: str, email: str, user_type: str, name: str) -> str:
+    now = datetime.now(timezone.utc)
+    payload = {
+        'sub': user_id,
+        'email': email,
+        'user_type': user_type,
+        'name': name,
+        'iat': int(now.timestamp()),
+        'exp': int((now + timedelta(minutes=JWT_EXPIRES_MINUTES)).timestamp()),
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm='HS256')
+
+
+def decode_jwt(token: str) -> Optional[dict]:
+    try:
+        return jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+    except Exception:
+        return None
+
+
+@auth_bp.route('/signup', methods=['POST'])
 def signup():
-    data = request.get_json()
+    data = request.get_json(force=True) or {}
+    name = data.get('name')
     email = data.get('email')
+    password = data.get('password')
+    user_type = data.get('user_type', 'participant')
+
+    if not name or not email or not password:
+        return jsonify({'message': 'Name, email and password are required'}), 400
+
+    hashed = generate_password_hash(password)
+
+    try:
+        user_doc = {
+            'name': name,
+            'email': email.lower().strip(),
+            'password_hash': hashed,
+            'user_type': user_type,
+            'created_at': datetime.utcnow(),
+            'updated_at': datetime.utcnow(),
+        }
+        result = users_col.insert_one(user_doc)
+        user_id = str(result.inserted_id)
+    except DuplicateKeyError:
+        return jsonify({'message': 'Email already registered'}), 409
+
+    token = create_jwt(user_id=user_id, email=email, user_type=user_type, name=name)
+    return jsonify({
+        'message': 'Account created successfully',
+        'token': token,
+        'user_type': user_type,
+        'email': email,
+        'name': name,
+    }), 201
+
+
+@auth_bp.route('/login', methods=['POST'])
+def login():
+    data = request.get_json(force=True) or {}
+    email = (data.get('email') or '').lower().strip()
     password = data.get('password')
 
     if not email or not password:
         return jsonify({'message': 'Email and password are required'}), 400
 
-    try:
-        user = auth.create_user(
-            email=email,
-            password=password
-        )
-        return jsonify({'message': 'Successfully created new user', 'uid': user.uid}), 201
-    except Exception as e:
-        return jsonify({'message': f'Error creating user: {e}'}), 400
+    user = users_col.find_one({'email': email})
+    if not user or not check_password_hash(user.get('password_hash', ''), password):
+        return jsonify({'message': 'Invalid email or password'}), 401
 
-@app.route('/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    email = data.get('email')
-    password = data.get('password') # Note: For security, client-side Firebase SDK should handle password login and send ID token
+    token = create_jwt(user_id=str(user['_id']), email=user['email'], user_type=user.get('user_type', 'participant'), name=user.get('name', ''))
+    return jsonify({
+        'message': 'Login successful',
+        'token': token,
+        'user_type': user.get('user_type', 'participant'),
+        'email': user['email'],
+        'name': user.get('name', ''),
+    }), 200
 
-    if not email or not password:
-        return jsonify({'message': 'Email and password are required'}), 400
 
-    # Note: Direct password login on the backend is not recommended for security.
-    # It's better to use the Firebase client SDK to sign in and verify the ID token on the backend.
-    # This is a basic example and does not include ID token verification.
+@auth_bp.route('/verify', methods=['POST'])
+def verify():
+    data = request.get_json(force=True) or {}
+    token = data.get('token')
+    if not token:
+        return jsonify({'message': 'Token is required'}), 400
 
-    try:
-        # This part is illustrative and not how you'd typically handle password login on the backend with Admin SDK
-        # The recommended approach is client-side sign-in and backend ID token verification.
-        # You would typically receive an ID token from the client after they authenticate.
-        # Example of verifying an ID token:
-        # id_token = data.get('idToken')
-        # decoded_token = auth.verify_id_token(id_token)
-        # uid = decoded_token['uid']
-        # return jsonify({'message': 'Successfully logged in', 'uid': uid}), 200
+    decoded = decode_jwt(token)
+    if not decoded:
+        return jsonify({'message': 'Invalid or expired token'}), 401
 
-        return jsonify({'message': 'Backend password login is not recommended. Use client-side authentication and send ID token for verification.'}), 400
+    return jsonify({
+        'valid': True,
+        'user_id': decoded.get('sub'),
+        'email': decoded.get('email'),
+        'user_type': decoded.get('user_type'),
+        'name': decoded.get('name'),
+    }), 200
 
-    except Exception as e:
-         return jsonify({'message': f'Error during login: {e}'}), 401
 
-if __name__ == '__main__':
-    # In a production environment, use a production-ready WSGI server like Gunicorn or uWSGI
-    app.run(debug=True)
+@auth_bp.route('/logout', methods=['POST'])
+def logout():
+    # Stateless JWT logout handled on client by clearing cookie
+    return jsonify({'message': 'Logged out'}), 200

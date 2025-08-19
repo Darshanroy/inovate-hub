@@ -35,9 +35,8 @@ export default function OrganizerDashboardLayout({
   const router = useRouter()
 
   const handleLogout = () => {
-    document.cookie = "isLoggedIn=; path=/; max-age=0";
-    document.cookie = "userType=; path=/; max-age=0";
-    router.push("/");
+    document.cookie = "authToken=; path=/; max-age=0";
+    router.push("/hackathons");
     router.refresh();
   }
 

@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { apiService } from "@/lib/api";
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} viewBox="0 0 24 24">
@@ -37,19 +38,23 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === "user@example.com" && password === "password") {
-      document.cookie = "isLoggedIn=true; path=/; max-age=3600";
-      document.cookie = "userType=participant; path=/; max-age=3600";
-      setAuthStatus(true, 'participant');
-      router.push("/hackathons/my");
-      router.refresh();
-    } else {
+    try {
+      const res = await apiService.login({ email, password });
+      if (res.token) {
+        document.cookie = `authToken=${res.token}; path=/; max-age=3600`;
+        setAuthStatus(true, res.user_type || 'participant');
+        router.push("/hackathons/my");
+        router.refresh();
+      } else {
+        throw new Error(res.message || 'Login failed');
+      }
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: "Invalid email or password.",
+        description: error?.message || "Invalid email or password.",
       });
     }
   };

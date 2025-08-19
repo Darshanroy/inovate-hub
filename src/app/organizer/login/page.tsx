@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { apiService } from "@/lib/api";
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} viewBox="0 0 24 24">
@@ -38,36 +39,25 @@ export default function OrganizerLoginPage() {
   const [password, setPassword] = useState('');
   const [isJudgeLogin, setIsJudgeLogin] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isJudgeLogin) {
-      if(email === 'judge@example.com' && password === 'password') {
-        document.cookie = "isLoggedIn=true; path=/; max-age=3600";
-        document.cookie = "userType=judge; path=/; max-age=3600";
-        setAuthStatus(true, 'judge');
-        router.push("/judge/dashboard");
+    try {
+      const res = await apiService.login({ email, password });
+      if (res.token) {
+        document.cookie = `authToken=${res.token}; path=/; max-age=3600`;
+        const type = res.user_type || (isJudgeLogin ? 'judge' : 'organizer');
+        setAuthStatus(true, type);
+        router.push(isJudgeLogin ? "/judge/dashboard" : "/organizer/dashboard");
         router.refresh();
       } else {
-         toast({
-          variant: "destructive",
-          title: "Login Failed",
-          description: "Invalid judge email or password.",
-        });
+        throw new Error(res.message || 'Login failed');
       }
-    } else {
-      if (email === "organizer@example.com" && password === "password") {
-        document.cookie = "isLoggedIn=true; path=/; max-age=3600";
-        document.cookie = "userType=organizer; path=/; max-age=3600";
-        setAuthStatus(true, 'organizer');
-        router.push("/organizer/dashboard");
-        router.refresh();
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Login Failed",
-          description: "Invalid organizer email or password.",
-        });
-      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: error?.message || "Invalid email or password.",
+      });
     }
   };
 
