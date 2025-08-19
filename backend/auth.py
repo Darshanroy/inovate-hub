@@ -180,12 +180,30 @@ def update_profile():
     if not isinstance(profile, dict) or not profile:
         return jsonify({'message': 'Profile data is required'}), 400
 
+    # Determine role and enforce allowed fields (server-side whitelist)
+    try:
+        user_doc = users_col.find_one({'_id': ObjectId(user_id)})
+    except Exception:
+        user_doc = None
+
+    role = (profile.get('role') or (user_doc or {}).get('user_type') or 'participant').lower()
+    allowed_fields_by_role = {
+        'participant': {'name', 'tagline', 'location', 'bio', 'skills', 'linkedin', 'github'},
+        'organizer': {'name', 'organization', 'location', 'bio', 'contact_email', 'website', 'linkedin'},
+        'judge': {'name', 'specialization', 'bio', 'linkedin'},
+    }
+    allowed_fields = allowed_fields_by_role.get(role, allowed_fields_by_role['participant'])
+    filtered_profile = {k: v for k, v in profile.items() if k in allowed_fields}
+
+    if 'name' not in filtered_profile or not str(filtered_profile['name']).strip():
+        return jsonify({'message': 'Name is required'}), 400
+
     now = datetime.utcnow()
     try:
         profiles_col.update_one(
             {'user_id': ObjectId(user_id)},
             {
-                '$set': {'data': profile, 'updated_at': now},
+                '$set': {'data': filtered_profile, 'role': role, 'updated_at': now},
                 '$setOnInsert': {'created_at': now, 'user_id': ObjectId(user_id)},
             },
             upsert=True,

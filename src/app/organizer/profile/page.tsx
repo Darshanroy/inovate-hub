@@ -23,9 +23,11 @@ import { LoadingOverlay } from "@/components/ui/loading-overlay";
 const organizerProfileFormSchema = z.object({
   name: z.string().min(1, "Name is required."),
   organization: z.string().min(1, "Organization is required."),
+  location: z.string().min(1, "Location is required."),
   bio: z.string().min(1, "Bio is required."),
+  contact_email: z.string().email("Please enter a valid contact email."),
+  website: z.string().url("Please enter a valid website URL."),
   linkedin: z.string().url("Please enter a valid LinkedIn URL."),
-  github: z.string().url("Please enter a valid GitHub URL."),
 });
 
 export default function OrganizerProfilePage() {
@@ -37,9 +39,11 @@ export default function OrganizerProfilePage() {
         defaultValues: {
             name: "",
             organization: "",
+            location: "",
             bio: "",
+            contact_email: "",
+            website: "",
             linkedin: "",
-            github: ""
         }
     });
 
@@ -67,9 +71,11 @@ export default function OrganizerProfilePage() {
                     form.reset({
                         name: res.profile.name || "",
                         organization: res.profile.organization || "",
+                        location: res.profile.location || "",
                         bio: res.profile.bio || "",
+                        contact_email: res.profile.contact_email || "",
+                        website: res.profile.website || "",
                         linkedin: res.profile.linkedin || "",
-                        github: res.profile.github || "",
                     });
                 }
             } catch {}
@@ -103,10 +109,13 @@ export default function OrganizerProfilePage() {
                                     {isEditing ? (
                                         <>
                                             <FormField control={form.control} name="name" render={({ field }) => (
-                                                <FormItem><FormLabel>Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                                <FormItem><FormLabel>Name</FormLabel><FormControl><Input placeholder="Your full name" {...field} /></FormControl><FormMessage /></FormItem>
                                             )} />
                                              <FormField control={form.control} name="organization" render={({ field }) => (
-                                                <FormItem><FormLabel>Organization</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                                <FormItem><FormLabel>Organization</FormLabel><FormControl><Input placeholder="Company/Community name" {...field} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                             <FormField control={form.control} name="location" render={({ field }) => (
+                                                <FormItem><FormLabel>Location</FormLabel><FormControl><Input placeholder="City, Country" {...field} /></FormControl><FormMessage /></FormItem>
                                             )} />
                                         </>
                                     ) : (
@@ -119,19 +128,24 @@ export default function OrganizerProfilePage() {
                             </div>
                             
                             <FormField control={form.control} name="bio" render={({ field }) => (
-                                <FormItem className="pt-6"><FormLabel>Bio</FormLabel><FormControl><Textarea {...field} rows={4} readOnly={!isEditing} /></FormControl><FormMessage /></FormItem>
+                                <FormItem className="pt-6"><FormLabel>Bio</FormLabel><FormControl><Textarea placeholder="Describe your role and the hackathons you organize." {...field} rows={4} readOnly={!isEditing} /></FormControl><FormMessage /></FormItem>
                             )} />
                             
                             <div className="mt-6">
                                 <h3 className="text-xl font-semibold mb-3">Social Links</h3>
                                 {isEditing ? (
-                                    <div className="flex flex-col sm:flex-row gap-4">
-                                        <FormField control={form.control} name="linkedin" render={({ field }) => (
-                                            <FormItem className="w-full"><FormLabel>LinkedIn</FormLabel><FormControl><Input placeholder="https://linkedin.com/in/..." {...field} /></FormControl><FormMessage /></FormItem>
+                                    <div className="flex flex-col gap-4">
+                                        <FormField control={form.control} name="contact_email" render={({ field }) => (
+                                            <FormItem className="w-full"><FormLabel>Contact Email</FormLabel><FormControl><Input placeholder="organizer@company.com" type="email" {...field} /></FormControl><FormMessage /></FormItem>
                                         )} />
-                                         <FormField control={form.control} name="github" render={({ field }) => (
-                                            <FormItem className="w-full"><FormLabel>GitHub</FormLabel><FormControl><Input placeholder="https://github.com/..." {...field} /></FormControl><FormMessage /></FormItem>
+                                        <FormField control={form.control} name="website" render={({ field }) => (
+                                            <FormItem className="w-full"><FormLabel>Website</FormLabel><FormControl><Input placeholder="https://your-organization.com" {...field} /></FormControl><FormMessage /></FormItem>
                                         )} />
+                                        <div className="flex flex-col sm:flex-row gap-4">
+                                            <FormField control={form.control} name="linkedin" render={({ field }) => (
+                                                <FormItem className="w-full"><FormLabel>LinkedIn</FormLabel><FormControl><Input placeholder="https://linkedin.com/in/your-profile" {...field} /></FormControl><FormMessage /></FormItem>
+                                            )} />
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="flex flex-col sm:flex-row gap-2">
@@ -139,12 +153,6 @@ export default function OrganizerProfilePage() {
                                             <Link href={form.getValues("linkedin")} target="_blank">
                                                 <Linkedin className="mr-2 h-4 w-4" />
                                                 LinkedIn
-                                            </Link>
-                                        </Button>
-                                        <Button asChild variant="outline" className="w-full justify-start">
-                                            <Link href={form.getValues("github")} target="_blank">
-                                                <Github className="mr-2 h-4 w-4" />
-                                                GitHub
                                             </Link>
                                         </Button>
                                     </div>
