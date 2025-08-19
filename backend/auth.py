@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 import os
 from typing import Optional
+from urllib.parse import quote_plus
 
 from flask import Blueprint, jsonify, request
 from pymongo import MongoClient, ASCENDING
@@ -15,7 +16,10 @@ auth_bp = Blueprint('auth', __name__)
 
 
 # --- Configuration ---
-MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017')
+# Prefer explicit MONGODB_URI if provided; otherwise build Atlas SRV URI using MONGODB_PASSWORD
+MONGODB_PASSWORD = "darshan"
+DEFAULT_ATLAS_URI = f"mongodb+srv://dar:{quote_plus(MONGODB_PASSWORD) if MONGODB_PASSWORD else '<db_password>'}@cluster0.g3jy5p4.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+MONGODB_URI = os.environ.get('MONGODB_URI', DEFAULT_ATLAS_URI)
 MONGODB_DB = os.environ.get('MONGODB_DB', 'inovatehub')
 JWT_SECRET = os.environ.get('JWT_SECRET', 'change_me_dev_secret')
 JWT_EXPIRES_MINUTES = int(os.environ.get('JWT_EXPIRES_MINUTES', '60'))
