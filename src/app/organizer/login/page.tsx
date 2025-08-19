@@ -68,61 +68,62 @@ export default function OrganizerLoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden">
-      <div className="absolute inset-0 z-0">
-        <div className="absolute -top-1/4 -left-1/4 h-1/2 w-1/2 rounded-full bg-gradient-to-br from-purple-600 via-blue-500 to-teal-400 opacity-20 blur-3xl filter"></div>
-        <div className="absolute -bottom-1/4 -right-1/4 h-1/2 w-1/2 rounded-full bg-gradient-to-tl from-pink-500 via-red-500 to-yellow-400 opacity-20 blur-3xl filter"></div>
-      </div>
-      <main className="container mx-auto flex h-screen items-center justify-center p-4">
-        <div className="w-full max-w-md rounded-2xl p-8 shadow-2xl bg-secondary/50 backdrop-blur-xl border border-white/10">
-          <div className="mb-8 text-center">
-            <h2 className="text-3xl font-bold">{isJudgeLogin ? 'Welcome, Judge' : 'Welcome Back, Organizer'}</h2>
-            <p className="text-muted-foreground mt-2">{isJudgeLogin ? 'Sign in to start evaluating submissions.' : 'Sign in to manage your hackathons.'}</p>
-          </div>
-          <form className="space-y-6" onSubmit={handleLogin}>
-            <div>
-              <label className="sr-only" htmlFor="email">Email</label>
-              <Input id="email" placeholder={isJudgeLogin ? "Email (judge@example.com)" : "Email (organizer@example.com)"} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-            </div>
-            <div>
-              <label className="sr-only" htmlFor="password">Password</label>
-              <Input id="password" placeholder="Password (password)" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-            </div>
-            <div className="text-right">
-              <Link className="text-sm text-muted-foreground hover:text-accent hover:underline" href="#">Forgot password?</Link>
-            </div>
-            <div>
-              <Button className="w-full font-bold" type="submit">Sign In</Button>
-            </div>
-          </form>
-          <div className="my-6 flex items-center">
-            <hr className="w-full border-t border-gray-600" />
-            <span className="px-2 text-muted-foreground">OR</span>
-            <hr className="w-full border-t border-gray-600" />
-          </div>
-          <div className="space-y-4">
-            <Button variant="secondary" className="w-full">
-              <GoogleIcon className="h-5 w-5 mr-3" />
-              Continue with Google
-            </Button>
-            <Button variant="secondary" className="w-full">
-              <GitHubIcon className="h-5 w-5 mr-3" />
-              Continue with GitHub
-            </Button>
-             <Button variant="secondary" className="w-full">
-              <LinkedInIcon className="h-5 w-5 mr-3 fill-current" />
-              Continue with LinkedIn
-            </Button>
-          </div>
-           <p className="mt-8 text-center text-muted-foreground">
-             {isJudgeLogin ? 'Not a judge?' : 'Not an organizer?'}{' '}
-             <button className="font-semibold text-accent hover:underline" onClick={() => setIsJudgeLogin(!isJudgeLogin)}>
-                {isJudgeLogin ? 'Sign in as an organizer' : 'Sign in as a judge'}
-             </button>
-          </p>
+    <div className="flex-1">
+      <div className="relative min-h-full w-full overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <div className="absolute -top-1/4 -left-1/4 h-1/2 w-1/2 rounded-full bg-gradient-to-br from-purple-600 via-blue-500 to-teal-400 opacity-20 blur-3xl filter"></div>
+          <div className="absolute -bottom-1/4 -right-1/4 h-1/2 w-1/2 rounded-full bg-gradient-to-tl from-pink-500 via-red-500 to-yellow-400 opacity-20 blur-3xl filter"></div>
         </div>
-      </main>
+        <main className="container mx-auto flex h-full items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-2xl p-8 shadow-2xl bg-secondary/50 backdrop-blur-xl border border-white/10">
+            <div className="mb-8 text-center">
+              <h2 className="text-3xl font-bold">{isJudgeLogin ? 'Welcome, Judge' : 'Welcome Back, Organizer'}</h2>
+              <p className="text-muted-foreground mt-2">{isJudgeLogin ? 'Sign in to start evaluating submissions.' : 'Sign in to manage your hackathons.'}</p>
+            </div>
+            <form className="space-y-6" onSubmit={handleLogin}>
+              <div>
+                <label className="sr-only" htmlFor="email">Email</label>
+                <Input id="email" placeholder={isJudgeLogin ? "Email (judge@example.com)" : "Email (organizer@example.com)"} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              </div>
+              <div>
+                <label className="sr-only" htmlFor="password">Password</label>
+                <Input id="password" placeholder="Password (password)" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              </div>
+              <div className="text-right">
+                <Link className="text-sm text-muted-foreground hover:text-accent hover:underline" href="#">Forgot password?</Link>
+              </div>
+              <div>
+                <Button className="w-full font-bold" type="submit">Sign In</Button>
+              </div>
+            </form>
+            <div className="my-6 flex items-center">
+              <hr className="w-full border-t border-gray-600" />
+              <span className="px-2 text-muted-foreground">OR</span>
+              <hr className="w-full border-t border-gray-600" />
+            </div>
+            <div className="space-y-4">
+              <Button variant="secondary" className="w-full">
+                <GoogleIcon className="h-5 w-5 mr-3" />
+                Continue with Google
+              </Button>
+              <Button variant="secondary" className="w-full">
+                <GitHubIcon className="h-5 w-5 mr-3" />
+                Continue with GitHub
+              </Button>
+              <Button variant="secondary" className="w-full">
+                <LinkedInIcon className="h-5 w-5 mr-3 fill-current" />
+                Continue with LinkedIn
+              </Button>
+            </div>
+            <p className="mt-8 text-center text-muted-foreground">
+              {isJudgeLogin ? 'Not a judge?' : 'Not an organizer?'}{' '}
+              <button className="font-semibold text-accent hover:underline" onClick={() => setIsJudgeLogin(!isJudgeLogin)}>
+                  {isJudgeLogin ? 'Sign in as an organizer' : 'Sign in as a judge'}
+              </button>
+            </p>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
-

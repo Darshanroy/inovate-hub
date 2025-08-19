@@ -7,13 +7,13 @@ import { UpcomingHackathons } from "@/components/landing/upcoming-hackathons";
 
 export default function LandingPage() {
   return (
-    <>
+    <div className="flex-1">
       <HeroSection />
       <TrustedBy />
       <FeaturesSection />
       <UpcomingHackathons />
       <HowItWorks />
       <Testimonials />
-    </>
+    </div>
   )
 }
