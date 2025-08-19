@@ -17,7 +17,8 @@ import {
   PlusCircle,
   LogOut,
   Rocket,
-  Bell
+  Bell,
+  User
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -116,6 +117,21 @@ export default function OrganizerDashboardLayout({
                       </DropdownMenu>
                     </div>
                   </div>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                  <Link href="/organizer/profile">
+                    <SidebarMenuButton
+                      isActive={pathname === "/organizer/profile"}
+                      className="text-base h-11 justify-start"
+                       tooltip={{
+                          children: "Profile",
+                          side: "right",
+                          align: "center",
+                        }}>
+                      <User className="h-5 w-5"/>
+                      <span className="group-data-[collapsible=icon]:hidden">Profile</span>
+                  </SidebarMenuButton>
+                  </Link>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton onClick={handleLogout}

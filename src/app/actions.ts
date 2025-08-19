@@ -1,3 +1,4 @@
+
 "use server";
 
 import { teammateMatch, TeammateMatchInput } from "@/ai/flows/teammate-matching";
@@ -56,8 +57,49 @@ export async function updateProfile(values: ProfileFormValues) {
   }
 
   // In a real application, you would save this data to a database.
-  // For now, we'll just log it to the console.
   console.log("Profile updated:", validatedFields.data);
 
   return { success: "Profile updated successfully!" };
+}
+
+const organizerProfileFormSchema = z.object({
+  name: z.string().min(1, "Name is required."),
+  organization: z.string().min(1, "Organization is required."),
+  bio: z.string().min(1, "Bio is required."),
+  linkedin: z.string().url("Please enter a valid LinkedIn URL."),
+  github: z.string().url("Please enter a valid GitHub URL."),
+});
+
+export type OrganizerProfileFormValues = z.infer<typeof organizerProfileFormSchema>;
+
+export async function updateOrganizerProfile(values: OrganizerProfileFormValues) {
+  const validatedFields = organizerProfileFormSchema.safeParse(values);
+
+  if (!validatedFields.success) {
+    return { error: "Invalid input." };
+  }
+
+  console.log("Organizer Profile updated:", validatedFields.data);
+  return { success: "Profile updated successfully!" };
+}
+
+
+const judgeProfileFormSchema = z.object({
+  name: z.string().min(1, "Name is required."),
+  specialization: z.string().min(1, "Specialization is required."),
+  bio: z.string().min(1, "Bio is required."),
+  linkedin: z.string().url("Please enter a valid LinkedIn URL."),
+});
+
+export type JudgeProfileFormValues = z.infer<typeof judgeProfileFormSchema>;
+
+export async function updateJudgeProfile(values: JudgeProfileFormValues) {
+    const validatedFields = judgeProfileFormSchema.safeParse(values);
+
+    if (!validatedFields.success) {
+        return { error: "Invalid input." };
+    }
+    
+    console.log("Judge Profile updated:", validatedFields.data);
+    return { success: "Profile updated successfully!" };
 }

@@ -38,11 +38,29 @@ export function AppHeader() {
   const [userType, setUserType] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    setIsLoggedIn(getCookie("isLoggedIn") === "true");
-    setUserType(getCookie("userType"));
+    // A simple way to re-trigger effect on navigation, since cookies can change.
+    // In a real app, a state manager or context would be better.
+    const checkLoginStatus = () => {
+      setIsLoggedIn(getCookie("isLoggedIn") === "true");
+      setUserType(getCookie("userType"));
+    }
+    checkLoginStatus();
+
+    // Re-check when focus returns to the window, e.g., after a new tab login
+    window.addEventListener('focus', checkLoginStatus);
+    
+    // Create a custom event listener for navigation changes
+    const handlePopState = () => checkLoginStatus();
+    window.addEventListener('popstate', handlePopState);
+
+
+    return () => {
+      window.removeEventListener('focus', checkLoginStatus);
+      window.removeEventListener('popstate', handlePopState);
+    };
   }, []);
   
-  const profileUrl = userType === "organizer" ? "/organizer/dashboard" : userType === 'judge' ? '/judge/dashboard' : "/profile";
+  const profileUrl = userType === "organizer" ? "/organizer/profile" : userType === 'judge' ? '/judge/profile' : "/profile";
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm border-b border-border">
@@ -88,7 +106,7 @@ export function AppHeader() {
             <>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full">
+                  <Button variant="ghost" size="icon" className="rounded-full w-9 h-9">
                     <Bell className="h-5 w-5" />
                     <span className="sr-only">Notifications</span>
                   </Button>
