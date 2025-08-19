@@ -13,7 +13,7 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar"
 import {
-  Home,
+  LayoutDashboard,
   PlusCircle,
   LogOut,
   Rocket,
@@ -41,7 +41,7 @@ export default function OrganizerDashboardLayout({
   }
 
   const menuItems = [
-    { href: "/organizer/dashboard", label: "Dashboard", icon: Home },
+    { href: "/organizer/dashboard", label: "Dashboard", icon: LayoutDashboard },
     {
       href: "/organizer/dashboard/create",
       label: "Create Hackathon",
@@ -65,7 +65,7 @@ export default function OrganizerDashboardLayout({
             <SidebarMenu className="mt-8 flex-1">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
-                  <Link href={item.href} passHref>
+                  <Link href={item.href}>
                     <SidebarMenuButton
                       isActive={pathname === item.href}
                       className="text-base h-11 justify-start"
@@ -104,7 +104,7 @@ export default function OrganizerDashboardLayout({
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Bell className="h-4 w-4" />
+                            <Bell className="h-5 w-5" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent side="top" align="end">

@@ -13,7 +13,7 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar"
 import {
-  Home,
+  LayoutDashboard,
   LogOut,
   Rocket,
   Bell
@@ -40,7 +40,7 @@ export default function JudgeDashboardLayout({
   }
 
   const menuItems = [
-    { href: "/judge/dashboard", label: "Dashboard", icon: Home },
+    { href: "/judge/dashboard", label: "Dashboard", icon: LayoutDashboard },
   ]
 
   return (
@@ -98,7 +98,7 @@ export default function JudgeDashboardLayout({
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Bell className="h-4 w-4" />
+                            <Bell className="h-5 w-5" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent side="top" align="end">
