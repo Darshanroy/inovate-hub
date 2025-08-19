@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -36,6 +37,7 @@ import { Loader2, Wand2 } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { ScrollArea } from "../ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import { LoadingOverlay } from "../ui/loading-overlay";
 
 const formSchema = z.object({
   skills: z.string().min(2, {
@@ -103,6 +105,7 @@ export function TeammateMatcherModal() {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[625px]">
+        {loading && <LoadingOverlay message="Our AI is finding your perfect match..." />}
         <DialogHeader>
           <DialogTitle>AI Teammate Matcher</DialogTitle>
           <DialogDescription>

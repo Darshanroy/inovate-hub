@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
 
 
 const judgeProfileFormSchema = z.object({
@@ -59,6 +60,7 @@ export default function JudgeProfilePage() {
 
     return (
         <div className="container mx-auto px-4 py-8">
+            {isSubmitting && <LoadingOverlay message="Saving your profile..." />}
             <div className="flex flex-col max-w-4xl mx-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h1 className="text-3xl font-bold">My Profile</h1>

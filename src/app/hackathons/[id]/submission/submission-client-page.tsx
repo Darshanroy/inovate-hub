@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { UploadCloud, File, X, PlusCircle, Link as LinkIcon, Youtube } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
 
 export default function SubmissionClientPage({ hackathon }: { hackathon: Hackathon }) {
   const [timeLeft, setTimeLeft] = useState({
@@ -22,6 +23,7 @@ export default function SubmissionClientPage({ hackathon }: { hackathon: Hackath
   const { toast } = useToast();
   const [files, setFiles] = useState<File[]>([]);
   const [techStack, setTechStack] = useState<string[]>(["React", "Node.js", "AI"]);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleSaveDraft = () => {
@@ -32,11 +34,16 @@ export default function SubmissionClientPage({ hackathon }: { hackathon: Hackath
   }
 
   const handleSubmit = () => {
-     toast({
-        title: "Project Submitted!",
-        description: "Your project has been successfully submitted for review.",
-    });
-    router.push(`/hackathons/${hackathon.id}`);
+     setIsLoading(true);
+     // Simulate API call
+     setTimeout(() => {
+        setIsLoading(false);
+        toast({
+            title: "Project Submitted!",
+            description: "Your project has been successfully submitted for review.",
+        });
+        router.push(`/hackathons/${hackathon.id}`);
+     }, 2000);
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,6 +86,7 @@ export default function SubmissionClientPage({ hackathon }: { hackathon: Hackath
 
   return (
     <>
+      {isLoading && <LoadingOverlay message="Submitting your masterpiece..." />}
       <div className="fixed left-0 right-0 top-[65px] z-20 border-b border-t border-border/20 bg-primary/10 py-3 text-center backdrop-blur-sm">
         <p className="text-sm">
           <span className="font-bold">Submission Deadline:</span> {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
