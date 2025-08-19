@@ -44,6 +44,7 @@ export type SoloParticipant = {
 }
 
 export type Submission = {
+    team: Team;
     title: string;
     description: string;
     techStack: string[];
@@ -68,6 +69,12 @@ export type JudgeEvent = {
     submissionsToJudge: number;
 }
 
+export type Criterion = {
+  id: number;
+  name: string;
+  weight: number;
+  maxScore: number;
+};
 
 export const hackathons: Hackathon[] = [
   {
@@ -233,36 +240,35 @@ export const soloParticipants: SoloParticipant[] = [
     { name: "Henry King", avatar: "https://placehold.co/40x40.png", skills: ["Android", "Kotlin", "Firebase"] },
 ];
 
-export const mySubmission: Submission = {
-    title: "AI-Powered Code Assistant",
-    description: "An intelligent code assistant that provides real-time suggestions, error checking, and code generation to improve developer productivity. Built with Next.js, Genkit, and a fine-tuned language model.",
-    techStack: ["Next.js", "React", "TypeScript", "Genkit", "Tailwind CSS"],
-    githubUrl: "https://github.com/sophiachen/ai-code-assistant",
-    videoUrl: "https://youtube.com/watch?v=example",
-    status: 'draft',
-}
-
 const teamsForResults: Team[] = [
     {
         id: "1",
         name: "AI Avengers",
         description: "AI for the win!",
         avatar: "https://placehold.co/192x192.png",
-        members: []
+        members: [
+            { name: "Tony Stark", role: "Leader", avatar: "https://placehold.co/32x32.png" },
+            { name: "Bruce Banner", role: "Developer", avatar: "https://placehold.co/32x32.png" },
+        ]
     },
     {
         id: "2",
         name: "Data Dynamos",
         description: "In data we trust.",
         avatar: "https://placehold.co/192x192.png",
-        members: []
+        members: [
+             { name: "Stephen Strange", role: "Leader", avatar: "https://placehold.co/32x32.png" },
+        ]
     },
     {
         id: "3",
         name: "Code Crusaders",
         description: "Crusading for clean code.",
         avatar: "https://placehold.co/192x192.png",
-        members: []
+        members: [
+             { name: "Peter Parker", role: "Leader", avatar: "https://placehold.co/32x32.png" },
+             { name: "Miles Morales", role: "Developer", avatar: "https://placehold.co/32x32.png" },
+        ]
     },
     { ...team, id: '4', name: "Team QuantumLeap AI", avatar: "https://placehold.co/192x192.png" }, // User's team
     {
@@ -270,9 +276,21 @@ const teamsForResults: Team[] = [
         name: "Bug Busters",
         description: "No bug is safe.",
         avatar: "https://placehold.co/192x192.png",
-        members: []
+        members: [
+            { name: "Scott Lang", role: "Leader", avatar: "https://placehold.co/32x32.png" },
+        ]
     },
 ];
+
+export const mySubmission: Submission = {
+    team: teamsForResults[3],
+    title: "AI-Powered Code Assistant",
+    description: "An intelligent code assistant that provides real-time suggestions, error checking, and code generation to improve developer productivity. Built with Next.js, Genkit, and a fine-tuned language model.",
+    techStack: ["Next.js", "React", "TypeScript", "Genkit", "Tailwind CSS"],
+    githubUrl: "https://github.com/sophiachen/ai-code-assistant",
+    videoUrl: "https://youtube.com/watch?v=example",
+    status: 'draft',
+}
 
 
 export const results: Result[] = [

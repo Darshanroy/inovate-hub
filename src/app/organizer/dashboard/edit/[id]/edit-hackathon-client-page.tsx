@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BasicInfoTab } from "./_components/basic-info-tab";
 import { JudgingPanelTab } from "./_components/judging-panel-tab";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ResultsTab } from "./_components/results-tab";
 
 const PlaceholderTab = ({ title }: { title: string }) => (
     <Card>
@@ -48,7 +49,7 @@ export default function EditHackathonClientPage({ hackathon }: { hackathon: Hack
             <JudgingPanelTab />
         </TabsContent>
          <TabsContent value="results">
-            <PlaceholderTab title="Results" />
+            <ResultsTab />
         </TabsContent>
       </Tabs>
     </div>
