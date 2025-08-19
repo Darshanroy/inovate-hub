@@ -15,11 +15,14 @@ import {
 import {
   Home,
   LogOut,
-  Rocket
+  Rocket,
+  Bell
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
 
 export default function JudgeDashboardLayout({
   children,
@@ -80,14 +83,31 @@ export default function JudgeDashboardLayout({
              <SidebarFooter>
               <SidebarMenu>
                  <SidebarMenuItem>
-                  <div className="flex items-center gap-3 p-2">
-                    <Avatar>
-                      <AvatarImage src="https://placehold.co/40x40.png" alt="Judge"/>
-                      <AvatarFallback>J</AvatarFallback>
-                    </Avatar>
+                  <div className="flex items-center justify-between p-2 w-full">
+                    <div className="flex items-center gap-3">
+                      <Avatar>
+                        <AvatarImage src="https://placehold.co/40x40.png" alt="Judge"/>
+                        <AvatarFallback>J</AvatarFallback>
+                      </Avatar>
+                      <div className="group-data-[collapsible=icon]:hidden">
+                          <p className="font-semibold">Judge</p>
+                          <p className="text-xs text-muted-foreground">judge@example.com</p>
+                      </div>
+                    </div>
                     <div className="group-data-[collapsible=icon]:hidden">
-                        <p className="font-semibold">Judge</p>
-                        <p className="text-xs text-muted-foreground">judge@example.com</p>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Bell className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent side="top" align="end">
+                           <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                           <DropdownMenuSeparator />
+                           <DropdownMenuItem>You have been invited to judge "AI Innovation Challenge".</DropdownMenuItem>
+                           <DropdownMenuItem>Submissions for "Sustainable Solutions" are now open for judging.</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </SidebarMenuItem>

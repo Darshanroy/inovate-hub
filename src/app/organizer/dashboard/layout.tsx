@@ -15,16 +15,15 @@ import {
 import {
   Home,
   PlusCircle,
-  Users,
-  FileText,
-  Award,
-  BarChart,
   LogOut,
-  Rocket
+  Rocket,
+  Bell
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
 
 export default function OrganizerDashboardLayout({
   children,
@@ -68,7 +67,6 @@ export default function OrganizerDashboardLayout({
                 <SidebarMenuItem key={item.label}>
                   <Link href={item.href} passHref>
                     <SidebarMenuButton
-                      asChild
                       isActive={pathname === item.href}
                       className="text-base h-11 justify-start"
                       tooltip={{
@@ -91,14 +89,31 @@ export default function OrganizerDashboardLayout({
              <SidebarFooter>
               <SidebarMenu>
                  <SidebarMenuItem>
-                  <div className="flex items-center gap-3 p-2">
-                    <Avatar>
-                      <AvatarImage src="https://placehold.co/40x40.png" alt="Organizer"/>
-                      <AvatarFallback>O</AvatarFallback>
-                    </Avatar>
-                    <div className="group-data-[collapsible=icon]:hidden">
-                        <p className="font-semibold">Organizer</p>
-                        <p className="text-xs text-muted-foreground">organizer@example.com</p>
+                  <div className="flex items-center justify-between p-2 w-full">
+                    <div className="flex items-center gap-3">
+                      <Avatar>
+                        <AvatarImage src="https://placehold.co/40x40.png" alt="Organizer"/>
+                        <AvatarFallback>O</AvatarFallback>
+                      </Avatar>
+                      <div className="group-data-[collapsible=icon]:hidden">
+                          <p className="font-semibold">Organizer</p>
+                          <p className="text-xs text-muted-foreground">organizer@example.com</p>
+                      </div>
+                    </div>
+                     <div className="group-data-[collapsible=icon]:hidden">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                           <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Bell className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent side="top" align="end">
+                           <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                           <DropdownMenuSeparator />
+                           <DropdownMenuItem>Judge Alice has accepted your invitation.</DropdownMenuItem>
+                           <DropdownMenuItem>3 new submissions for "AI Innovation Challenge".</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </SidebarMenuItem>

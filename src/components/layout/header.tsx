@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
-import { Bell, Search, User, FileText } from "lucide-react";
+import { Bell, Search, User } from "lucide-react";
 import { Input } from "../ui/input";
 import {
   DropdownMenu,
@@ -41,7 +42,7 @@ export function AppHeader() {
     setUserType(getCookie("userType"));
   }, []);
   
-  const profileUrl = userType === "organizer" ? "/organizer/dashboard" : "/profile";
+  const profileUrl = userType === "organizer" ? "/organizer/dashboard" : userType === 'judge' ? '/judge/dashboard' : "/profile";
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm border-b border-border">
@@ -70,6 +71,11 @@ export function AppHeader() {
                 </Link>
               </>
             )}
+             {isLoggedIn && userType === 'judge' && (
+                <Link href="/judge/dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
+                  Judging Dashboard
+                </Link>
+            )}
           </nav>
         </div>
        
@@ -80,10 +86,20 @@ export function AppHeader() {
           </div>
           {isLoggedIn ? (
             <>
-               <Button variant="ghost" size="icon" className="rounded-full">
-                <Bell className="h-5 w-5" />
-                <span className="sr-only">Notifications</span>
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <Bell className="h-5 w-5" />
+                    <span className="sr-only">Notifications</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>You have been invited to judge "AI Innovation Challenge".</DropdownMenuItem>
+                   <DropdownMenuItem>Your submission for "FinTech Disruption" has been approved.</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                    <Avatar className="cursor-pointer">
