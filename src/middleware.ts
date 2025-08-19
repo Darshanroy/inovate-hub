@@ -5,14 +5,19 @@ import type { NextRequest } from 'next/server'
 const protectedPaths = [
   '/hackathons/my',
   '/profile',
-  '/organizer',
-  '/judge'
+  '/organizer/dashboard',
+  '/organizer/profile',
+  '/judge/dashboard',
+  '/judge/profile'
 ]
 
 // Add paths that should redirect to dashboard if already authenticated
 const authPaths = [
   '/login',
-  '/signup'
+  '/signup',
+  '/organizer/login',
+  '/organizer/signup',
+  '/judge/login'
 ]
 
 export function middleware(request: NextRequest) {
@@ -30,8 +35,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // If accessing auth pages while already authenticated, redirect to dashboard
+  // If accessing auth pages while already authenticated, redirect to appropriate dashboard
   if (isAuthPath && authToken) {
+    // For now, redirect to participant dashboard - this could be enhanced to check user type
     return NextResponse.redirect(new URL('/hackathons/my', request.url))
   }
 
