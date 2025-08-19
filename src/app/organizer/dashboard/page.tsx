@@ -4,11 +4,10 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { PlusCircle, ArrowRight } from "lucide-react"
-import { hackathons, Hackathon } from "@/lib/data"
+import { PlusCircle, ArrowRight, Eye, Edit, Trash2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { format, isPast, isFuture, parseISO } from "date-fns"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
@@ -20,10 +19,54 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ListFilter } from "lucide-react"
+import { apiService } from "@/lib/api"
+import { getCookie } from "@/hooks/use-auth"
+import { useToast } from "@/hooks/use-toast"
+
+interface Hackathon {
+  id: string;
+  name: string;
+  theme: string;
+  date: string;
+  rounds?: Array<{ name: string; date: string; description: string }>;
+  prize: number;
+  locationType: 'online' | 'offline';
+  image: string;
+  hint: string;
+  description: string;
+  registration_count: number;
+  team_count: number;
+  created_at: string;
+}
 
 export default function OrganizerDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [hackathons, setHackathons] = useState<Hackathon[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    loadHackathons();
+  }, []);
+
+  const loadHackathons = async () => {
+    try {
+      setLoading(true);
+      const token = getCookie('authToken');
+      if (!token) {
+        toast({ title: 'Please log in', description: 'You need to be logged in to view your hackathons.' });
+        return;
+      }
+      const res = await apiService.getOrganizerHackathons(token);
+      setHackathons(res.hackathons || []);
+    } catch (error: any) {
+      console.error('Failed to load hackathons:', error);
+      toast({ title: 'Error', description: error.message || 'Failed to load hackathons' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getEventStatus = (hackathon: Hackathon) => {
     if (hackathon.rounds && hackathon.rounds.length > 0) {
@@ -54,9 +97,19 @@ export default function OrganizerDashboard() {
     );
 
   const totalHackathons = hackathons.length;
-  const totalParticipants = 128; // mock data
+  const totalParticipants = hackathons.reduce((sum, h) => sum + h.registration_count, 0);
   const upcomingDeadlines = hackathons.filter(h => getEventStatus(h) === 'Upcoming').length;
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading your hackathons...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -105,71 +158,106 @@ export default function OrganizerDashboard() {
         <CardHeader>
           <CardTitle>My Hackathons</CardTitle>
           <CardDescription>
-            Here you can manage all your hackathons, participants, and results.
+            Manage and monitor all your hackathon events.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4 mb-4">
-             <Input 
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <Input
                 placeholder="Search hackathons..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-xs"
-             />
-             <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                    <ListFilter className="mr-2 h-4 w-4" />
-                    Status: {statusFilter}
+                className="pl-8"
+              />
+              <ListFilter className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-auto">
+                  <ListFilter className="mr-2 h-4 w-4" />
+                  {statusFilter}
                 </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuRadioGroup value={statusFilter} onValueChange={setStatusFilter}>
-                    {["All", "Upcoming", "Ongoing", "Ended"].map(s => (
-                          <DropdownMenuRadioItem key={s} value={s}>{s}</DropdownMenuRadioItem>
-                    ))}
+                  <DropdownMenuRadioItem value="All">All</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="Upcoming">Upcoming</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="Ongoing">Ongoing</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="Ended">Ended</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
+              </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <div className="space-y-4">
-            {filteredHackathons.map((hackathon) => {
-              const status = getEventStatus(hackathon);
-              const displayDate = hackathon.rounds && hackathon.rounds.length > 0 ? hackathon.rounds[0].date : hackathon.date;
-              return (
-                <Card key={hackathon.id} className="bg-secondary">
-                  <CardHeader className="flex flex-row justify-between items-start">
-                    <div>
-                      <CardTitle className="text-xl">{hackathon.name}</CardTitle>
-                      <CardDescription>{format(new Date(displayDate), "PPP")}</CardDescription>
+
+          {filteredHackathons.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-muted-foreground mb-4">
+                {hackathons.length === 0 ? (
+                  <>
+                    <p className="text-lg font-semibold mb-2">No hackathons yet</p>
+                    <p>Create your first hackathon to get started!</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg font-semibold mb-2">No hackathons found</p>
+                    <p>Try adjusting your search or filter criteria.</p>
+                  </>
+                )}
+              </div>
+              {hackathons.length === 0 && (
+                <Button asChild>
+                  <Link href="/organizer/dashboard/create">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create Your First Hackathon
+                  </Link>
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredHackathons.map((hackathon) => (
+                <div key={hackathon.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{hackathon.name}</h3>
+                      <p className="text-sm text-muted-foreground">{hackathon.theme}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant={getEventStatus(hackathon) === 'Ongoing' ? 'default' : 'secondary'}>
+                          {getEventStatus(hackathon)}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          {hackathon.registration_count} participants • {hackathon.team_count} teams
+                        </span>
+                      </div>
                     </div>
-                     <Badge variant={status === "Ended" ? "secondary" : status === 'Ongoing' ? "destructive" : "default"}>{status}</Badge>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-4 grid-cols-2 md:grid-cols-4 text-sm">
-                       <div>
-                          <p className="text-muted-foreground">Participants</p>
-                          <p className="font-bold">128</p>
-                       </div>
-                       <div>
-                          <p className="text-muted-foreground">Submissions</p>
-                          <p className="font-bold">32</p>
-                       </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="justify-end bg-black/10 p-4">
-                    <Button asChild>
-                        <Link href={`/organizer/dashboard/edit/${hackathon.id}`}>
-                            Manage Event <ArrowRight className="ml-2 h-4 w-4" />
-                        </Link>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/hackathons/${hackathon.id}`}>
+                        <Eye className="mr-2 h-4 w-4"/>
+                        View
+                      </Link>
                     </Button>
-                  </CardFooter>
-                </Card>
-              )
-            })}
-          </div>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/organizer/dashboard/edit/${hackathon.id}`}>
+                        <Edit className="mr-2 h-4 w-4"/>
+                        Edit
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/organizer/dashboard/edit/${hackathon.id}`}>
+                        <ArrowRight className="mr-2 h-4 w-4"/>
+                        Manage
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

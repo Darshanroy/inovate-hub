@@ -49,6 +49,48 @@ export interface ProfileUpdateRequest {
   profile: Record<string, any>;
 }
 
+export interface Team {
+  id: string;
+  name: string;
+  description: string;
+  code: string;
+  leader_id: string;
+  members: Array<{
+    id: string;
+    name: string;
+    email: string;
+  }>;
+  max_members: number;
+  created_at: string;
+}
+
+export interface TeamRequest {
+  id: string;
+  team_id: string;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  message: string;
+  status: string;
+  created_at: string;
+}
+
+export interface Participant {
+  id: string;
+  name: string;
+  email: string;
+  motivation: string;
+  portfolio_link: string;
+  looking_for_team: boolean;
+  team_code: string;
+  registration_date: string;
+  team?: {
+    team_id: string;
+    team_name: string;
+    team_code: string;
+  };
+}
+
 class ApiService {
   private baseUrl: string;
 
@@ -163,15 +205,110 @@ class ApiService {
     });
   }
 
-  async registerForHackathon(token: string, id: string): Promise<{ message: string }> {
+  async registerForHackathon(
+    token: string,
+    id: string,
+    details?: { motivation?: string; hasTeam?: boolean; teamCode?: string; portfolio?: string }
+  ): Promise<{ message: string }> {
     return this.request<{ message: string }>(`/hackathons/register/${id}`, {
       method: 'POST',
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ token, details }),
     });
   }
 
   async myRegistrations(token: string): Promise<{ hackathons: any[] }> {
     return this.request<{ hackathons: any[] }>(`/hackathons/my-registrations`, {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  // Team Management
+  async createTeam(token: string, hackathonId: string, team: { name: string; description?: string }): Promise<{ message: string; team_id: string; code: string }> {
+    return this.request<{ message: string; team_id: string; code: string }>(`/hackathons/teams/create/${hackathonId}`, {
+      method: 'POST',
+      body: JSON.stringify({ token, team }),
+    });
+  }
+
+  async listTeams(hackathonId: string): Promise<{ teams: Team[] }> {
+    return this.request<{ teams: Team[] }>(`/hackathons/teams/list/${hackathonId}`);
+  }
+
+  async joinTeam(token: string, hackathonId: string, teamCode: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/teams/join/${hackathonId}`, {
+      method: 'POST',
+      body: JSON.stringify({ token, team_code: teamCode }),
+    });
+  }
+
+  async requestJoinTeam(token: string, hackathonId: string, teamId: string, message?: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/teams/request/${hackathonId}`, {
+      method: 'POST',
+      body: JSON.stringify({ token, team_id: teamId, message }),
+    });
+  }
+
+  async getTeamRequests(token: string, hackathonId: string): Promise<{ requests: TeamRequest[] }> {
+    return this.request<{ requests: TeamRequest[] }>(`/hackathons/teams/requests/${hackathonId}`, {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  async respondToTeamRequest(token: string, requestId: string, action: 'approve' | 'reject'): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/teams/requests/respond`, {
+      method: 'POST',
+      body: JSON.stringify({ token, request_id: requestId, action }),
+    });
+  }
+
+  // Team Messages and Updates
+  async getTeamMessages(token: string, hackathonId: string): Promise<{ messages: any[] }> {
+    return this.request<{ messages: any[] }>(`/hackathons/teams/messages/${hackathonId}`, {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  async sendTeamMessage(token: string, hackathonId: string, message: string): Promise<{ message: string; id: string }> {
+    return this.request<{ message: string; id: string }>(`/hackathons/teams/messages/send/${hackathonId}`, {
+      method: 'POST',
+      body: JSON.stringify({ token, message }),
+    });
+  }
+
+  async updateTeam(token: string, hackathonId: string, updates: { description?: string }): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/teams/update/${hackathonId}`, {
+      method: 'POST',
+      body: JSON.stringify({ token, updates }),
+    });
+  }
+
+  async getMyTeam(token: string, hackathonId: string): Promise<{ team: any }> {
+    return this.request<{ team: any }>(`/hackathons/teams/my-team/${hackathonId}`, {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  async removeTeamMember(token: string, hackathonId: string, memberId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/teams/remove-member/${hackathonId}`, {
+      method: 'POST',
+      body: JSON.stringify({ token, member_id: memberId }),
+    });
+  }
+
+  // Organizer Dashboard
+  async getOrganizerHackathons(token: string): Promise<{ hackathons: any[] }> {
+    return this.request<{ hackathons: any[] }>(`/hackathons/organizer/hackathons`, {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  async getHackathonParticipants(token: string, hackathonId: string): Promise<{ participants: Participant[] }> {
+    return this.request<{ participants: Participant[] }>(`/hackathons/organizer/participants/${hackathonId}`, {
       method: 'POST',
       body: JSON.stringify({ token }),
     });
