@@ -47,26 +47,6 @@ export default function OrganizerDashboardLayout({
       label: "Create Hackathon",
       icon: PlusCircle,
     },
-    {
-      href: "/organizer/dashboard/participants",
-      label: "Participants",
-      icon: Users,
-    },
-    {
-      href: "/organizer/dashboard/submissions",
-      label: "Submissions",
-      icon: FileText,
-    },
-    {
-      href: "/organizer/dashboard/judging",
-      label: "Judging Panel",
-      icon: Award,
-    },
-    {
-      href: "/organizer/dashboard/results",
-      label: "Results",
-      icon: BarChart,
-    },
   ]
 
   return (

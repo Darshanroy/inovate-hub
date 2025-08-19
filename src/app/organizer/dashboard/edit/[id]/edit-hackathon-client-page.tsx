@@ -17,27 +17,15 @@ export default function EditHackathonClientPage({ hackathon }: { hackathon: Hack
       </div>
       
       <Tabs defaultValue="basic-info" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 mb-6">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
-            <TabsTrigger value="participants">Participants</TabsTrigger>
-            <TabsTrigger value="submissions">Submissions</TabsTrigger>
             <TabsTrigger value="judging">Judging Panel</TabsTrigger>
-            <TabsTrigger value="results">Results</TabsTrigger>
         </TabsList>
         <TabsContent value="basic-info">
             <BasicInfoTab hackathon={hackathon} />
         </TabsContent>
-         <TabsContent value="participants">
-            <p>Participant management coming soon.</p>
-        </TabsContent>
-         <TabsContent value="submissions">
-            <p>Submission management coming soon.</p>
-        </TabsContent>
         <TabsContent value="judging">
             <JudgingPanelTab />
-        </TabsContent>
-        <TabsContent value="results">
-            <p>Results management coming soon.</p>
         </TabsContent>
       </Tabs>
     </div>
