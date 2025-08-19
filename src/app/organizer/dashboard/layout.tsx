@@ -1,3 +1,4 @@
+
 "use client"
 
 import {
@@ -65,8 +66,9 @@ export default function OrganizerDashboardLayout({
             <SidebarMenu className="mt-8 flex-1">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
-                  <Link href={item.href} legacyBehavior passHref>
+                  <Link href={item.href} passHref>
                     <SidebarMenuButton
+                      asChild
                       isActive={pathname === item.href}
                       className="text-base h-11 justify-start"
                       tooltip={{
@@ -75,9 +77,11 @@ export default function OrganizerDashboardLayout({
                         align: "center",
                       }}
                     >
-                      <item.icon className="h-5 w-5" />
-                      <span className="group-data-[collapsible=icon]:hidden">
-                        {item.label}
+                      <span>
+                        <item.icon className="h-5 w-5" />
+                        <span className="group-data-[collapsible=icon]:hidden">
+                          {item.label}
+                        </span>
                       </span>
                     </SidebarMenuButton>
                   </Link>
