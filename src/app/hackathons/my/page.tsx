@@ -60,16 +60,29 @@ export type Hackathon = {
 };
 
 const getEventStatus = (hackathon: Hackathon) => {
+  // Check if hackathon.rounds exists and has elements before accessing rounds[0] and rounds[last]
   if (hackathon.rounds && hackathon.rounds.length > 0) {
-    const firstRoundDate = parseISO(hackathon.rounds[0].date);
-    const lastRoundDate = parseISO(hackathon.rounds[hackathon.rounds.length - 1].date);
+    // Ensure the date properties within rounds are valid strings before parsing
+    const firstRoundDateString = hackathon.rounds[0]?.date;
+    const lastRoundDateString = hackathon.rounds[hackathon.rounds.length - 1]?.date;
+
+    if (typeof firstRoundDateString !== 'string' || typeof lastRoundDateString !== 'string') {
+ return "Unknown"; // Handle invalid date strings in rounds
+    }
+
+    const firstRoundDate = parseISO(firstRoundDateString);
+    const lastRoundDate = parseISO(lastRoundDateString);
     
     if (isPast(lastRoundDate)) return "Ended";
     if (isFuture(firstRoundDate)) return "Not Started";
     return "Ongoing";
   }
   // Fallback for single-date hackathons
-  const eventDate = parseISO(hackathon.date);
+  // Ensure hackathon.date is a valid string before parsing
+  if (typeof hackathon.date !== 'string') {
+ return "Unknown"; // Handle invalid single date
+  }
+  const eventDate = parseISO(hackathon.date); // This line might still throw if the string format is bad, but the check helps
   const eventEndDate = new Date(eventDate);
   eventEndDate.setDate(eventEndDate.getDate() + 2); // Assume 2 days duration
 
@@ -156,13 +169,17 @@ export default function MyHackathonsPage() {
     }
     if (searchTerm) {
       list = list.filter(h => 
-        h.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        h.team?.name.toLowerCase().includes(searchTerm.toLowerCase())
+        (typeof h.name === 'string' && h.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (typeof h.team?.name === 'string' && h.team.name.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
+    // Add checks for date properties in sort function
     return list.sort((a,b) => {
-      const dateA = a.rounds && a.rounds[0] ? new Date(a.rounds[0].date) : new Date(a.date);
-      const dateB = b.rounds && b.rounds[0] ? new Date(b.rounds[0].date) : new Date(b.date);
+      const dateAString = (a.rounds && a.rounds[0]?.date && typeof a.rounds[0].date === 'string') ? a.rounds[0].date : (a.date && typeof a.date === 'string' ? a.date : null);
+      const dateBString = (b.rounds && b.rounds[0]?.date && typeof b.rounds[0].date === 'string') ? b.rounds[0].date : (b.date && typeof b.date === 'string' ? b.date : null);
+
+      const dateA = dateAString ? new Date(dateAString) : new Date(0); // Use epoch for sorting if date is invalid
+      const dateB = dateBString ? new Date(dateBString) : new Date(0);
       return dateB.getTime() - dateA.getTime();
     });
   }, [hackathons, statusFilter, searchTerm]);
@@ -171,12 +188,15 @@ export default function MyHackathonsPage() {
     const wl = wishlistIds;
     let list = allHackathons.filter(h => wl.has(h.id));
     // Only show upcoming/not started or ongoing
+    // Add check for valid date before getting status
     list = list.filter(h => {
-      const s = getEventStatus(h);
+      // Only get status if date properties are likely valid strings
+      const s = (typeof h.date === 'string' || (h.rounds && h.rounds.length > 0 && typeof h.rounds[0]?.date === 'string')) ? getEventStatus(h) : 'Unknown';
       return s === 'Not Started' || s === 'Ongoing';
     });
     if (searchTerm) {
-      list = list.filter(h => h.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      // Add check for valid name property before filtering
+      list = list.filter(h => typeof h.name === 'string' && h.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }
     return list;
   }, [allHackathons, wishlistIds, searchTerm]);
@@ -324,7 +344,10 @@ export default function MyHackathonsPage() {
         <div className="space-y-6">
           {filteredHackathons.map((hackathon) => {
             const status = getEventStatus(hackathon);
-            const displayDate = hackathon.rounds && hackathon.rounds[0] ? hackathon.rounds[0].date : hackathon.date;
+            // Add checks for valid date strings before displaying
+            const displayDate = (hackathon.rounds && hackathon.rounds[0]?.date && typeof hackathon.rounds[0].date === 'string')
+              ? hackathon.rounds[0].date
+              : (hackathon.date && typeof hackathon.date === 'string' ? hackathon.date : 'Invalid Date');
             
             return (
               <Card key={hackathon.id} className="overflow-hidden">
