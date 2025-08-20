@@ -51,12 +51,25 @@ def decode_jwt(token: str) -> Optional[dict]:
 def list_hackathons():
     docs = list(hackathons_col.find({}).sort('created_at', DESCENDING))
     def to_public(h):
+        # Normalize rounds to include 'start'/'end' if only 'date' exists
+        rounds = []
+        for r in (h.get('rounds', []) or []):
+            if isinstance(r, dict):
+                rounds.append({
+                    'name': r.get('name', ''),
+                    'description': r.get('description', ''),
+                    'start': r.get('start') or r.get('date') or '',
+                    'end': r.get('end') or '',
+                })
+        
         return {
             'id': str(h['_id']),
             'name': h.get('name', ''),
             'theme': h.get('theme', ''),
             'date': h.get('date', ''),
-            'rounds': h.get('rounds', []),
+            'start_date': h.get('start_date', h.get('date', '')),
+            'end_date': h.get('end_date', ''),
+            'rounds': rounds,
             'prize': h.get('prize', 0),
             'locationType': h.get('locationType', 'online'),
             'image': h.get('image', ''),
@@ -82,12 +95,25 @@ def get_hackathon(hackathon_id: str):
     # Return public-safe fields only
     reg_count = registrations_col.count_documents({'hackathon_id': ObjectId(hackathon_id)})
     team_count = teams_col.count_documents({'hackathon_id': ObjectId(hackathon_id)})
+    # Normalize rounds to include 'start'/'end' if only 'date' exists
+    rounds = []
+    for r in (doc.get('rounds', []) or []):
+        if isinstance(r, dict):
+            rounds.append({
+                'name': r.get('name', ''),
+                'description': r.get('description', ''),
+                'start': r.get('start') or r.get('date') or '',
+                'end': r.get('end') or '',
+            })
+
     public = {
         'id': str(doc['_id']),
         'name': doc.get('name', ''),
         'theme': doc.get('theme', ''),
         'date': doc.get('date', ''),
-        'rounds': doc.get('rounds', []),
+        'start_date': doc.get('start_date', doc.get('date', '')),
+        'end_date': doc.get('end_date', ''),
+        'rounds': rounds,
         'prize': doc.get('prize', 0),
         'locationType': doc.get('locationType', 'online'),
         'location': doc.get('location'),
@@ -127,8 +153,10 @@ def create_hackathon():
         'theme': hack['theme'],
         'locationType': hack['locationType'],  # 'online' | 'offline'
         'location': hack.get('location'),
-        'date': hack.get('date', ''),
-        'rounds': hack.get('rounds', []),
+        'date': hack.get('date', ''),  # legacy single date support
+        'start_date': hack.get('start_date', hack.get('date', '')),
+        'end_date': hack.get('end_date', ''),
+        'rounds': hack.get('rounds', []),  # each round may have start/end
         'prize': hack.get('prize', 0),
         'image': hack.get('image', 'https://placehold.co/1200x600.png'),
         'hint': hack.get('hint', 'hackathon banner'),
@@ -172,6 +200,30 @@ def update_hackathon(hackathon_id: str):
 
 @hackathons_bp.route('/delete/<hackathon_id>', methods=['POST'])
 def delete_hackathon(hackathon_id: str):
+    data = request.get_json(force=True) or {}
+    token = data.get('token')
+    decoded = decode_jwt(token or '')
+    if not decoded:
+        return jsonify({'message': 'Unauthorized'}), 401
+    try:
+        doc = hackathons_col.find_one({'_id': ObjectId(hackathon_id)})
+    except Exception:
+        doc = None
+    if not doc:
+        return jsonify({'message': 'Not found'}), 404
+    if str(doc.get('organizer_id')) != decoded.get('sub'):
+        return jsonify({'message': 'Forbidden'}), 403
+
+    hackathons_col.delete_one({'_id': ObjectId(hackathon_id)})
+    registrations_col.delete_many({'hackathon_id': ObjectId(hackathon_id)})
+    teams_col.delete_many({'hackathon_id': ObjectId(hackathon_id)})
+    team_requests_col.delete_many({'hackathon_id': ObjectId(hackathon_id)})
+    return jsonify({'message': 'Hackathon deleted'}), 200
+
+
+# Alias delete route used by organizer dashboard client
+@hackathons_bp.route('/organizer/delete/<hackathon_id>', methods=['POST', 'DELETE'])
+def organizer_delete_hackathon(hackathon_id: str):
     data = request.get_json(force=True) or {}
     token = data.get('token')
     decoded = decode_jwt(token or '')
@@ -312,14 +364,8 @@ def create_team(hackathon_id: str):
         code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
     now = datetime.utcnow()
-    # Use hackathon-specific team size if provided
-    try:
-        hack = hackathons_col.find_one({'_id': ObjectId(hackathon_id)})
-    except Exception:
-        hack = None
-    max_members = int(hack.get('team_size', 4) or 4) if hack else 4
-    if max_members <= 0:
-        max_members = 4
+    # Fixed team size limit of 5 members (including leader)
+    max_members = 5
     team_doc = {
         'hackathon_id': ObjectId(hackathon_id),
         'name': name,
@@ -369,7 +415,7 @@ def list_teams(hackathon_id: str):
                     }
                     for member_id in member_ids
                 ],
-                'max_members': team.get('max_members', 4),
+                'max_members': 5,
                 'created_at': team.get('created_at', ''),
             }
             team_list.append(team_info)
@@ -416,9 +462,8 @@ def join_team(hackathon_id: str):
         hack = hackathons_col.find_one({'_id': ObjectId(hackathon_id)})
     except Exception:
         hack = None
-    effective_max = int(team.get('max_members') or hack.get('team_size', 4) if hack else 4)
-    if effective_max <= 0:
-        effective_max = 4
+    # Enforce fixed maximum size of 5
+    effective_max = 5
     if len(team.get('members', [])) >= effective_max:
         return jsonify({'message': 'Team is full'}), 400
 
@@ -552,8 +597,8 @@ def respond_to_request():
         return jsonify({'message': 'Forbidden'}), 403
 
     if action == 'approve':
-        # Check if team is full
-        if len(team.get('members', [])) >= team.get('max_members', 4):
+        # Check if team is full (fixed at 5)
+        if len(team.get('members', [])) >= 5:
             return jsonify({'message': 'Team is full'}), 400
         
         # Add user to team
@@ -655,7 +700,7 @@ def respond_invitation():
         if existing:
             return jsonify({'message': 'You are already in a team for this hackathon'}), 400
         # Check capacity
-        if len(team.get('members', [])) >= team.get('max_members', 4):
+        if len(team.get('members', [])) >= 5:
             return jsonify({'message': 'Team is full'}), 400
         # Add member
         teams_col.update_one(
@@ -698,12 +743,25 @@ def organizer_hackathons():
         # Count teams
         team_count = teams_col.count_documents({'hackathon_id': hack['_id']})
         
+        # Normalize rounds
+        rounds = []
+        for r in (hack.get('rounds', []) or []):
+            if isinstance(r, dict):
+                rounds.append({
+                    'name': r.get('name', ''),
+                    'description': r.get('description', ''),
+                    'start': r.get('start') or r.get('date') or '',
+                    'end': r.get('end') or '',
+                })
+
         hack_info = {
             'id': str(hack['_id']),
             'name': hack.get('name', ''),
             'theme': hack.get('theme', ''),
             'date': hack.get('date', ''),
-            'rounds': hack.get('rounds', []),
+            'start_date': hack.get('start_date', hack.get('date', '')),
+            'end_date': hack.get('end_date', ''),
+            'rounds': rounds,
             'prize': hack.get('prize', 0),
             'locationType': hack.get('locationType', 'online'),
             'image': hack.get('image', ''),
@@ -1045,7 +1103,7 @@ def get_my_team(hackathon_id: str):
             }
             for member_id in member_ids
         ],
-        'max_members': team.get('max_members', 4),
+        'max_members': 5,
         'created_at': team.get('created_at', '').isoformat() if team.get('created_at') else '',
     }
     

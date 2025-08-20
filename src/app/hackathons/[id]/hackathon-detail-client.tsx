@@ -268,24 +268,24 @@ const PrizesTab = ({ prizes }: { prizes?: string }) => (
 const SponsorsTab = ({ sponsors }: { sponsors?: { name?: string; description?: string }[] }) => {
   if (!sponsors || sponsors.length === 0) return null;
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Sponsors</h3>
-          <div className="grid gap-4">
+  <div className="space-y-6">
+    <Card>
+      <CardContent className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Sponsors</h3>
+        <div className="grid gap-4">
             {sponsors.map((sponsor, index) => (
               <div key={index} className="p-4 border rounded-lg">
                 <h4 className="font-medium">{sponsor.name}</h4>
                 {sponsor.description && (
-                  <p className="text-sm text-muted-foreground">{sponsor.description}</p>
+                <p className="text-sm text-muted-foreground">{sponsor.description}</p>
                 )}
               </div>
             ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+);
 };
 
 const FAQTab = ({ faq }: { faq?: any[] }) => (

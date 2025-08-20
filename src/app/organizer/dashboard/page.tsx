@@ -29,8 +29,10 @@ interface Hackathon {
   id: string;
   name: string;
   theme: string;
-  date: string;
-  rounds?: Array<{ name: string; date: string; description: string }>;
+  date?: string;
+  start_date?: string;
+  end_date?: string;
+  rounds?: Array<{ name: string; start?: string; end?: string; date?: string; description: string }>;
   prize: number;
   locationType: 'online' | 'offline';
   image: string;
@@ -73,21 +75,32 @@ export default function OrganizerDashboard() {
   };
 
   const getEventStatus = (hackathon: Hackathon) => {
+    const safeParse = (s?: string) => {
+      if (!s) return undefined;
+      try { const d = parseISO(s); return isNaN(d.getTime()) ? undefined : d; } catch { return undefined; }
+    };
     if (hackathon.rounds && hackathon.rounds.length > 0) {
-        const firstRoundDate = parseISO(hackathon.rounds[0].date);
-        const lastRoundDate = parseISO(hackathon.rounds[hackathon.rounds.length - 1].date);
-        
-        if (isPast(lastRoundDate)) return "Ended";
-        if (isFuture(firstRoundDate)) return "Upcoming";
+      const first = hackathon.rounds[0];
+      const last = hackathon.rounds[hackathon.rounds.length - 1];
+      const firstDate = safeParse(first.start || first.date);
+      const lastDate = safeParse(last.end || last.date);
+      if (firstDate && lastDate) {
+        if (isPast(lastDate)) return "Ended";
+        if (isFuture(firstDate)) return "Upcoming";
         return "Ongoing";
+      }
     }
-    // Fallback for single-date hackathons
-    const eventDate = parseISO(hackathon.date);
-    const eventEndDate = new Date(eventDate);
-    eventEndDate.setDate(eventEndDate.getDate() + 2); // Assume 2 days duration
-
-    if (isPast(eventEndDate)) return "Ended";
-    if (isPast(eventDate)) return "Ongoing";
+    const start = safeParse(hackathon.start_date || hackathon.date);
+    const end = safeParse(hackathon.end_date);
+    if (start && end) {
+      if (isPast(end)) return "Ended";
+      if (isFuture(start)) return "Upcoming";
+      return "Ongoing";
+    }
+    if (start) {
+      if (isFuture(start)) return "Upcoming";
+      return "Ongoing";
+    }
     return "Upcoming";
   }
 
@@ -298,9 +311,14 @@ export default function OrganizerDashboard() {
                         <span className="text-sm text-muted-foreground">
                           {hackathon.registration_count || 0} participants • {hackathon.team_count || 0} teams
                         </span>
-                        {hackathon.prize && (
+                        {typeof hackathon.prize === 'number' && hackathon.prize > 0 && (
                           <span className="text-sm text-muted-foreground">
-                            • ${hackathon.prize.toLocaleString()} prize pool
+                            • ₹{hackathon.prize.toLocaleString('en-IN')} prize pool
+                          </span>
+                        )}
+                        {(hackathon.start_date || hackathon.end_date) && (
+                          <span className="text-sm text-muted-foreground">
+                            • {hackathon.start_date ? format(parseISO(hackathon.start_date), 'PP') : '—'} → {hackathon.end_date ? format(parseISO(hackathon.end_date), 'PP') : '—'}
                           </span>
                         )}
                       </div>

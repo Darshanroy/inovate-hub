@@ -44,20 +44,22 @@ export default function OrganizerLoginPage() {
     try {
       const res = await apiService.login({ email, password });
       if (res.token) {
-        document.cookie = `authToken=${res.token}; path=/; max-age=3600`;
         const type = res.user_type || (isJudgeLogin ? 'judge' : 'organizer');
+        document.cookie = `authToken=${res.token}; path=/; max-age=3600; samesite=lax`;
+        document.cookie = `userType=${type}; path=/; max-age=3600; samesite=lax`;
         setAuthStatus(true, type);
         try {
           const prof = await apiService.getProfile(res.token);
-          if (!prof.exists) {
-            router.push(type === 'judge' ? "/judge/profile" : "/organizer/profile");
-          } else {
-            router.push(isJudgeLogin ? "/judge/dashboard" : "/organizer/dashboard");
-          }
+          const dest = !prof.exists
+            ? (type === 'judge' ? '/judge/profile' : '/organizer/profile')
+            : (type === 'judge' ? '/judge/dashboard' : '/organizer/dashboard');
+          // Force full navigation so middleware sees fresh cookies
+          window.location.replace(dest);
+          return;
         } catch {
-          router.push(type === 'judge' ? "/judge/profile" : "/organizer/profile");
+          window.location.replace(type === 'judge' ? '/judge/profile' : '/organizer/profile');
+          return;
         }
-        router.refresh();
       } else {
         throw new Error(res.message || 'Login failed');
       }
