@@ -91,6 +91,57 @@ export interface Participant {
   };
 }
 
+export interface Submission {
+  id: string;
+  hackathon_id: string;
+  team_id: string;
+  team_name: string;
+  project_title: string;
+  project_description: string;
+  tech_stack: string[];
+  github_link?: string;
+  video_link?: string;
+  files: SubmissionFile[];
+  status: 'draft' | 'submitted' | 'reviewed' | 'approved' | 'rejected';
+  score?: number;
+  feedback?: string;
+  submitted_at: string;
+  updated_at: string;
+  created_at: string;
+}
+
+export interface SubmissionFile {
+  id: string;
+  name: string;
+  url: string;
+  size: number;
+  type: string;
+}
+
+export interface CreateSubmissionRequest {
+  token: string;
+  hackathon_id: string;
+  submission: {
+    project_title: string;
+    project_description: string;
+    tech_stack: string[];
+    github_link?: string;
+    video_link?: string;
+  };
+}
+
+export interface UpdateSubmissionRequest {
+  token: string;
+  submission_id: string;
+  updates: {
+    project_title?: string;
+    project_description?: string;
+    tech_stack?: string[];
+    github_link?: string;
+    video_link?: string;
+  };
+}
+
 class ApiService {
   private baseUrl: string;
 
@@ -256,10 +307,10 @@ class ApiService {
     });
   }
 
-  async respondToTeamRequest(token: string, requestId: string, action: 'approve' | 'reject'): Promise<{ message: string }> {
-    return this.request<{ message: string }>(`/hackathons/teams/requests/respond`, {
+  async respondToTeamRequest(token: string, hackathonId: string, requestId: string, response: 'accept' | 'reject'): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/teams/requests/respond/${hackathonId}`, {
       method: 'POST',
-      body: JSON.stringify({ token, request_id: requestId, action }),
+      body: JSON.stringify({ token, request_id: requestId, response }),
     });
   }
 
@@ -311,6 +362,100 @@ class ApiService {
     return this.request<{ participants: Participant[] }>(`/hackathons/organizer/participants/${hackathonId}`, {
       method: 'POST',
       body: JSON.stringify({ token }),
+    });
+  }
+
+  async deleteHackathon(token: string, hackathonId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/organizer/delete/${hackathonId}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  async updateHackathon(token: string, hackathonId: string, updates: any): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/organizer/update/${hackathonId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ token, updates }),
+    });
+  }
+
+  async publishHackathon(token: string, hackathonId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/organizer/publish/${hackathonId}`, {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  async saveDraft(token: string, hackathonId: string, data: any): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/organizer/draft/${hackathonId}`, {
+      method: 'POST',
+      body: JSON.stringify({ token, data }),
+    });
+  }
+
+  // Submission Management
+  async createSubmission(data: CreateSubmissionRequest): Promise<{ message: string; submission_id: string }> {
+    return this.request<{ message: string; submission_id: string }>(`/hackathons/submissions/create/${data.hackathon_id}`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateSubmission(data: UpdateSubmissionRequest): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/submissions/update/${data.submission_id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getMySubmission(token: string, hackathonId: string): Promise<{ submission: Submission | null }> {
+    return this.request<{ submission: Submission | null }>(`/hackathons/submissions/my/${hackathonId}`, {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  async getSubmission(submissionId: string): Promise<{ submission: Submission }> {
+    return this.request<{ submission: Submission }>(`/hackathons/submissions/get/${submissionId}`);
+  }
+
+  async listHackathonSubmissions(token: string, hackathonId: string): Promise<{ submissions: Submission[] }> {
+    return this.request<{ submissions: Submission[] }>(`/hackathons/submissions/list/${hackathonId}`, {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  async uploadSubmissionFile(token: string, submissionId: string, file: File): Promise<{ file: SubmissionFile }> {
+    const formData = new FormData();
+    formData.append('token', token);
+    formData.append('file', file);
+
+    return this.request<{ file: SubmissionFile }>(`/hackathons/submissions/upload/${submissionId}`, {
+      method: 'POST',
+      body: formData,
+      headers: {}, // Let browser set content-type for FormData
+    });
+  }
+
+  async deleteSubmissionFile(token: string, submissionId: string, fileId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/submissions/files/delete/${submissionId}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ token, file_id: fileId }),
+    });
+  }
+
+  async submitProject(token: string, submissionId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/submissions/submit/${submissionId}`, {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  async saveSubmissionDraft(token: string, submissionId: string, data: any): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/submissions/draft/${submissionId}`, {
+      method: 'POST',
+      body: JSON.stringify({ token, data }),
     });
   }
 }

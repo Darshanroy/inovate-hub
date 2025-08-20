@@ -335,37 +335,7 @@ export default function TeamPage() {
     <>
       <div className="relative flex size-full min-h-screen flex-col overflow-x-hidden team-interface">
         <div className="flex h-full grow flex-col">
-          {/* Header */}
-          <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-800 px-10 py-3">
-            <div className="flex items-center gap-8">
-              <div className="flex items-center gap-4 text-[var(--text-primary)]">
-                <div className="size-6 text-[var(--primary-color)]">
-                  <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z" fill="currentColor"></path>
-                  </svg>
-                </div>
-                <h2 className="text-xl font-bold tracking-tight">InnovateHub</h2>
-              </div>
-              <nav className="flex items-center gap-9">
-                <Link href="/" className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Dashboard</Link>
-                <Link href="#" className="text-sm font-medium text-[var(--text-primary)]">Teams</Link>
-                <Link href="/hackathons" className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Events</Link>
-                <Link href="#" className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)]">Leaderboard</Link>
-              </nav>
-            </div>
-            <div className="flex flex-1 justify-end gap-6 items-center">
-              <label className="relative flex items-center h-10 max-w-64">
-                <div className="absolute left-3 text-[var(--text-secondary)]">
-                  <Search className="h-5 w-5" />
-                </div>
-                <input className="input w-full pl-10 pr-4" placeholder="Search" value="" />
-              </label>
-              <button className="flex items-center justify-center rounded-full size-10 bg-[var(--card-background)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-                <Bell className="h-5 w-5" />
-              </button>
-              <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuB8Omil4JR3-avFJyxqAzOz4QnDJfV2g8lzBbwXZu6XslT4K1HBH2vEgTpqNzLd6AhP_4UNtBenfPD-pW2YEraXiLGdwvX48A_tDEkP5bqubIY4iV19HXdDkinyKK6tbWRXHrBY6xwR3uYIn1hlCiT5b3soW6ylsUvM-sA0peYP4OAaiBsT_cTfBEnzL-nw9qA7P0DqQyUwLbHvR4JFTzFaSB9NTFxDDef5xqb6xXiTEPtW2i_gz5iscHRg-82fvppOlyz7rJoAQzUI")'}}></div>
-            </div>
-          </header>
+
 
           {/* Main Content */}
           <main className="main_container grid grid-cols-12 gap-8 items-start">

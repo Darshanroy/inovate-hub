@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Hackathon, Team, TeamMessage, soloParticipants as allSoloParticipants, SoloParticipant } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { MoreVertical, Paperclip, Send, UserPlus, Pencil, X, Save, Trash2, Expand, Minimize, Mail, Check, Copy, Search, FileText } from "lucide-react";
+import { MoreVertical, Paperclip, Send, UserPlus, Pencil, X, Save, Trash2, Expand, Minimize, Mail, Check, Copy, Search, FileText, Edit3, Users, Settings } from "lucide-react";
 import Image from "next/image";
 import {
   AlertDialog,
@@ -23,69 +23,283 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Link from "next/link";
 
-
-const InviteDialog = ({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) => {
+// Enhanced Invite Dialog with better participant management
+const InviteDialog = ({ open, onOpenChange, onInvite }: { 
+  open: boolean, 
+  onOpenChange: (open: boolean) => void,
+  onInvite: (participant: SoloParticipant) => void 
+}) => {
     const { toast } = useToast();
     const [invited, setInvited] = useState<string[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
+    const [filterSkill, setFilterSkill] = useState("all");
     
     const handleInvite = (participant: SoloParticipant) => {
         setInvited(prev => [...prev, participant.name]);
+        onInvite(participant);
         toast({
             title: "Invitation Sent!",
             description: `${participant.name} has been invited to join your team.`
         })
     }
 
-    const filteredParticipants = allSoloParticipants.filter(p =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.skills.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    // Get unique skills for filtering
+    const allSkills = Array.from(new Set(allSoloParticipants.flatMap(p => p.skills))).sort();
+
+    const filteredParticipants = allSoloParticipants.filter(p => {
+        const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.skills.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()));
+        const matchesSkill = filterSkill === "all" || p.skills.includes(filterSkill);
+        return matchesSearch && matchesSkill;
+    });
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-4xl max-h-[80vh]">
+                <DialogHeader>
+                    <DialogTitle>Invite Team Members</DialogTitle>
+                    <DialogDescription>
+                        Browse participants who are looking for a team and send them an invitation.
+                    </DialogDescription>
+                </DialogHeader>
+                
+                <div className="space-y-4">
+                    <div className="flex gap-4">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input 
+                                placeholder="Search by name or skill..." 
+                                className="pl-9"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <Select value={filterSkill} onValueChange={setFilterSkill}>
+                            <SelectTrigger className="w-48">
+                                <SelectValue placeholder="Filter by skill" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Skills</SelectItem>
+                                {allSkills.map(skill => (
+                                    <SelectItem key={skill} value={skill}>{skill}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    
+                    <div className="text-sm text-muted-foreground">
+                        Found {filteredParticipants.length} participants
+                    </div>
+                </div>
+
+                <ScrollArea className="h-96">
+                <div className="space-y-4 pr-6">
+                    {filteredParticipants.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                            <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                            <p>No participants found matching your criteria.</p>
+                        </div>
+                    ) : (
+                        filteredParticipants.map(participant => (
+                            <div key={participant.name} className="flex items-center justify-between p-4 border rounded-lg bg-background hover:bg-secondary/50 transition-colors">
+                                <div className="flex items-center gap-4">
+                                    <Image src={participant.avatar} alt={participant.name} width={48} height={48} className="rounded-full" data-ai-hint="person face" />
+                                    <div>
+                                        <h4 className="font-semibold">{participant.name}</h4>
+                                        <div className="flex flex-wrap gap-1 mt-1">
+                                            {participant.skills.map(skill => (
+                                                <Badge key={skill} variant="secondary" className="text-xs">
+                                                    {skill}
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                                <Button 
+                                    size="sm" 
+                                    onClick={() => handleInvite(participant)} 
+                                    disabled={invited.includes(participant.name)}
+                                    variant={invited.includes(participant.name) ? "outline" : "default"}
+                                >
+                                    {invited.includes(participant.name) ? (
+                                        <> <Check className="mr-2 h-4 w-4" /> Invited</>
+                                    ) : (
+                                        <> <Mail className="mr-2 h-4 w-4"/> Send Invitation</>
+                                    )}
+                                </Button>
+                            </div>
+                        ))
+                    )}
+                </div>
+                </ScrollArea>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+// Team Settings Dialog for advanced team management
+const TeamSettingsDialog = ({ 
+  open, 
+  onOpenChange, 
+  team, 
+  onUpdateTeam 
+}: { 
+  open: boolean, 
+  onOpenChange: (open: boolean) => void,
+  team: Team,
+  onUpdateTeam: (updates: Partial<Team>) => void
+}) => {
+    const { toast } = useToast();
+    const [editedTeam, setEditedTeam] = useState<Team>(team);
+    const [isEditing, setIsEditing] = useState(false);
+
+    const handleSave = () => {
+        onUpdateTeam(editedTeam);
+        setIsEditing(false);
+        toast({
+            title: "Team Updated",
+            description: "Team settings have been saved successfully.",
+        });
+    };
+
+    const handleCancel = () => {
+        setEditedTeam(team);
+        setIsEditing(false);
+    };
+
+    const updateMemberRole = (memberName: string, newRole: string) => {
+        setEditedTeam(prev => ({
+            ...prev,
+            members: prev.members.map(m => 
+                m.name === memberName ? { ...m, role: newRole as any } : m
+            )
+        }));
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-2xl">
                 <DialogHeader>
-                    <DialogTitle>Invite Members</DialogTitle>
+                    <DialogTitle>Team Settings</DialogTitle>
                     <DialogDescription>
-                        Browse participants who are looking for a team and send them an invitation.
+                        Manage your team details, member roles, and permissions.
                     </DialogDescription>
                 </DialogHeader>
-                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                        placeholder="Search by name or skill..." 
-                        className="pl-9"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <ScrollArea className="h-96">
-                <div className="space-y-4 pr-6">
-                    {filteredParticipants.map(participant => (
-                        <div key={participant.name} className="flex items-center justify-between p-4 border rounded-lg bg-background">
-                            <div className="flex items-center gap-4">
-                                <Image src={participant.avatar} alt={participant.name} width={40} height={40} className="rounded-full" data-ai-hint="person face" />
-                                <div>
-                                    <h4 className="font-semibold">{participant.name}</h4>
-                                    <div className="flex flex-wrap gap-1 mt-1">
-                                        {participant.skills.map(skill => <Badge key={skill} variant="secondary">{skill}</Badge>)}
+                
+                <Tabs defaultValue="general" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="general">General</TabsTrigger>
+                        <TabsTrigger value="members">Members</TabsTrigger>
+                        <TabsTrigger value="permissions">Permissions</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="general" className="space-y-4">
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-sm font-medium">Team Name</label>
+                                {isEditing ? (
+                                    <Input 
+                                        value={editedTeam.name} 
+                                        onChange={(e) => setEditedTeam(prev => ({ ...prev, name: e.target.value }))}
+                                        className="mt-1"
+                                    />
+                                ) : (
+                                    <p className="text-sm text-muted-foreground mt-1">{team.name}</p>
+                                )}
+                            </div>
+                            
+                            <div>
+                                <label className="text-sm font-medium">Description</label>
+                                {isEditing ? (
+                                    <Textarea 
+                                        value={editedTeam.description} 
+                                        onChange={(e) => setEditedTeam(prev => ({ ...prev, description: e.target.value }))}
+                                        className="mt-1"
+                                        rows={3}
+                                    />
+                                ) : (
+                                    <p className="text-sm text-muted-foreground mt-1">{team.description}</p>
+                                )}
+                            </div>
+                        </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="members" className="space-y-4">
+                        <div className="space-y-3">
+                            {team.members.map((member) => (
+                                <div key={member.name} className="flex items-center justify-between p-3 border rounded-lg">
+                                    <div className="flex items-center gap-3">
+                                        <Image src={member.avatar} alt={member.name} width={32} height={32} className="rounded-full" />
+                                        <div>
+                                            <p className="font-medium">{member.name}</p>
+                                            {isEditing ? (
+                                                <Select 
+                                                    value={editedTeam.members.find(m => m.name === member.name)?.role || member.role}
+                                                    onValueChange={(value) => updateMemberRole(member.name, value)}
+                                                >
+                                                    <SelectTrigger className="w-32 h-8">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="Leader">Leader</SelectItem>
+                                                        <SelectItem value="Developer">Developer</SelectItem>
+                                                        <SelectItem value="Designer">Designer</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            ) : (
+                                                <p className="text-sm text-muted-foreground">{member.role}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="permissions" className="space-y-4">
+                        <div className="space-y-3">
+                            <div className="p-3 border rounded-lg">
+                                <h4 className="font-medium mb-2">Team Permissions</h4>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex items-center justify-between">
+                                        <span>Edit team details</span>
+                                        <Badge variant="secondary">Leader only</Badge>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span>Invite new members</span>
+                                        <Badge variant="secondary">Leader only</Badge>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span>Remove members</span>
+                                        <Badge variant="secondary">Leader only</Badge>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span>Submit project</span>
+                                        <Badge variant="secondary">All members</Badge>
                                     </div>
                                 </div>
                             </div>
-                            <Button size="sm" onClick={() => handleInvite(participant)} disabled={invited.includes(participant.name)}>
-                                {invited.includes(participant.name) ? (
-                                    <> <Check className="mr-2 h-4 w-4" /> Invited</>
-                                ) : (
-                                    <> <Mail className="mr-2 h-4 w-4"/> Send Invitation</>
-                                )}
-                            </Button>
                         </div>
-                    ))}
-                </div>
-                </ScrollArea>
+                    </TabsContent>
+                </Tabs>
+                
+                <DialogFooter>
+                    {isEditing ? (
+                        <>
+                            <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                            <Button onClick={handleSave}>Save Changes</Button>
+                        </>
+                    ) : (
+                        <Button onClick={() => setIsEditing(true)}>
+                            <Edit3 className="mr-2 h-4 w-4" />
+                            Edit Team
+                        </Button>
+                    )}
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     )
@@ -108,6 +322,7 @@ export default function TeamClientPage({
   const [editedDescription, setEditedDescription] = useState(initialTeam.description);
   const [isChatFullScreen, setIsChatFullScreen] = useState(false);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const handleSendMessage = () => {
@@ -125,6 +340,20 @@ export default function TeamClientPage({
   
   const handleInvite = () => {
     setIsInviteDialogOpen(true);
+  }
+
+  const handleInviteParticipant = (participant: SoloParticipant) => {
+    // In a real app, this would send an API request to invite the participant
+    toast({
+        title: "Invitation Sent",
+        description: `Invitation sent to ${participant.name}`,
+    });
+  }
+
+  const handleUpdateTeam = (updates: Partial<Team>) => {
+    setTeam(prev => ({ ...prev, ...updates }));
+    setEditedName(updates.name || team.name);
+    setEditedDescription(updates.description || team.description);
   }
 
   const handleCopyInviteCode = () => {
@@ -208,16 +437,23 @@ export default function TeamClientPage({
                 )}
                 </div>
             </div>
-             {isEditing ? (
-                <div className="flex gap-2">
-                    <Button variant="ghost" size="icon" onClick={handleSave}><Save className="w-5 h-5"/></Button>
-                    <Button variant="ghost" size="icon" onClick={handleCancel}><X className="w-5 h-5"/></Button>
-                </div>
-             ) : (
-                <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
-                    <Pencil className="w-5 h-5"/>
-                </Button>
-             )}
+             <div className="flex gap-2">
+                {isEditing ? (
+                    <>
+                        <Button variant="ghost" size="icon" onClick={handleSave}><Save className="w-5 h-5"/></Button>
+                        <Button variant="ghost" size="icon" onClick={handleCancel}><X className="w-5 h-5"/></Button>
+                    </>
+                ) : (
+                    <>
+                        <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
+                            <Pencil className="w-5 h-5"/>
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => setIsSettingsDialogOpen(true)}>
+                            <Settings className="w-5 h-5"/>
+                        </Button>
+                    </>
+                )}
+             </div>
           </div>
           <div className="mb-4 p-3 bg-secondary rounded-lg flex justify-between items-center">
             <div className="flex items-center gap-2">
@@ -230,7 +466,13 @@ export default function TeamClientPage({
             </Button>
           </div>
           <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4">Team Members</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Team Members ({team.members.length})</h2>
+              <Button size="sm" onClick={handleInvite} variant="outline">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Invite Members
+              </Button>
+            </div>
             <div className="flex items-center gap-6 flex-wrap">
               {team.members.map((member) => (
                 <div key={member.name} className="text-center relative group">
@@ -279,11 +521,6 @@ export default function TeamClientPage({
                   </p>
                 </div>
               ))}
-              
-               <button onClick={handleInvite} className="flex flex-col items-center justify-center size-16 rounded-full border-2 border-dashed border-border hover:bg-secondary transition-colors">
-                  <UserPlus className="w-6 h-6 text-muted-foreground" />
-               </button>
-               
             </div>
           </div>
            <div className="border-t border-border pt-6">
@@ -298,73 +535,90 @@ export default function TeamClientPage({
       </div>
       <div className={`${isChatFullScreen ? 'col-span-12 h-[calc(100vh-10rem)]' : 'col-span-12 lg:col-span-4'}`}>
         <div className="bg-card text-card-foreground rounded-2xl shadow-lg h-full flex flex-col p-6">
-          <div className="flex items-center justify-between pb-4 border-b border-border">
-            <h2 className="text-xl font-semibold">Team Chat</h2>
-            <div className="flex items-center">
-                 <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setIsChatFullScreen(!isChatFullScreen)}>
-                    {isChatFullScreen ? <Minimize className="h-5 w-5" /> : <Expand className="h-5 w-5" />}
-                </Button>
-                <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={handleMoreOptions}>
-                <MoreVertical className="h-5 w-5" />
-                </Button>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Team Chat</h3>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsChatFullScreen(!isChatFullScreen)}
+              >
+                {isChatFullScreen ? <Minimize className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
+              </Button>
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-2">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex gap-3 items-end max-w-[85%] ${
-                  message.isSelf ? "flex-row-reverse ml-auto" : ""
-                }`}
-              >
-                <Image
-                  alt={message.author}
-                  className="size-6 rounded-full"
-                  height={24}
-                  src={message.avatar}
-                  width={24}
-                />
+          <ScrollArea className="flex-1 mb-4">
+            <div className="space-y-4">
+              {messages.map((message) => (
                 <div
-                  className={`p-3 rounded-2xl ${
-                    message.isSelf
-                      ? "bg-primary/20 rounded-br-none"
-                      : "bg-secondary rounded-bl-none"
+                  key={message.id}
+                  className={`flex gap-3 items-start ${
+                    message.isSelf ? "flex-row-reverse" : ""
                   }`}
                 >
-                  <p className="text-sm">{message.content}</p>
+                  {!message.isSelf && (
+                    <Image
+                      src={message.avatar}
+                      alt={message.author}
+                      width={32}
+                      height={32}
+                      className="rounded-full"
+                      data-ai-hint="person face"
+                    />
+                  )}
+                  <div
+                    className={`max-w-[80%] rounded-2xl p-3 text-sm ${
+                      message.isSelf
+                        ? "bg-primary text-primary-foreground rounded-br-none"
+                        : "bg-secondary rounded-bl-none"
+                    }`}
+                  >
+                    <div className="font-semibold text-xs mb-1">
+                      {message.author}
+                    </div>
+                    {message.content}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-          <div className="pt-4 mt-auto border-t border-border">
-            <div className="relative">
-              <Textarea
-                className="w-full pr-20 resize-none bg-background"
-                placeholder="Type a message..."
-                rows={1}
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-              />
-               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
-                 <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" onClick={handleAttachment}>
-                    <Paperclip className="w-5 h-5"/>
-                 </Button>
-                <Button className="p-2 rounded-full h-8 w-12 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleSendMessage}>
-                    <Send className="w-5 h-5" />
-                </Button>
-               </div>
+              ))}
             </div>
+          </ScrollArea>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleAttachment}
+            >
+              <Paperclip className="h-4 w-4" />
+            </Button>
+            <Input
+              placeholder="Type a message..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+              className="flex-1"
+            />
+            <Button size="icon" onClick={handleSendMessage}>
+              <Send className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
     </main>
-    <InviteDialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen} />
+
+    {/* Enhanced Invite Dialog */}
+    <InviteDialog 
+      open={isInviteDialogOpen} 
+      onOpenChange={setIsInviteDialogOpen}
+      onInvite={handleInviteParticipant}
+    />
+
+    {/* Team Settings Dialog */}
+    <TeamSettingsDialog 
+      open={isSettingsDialogOpen} 
+      onOpenChange={setIsSettingsDialogOpen}
+      team={team}
+      onUpdateTeam={handleUpdateTeam}
+    />
     </>
   );
 }

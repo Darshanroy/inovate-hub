@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Edit, Save, Trash2 } from "lucide-react";
-import Link from "next/link";
+import { ArrowLeft, ArrowRightCircle, Save, Eye, EyeOff } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { apiService } from "@/lib/api";
 import { getCookie } from "@/hooks/use-auth";
@@ -38,12 +37,15 @@ interface Hackathon {
   registration_count: number;
   team_count: number;
   created_at: string;
+  status?: 'draft' | 'published';
 }
 
 export default function EditHackathonPage() {
   const [hackathon, setHackathon] = useState<Hackathon | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const { toast } = useToast();
   const params = useParams();
   const router = useRouter();
@@ -86,43 +88,81 @@ export default function EditHackathonPage() {
     }
   };
 
-  const handleSave = async () => {
-    if (!hackathon) return;
-
+  const handleSave = async (data: Partial<Hackathon>) => {
     try {
       setSaving(true);
       const token = getCookie('authToken');
-      if (!token) return;
+      if (!token) {
+        toast({ title: 'Please log in', description: 'You need to be logged in to save changes.' });
+        return;
+      }
 
-      // This would need to be implemented based on the form data
-      // For now, we'll just show a success message
+      // This would be a real API call to update the hackathon
+      // For now, we'll just update the local state
+      setHackathon(prev => prev ? { ...prev, ...data } : null);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       toast({ title: 'Hackathon updated', description: 'Your changes have been saved successfully.' });
     } catch (error: any) {
-      toast({ title: 'Error', description: error.message || 'Failed to update hackathon' });
+      console.error('Failed to save hackathon:', error);
+      toast({ title: 'Error', description: error.message || 'Failed to save hackathon' });
+      throw error;
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!hackathon) return;
-
-    if (!confirm('Are you sure you want to delete this hackathon? This action cannot be undone.')) {
-      return;
-    }
-
+  const handleSaveDraft = async (data: Partial<Hackathon>) => {
     try {
-      setSaving(true);
+      setSavingDraft(true);
       const token = getCookie('authToken');
-      if (!token) return;
+      if (!token) {
+        toast({ title: 'Please log in', description: 'You need to be logged in to save draft.' });
+        return;
+      }
 
-      await apiService.deleteHackathon(token, hackathonId);
-      toast({ title: 'Hackathon deleted', description: 'The hackathon has been deleted successfully.' });
-      router.push('/organizer/dashboard');
+      // This would be a real API call to save as draft
+      // For now, we'll just update the local state
+      setHackathon(prev => prev ? { ...prev, ...data, status: 'draft' } : null);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({ title: 'Draft saved', description: 'Your draft has been saved successfully.' });
     } catch (error: any) {
-      toast({ title: 'Error', description: error.message || 'Failed to delete hackathon' });
+      console.error('Failed to save draft:', error);
+      toast({ title: 'Error', description: error.message || 'Failed to save draft' });
+      throw error;
     } finally {
-      setSaving(false);
+      setSavingDraft(false);
+    }
+  };
+
+  const handlePublish = async (data: Partial<Hackathon>) => {
+    try {
+      setPublishing(true);
+      const token = getCookie('authToken');
+      if (!token) {
+        toast({ title: 'Please log in', description: 'You need to be logged in to publish hackathon.' });
+        return;
+      }
+
+      // This would be a real API call to publish the hackathon
+      // For now, we'll just update the local state
+      setHackathon(prev => prev ? { ...prev, ...data, status: 'published' } : null);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({ title: 'Hackathon published', description: 'Your hackathon has been published successfully!' });
+    } catch (error: any) {
+      console.error('Failed to publish hackathon:', error);
+      toast({ title: 'Error', description: error.message || 'Failed to publish hackathon' });
+      throw error;
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -131,7 +171,7 @@ export default function EditHackathonPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading hackathon...</p>
+          <p className="text-muted-foreground">Loading hackathon details...</p>
         </div>
       </div>
     );
@@ -142,11 +182,9 @@ export default function EditHackathonPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <h3 className="text-lg font-semibold mb-2">Hackathon not found</h3>
-          <p className="text-muted-foreground mb-4">This hackathon does not exist or you do not have permission to edit it.</p>
-          <Button asChild>
-            <Link href="/organizer/dashboard">
-              Back to Dashboard
-            </Link>
+          <p className="text-muted-foreground mb-4">The hackathon you're looking for doesn't exist.</p>
+          <Button onClick={() => router.push('/organizer/dashboard')}>
+            Back to Dashboard
           </Button>
         </div>
       </div>
@@ -154,94 +192,94 @@ export default function EditHackathonPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-6xl flex-1 px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <Button asChild variant="outline" size="sm">
-            <Link href="/organizer/dashboard">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Dashboard
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">Edit Hackathon</h1>
-            <p className="text-muted-foreground">Manage your hackathon settings and participants.</p>
-          </div>
+    <div className="space-y-6">
+      {/* Navigation Header */}
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="sm" onClick={() => router.back()}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        <div className="h-4 w-px bg-border" />
+        <Button variant="ghost" size="sm" onClick={() => router.forward()}>
+          <ArrowRightCircle className="mr-2 h-4 w-4" />
+          Forward
+        </Button>
+      </div>
+
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between md:items-start gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Edit {hackathon.name}</h1>
+          <p className="text-muted-foreground mt-2">Update your hackathon information and settings.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={handleSave} disabled={saving}>
-            <Save className="mr-2 h-4 w-4" />
-            {saving ? 'Saving...' : 'Save Changes'}
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => router.push(`/organizer/dashboard/view/${hackathon.id}`)}>
+            View Stats
           </Button>
-          <Button onClick={handleDelete} variant="destructive" disabled={saving}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+          <Button variant="outline" onClick={() => router.push(`/organizer/dashboard/manage/${hackathon.id}`)}>
+            Manage Event
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Edit className="h-5 w-5" />
-              {hackathon.name}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="text-center p-4 bg-secondary/50 rounded-lg">
-                <div className="text-2xl font-bold text-primary">
-                  {hackathon.registration_count}
-                </div>
-                <div className="text-sm text-muted-foreground">Participants</div>
-              </div>
-              <div className="text-center p-4 bg-secondary/50 rounded-lg">
-                <div className="text-2xl font-bold text-primary">
-                  {hackathon.team_count}
-                </div>
-                <div className="text-sm text-muted-foreground">Teams</div>
-              </div>
-              <div className="text-center p-4 bg-secondary/50 rounded-lg">
-                <div className="text-2xl font-bold text-primary">
-                  {hackathon.locationType}
-                </div>
-                <div className="text-sm text-muted-foreground">Location Type</div>
-              </div>
-            </div>
-
-            <Tabs defaultValue="basic-info" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
-                <TabsTrigger value="participants">Participants</TabsTrigger>
-                <TabsTrigger value="submissions">Submissions</TabsTrigger>
-                <TabsTrigger value="judging">Judging</TabsTrigger>
-                <TabsTrigger value="results">Results</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="basic-info" className="mt-6">
-                <BasicInfoTab hackathon={hackathon} />
-              </TabsContent>
-
-              <TabsContent value="participants" className="mt-6">
-                <ParticipantsTab />
-              </TabsContent>
-
-              <TabsContent value="submissions" className="mt-6">
-                <SubmissionsTab />
-              </TabsContent>
-
-              <TabsContent value="judging" className="mt-6">
-                <JudgingPanelTab />
-              </TabsContent>
-
-              <TabsContent value="results" className="mt-6">
-                <ResultsTab />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+      {/* Status Indicator */}
+      <div className="flex items-center gap-2 p-3 bg-secondary rounded-lg">
+        <span className="text-sm font-medium">Status:</span>
+        <Badge variant={hackathon.status === 'published' ? 'default' : 'secondary'}>
+          {hackathon.status === 'published' ? (
+            <>
+              <Eye className="w-3 h-3 mr-1" />
+              Published
+            </>
+          ) : (
+            <>
+              <EyeOff className="w-3 h-3 mr-1" />
+              Draft
+            </>
+          )}
+        </Badge>
+        {hackathon.status === 'published' && (
+          <span className="text-sm text-muted-foreground ml-2">
+            This hackathon is live and visible to participants
+          </span>
+        )}
       </div>
+
+      {/* Edit Tabs */}
+      <Tabs defaultValue="basic-info" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
+          <TabsTrigger value="participants">Participants</TabsTrigger>
+          <TabsTrigger value="judging">Judging</TabsTrigger>
+          <TabsTrigger value="submissions">Submissions</TabsTrigger>
+          <TabsTrigger value="results">Results</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="basic-info" className="space-y-4">
+          <BasicInfoTab 
+            hackathon={hackathon}
+            onSave={handleSave}
+            onSaveDraft={handleSaveDraft}
+            onPublish={handlePublish}
+          />
+        </TabsContent>
+
+        <TabsContent value="participants" className="space-y-4">
+          <ParticipantsTab hackathon={hackathon} />
+        </TabsContent>
+
+        <TabsContent value="judging" className="space-y-4">
+          <JudgingPanelTab hackathon={hackathon} />
+        </TabsContent>
+
+        <TabsContent value="submissions" className="space-y-4">
+          <SubmissionsTab hackathon={hackathon} />
+        </TabsContent>
+
+        <TabsContent value="results" className="space-y-4">
+          <ResultsTab hackathon={hackathon} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

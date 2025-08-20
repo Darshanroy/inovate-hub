@@ -4,7 +4,7 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { PlusCircle, ArrowRight, Eye, Edit, Trash2 } from "lucide-react"
+import { PlusCircle, ArrowRight, Eye, Edit, Trash2, ArrowLeft, ArrowRightCircle, Users, Calendar, DollarSign, BarChart3 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { format, isPast, isFuture, parseISO } from "date-fns"
 import { useState, useEffect } from "react"
@@ -22,6 +22,7 @@ import { ListFilter } from "lucide-react"
 import { apiService } from "@/lib/api"
 import { getCookie } from "@/hooks/use-auth"
 import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
 
 interface Hackathon {
   id: string;
@@ -37,6 +38,7 @@ interface Hackathon {
   registration_count: number;
   team_count: number;
   created_at: string;
+  status?: 'draft' | 'published' | 'ended';
 }
 
 export default function OrganizerDashboard() {
@@ -45,6 +47,7 @@ export default function OrganizerDashboard() {
   const [hackathons, setHackathons] = useState<Hackathon[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     loadHackathons();
@@ -87,6 +90,42 @@ export default function OrganizerDashboard() {
     return "Upcoming";
   }
 
+  const handleViewHackathon = (hackathon: Hackathon) => {
+    // Navigate to a detailed view page with stats
+    router.push(`/organizer/dashboard/view/${hackathon.id}`);
+  };
+
+  const handleEditHackathon = (hackathon: Hackathon) => {
+    // Navigate to edit page
+    router.push(`/organizer/dashboard/edit/${hackathon.id}`);
+  };
+
+  const handleManageHackathon = (hackathon: Hackathon) => {
+    // Navigate to management page with participants, submissions, judging
+    router.push(`/organizer/dashboard/manage/${hackathon.id}`);
+  };
+
+  const handleDeleteHackathon = async (hackathon: Hackathon) => {
+    if (!confirm(`Are you sure you want to delete "${hackathon.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const token = getCookie('authToken');
+      if (!token) {
+        toast({ title: 'Please log in', description: 'You need to be logged in to delete hackathons.' });
+        return;
+      }
+
+      await apiService.deleteHackathon(token, hackathon.id);
+      toast({ title: 'Hackathon deleted', description: 'The hackathon has been deleted successfully.' });
+      loadHackathons(); // Reload the list
+    } catch (error: any) {
+      console.error('Failed to delete hackathon:', error);
+      toast({ title: 'Error', description: error.message || 'Failed to delete hackathon' });
+    }
+  };
+
   const filteredHackathons = hackathons
     .filter(h => {
         if (statusFilter === "All") return true;
@@ -97,7 +136,8 @@ export default function OrganizerDashboard() {
     );
 
   const totalHackathons = hackathons.length;
-  const totalParticipants = hackathons.reduce((sum, h) => sum + h.registration_count, 0);
+  const totalParticipants = hackathons.reduce((sum, h) => sum + (h.registration_count || 0), 0);
+  const totalTeams = hackathons.reduce((sum, h) => sum + (h.team_count || 0), 0);
   const upcomingDeadlines = hackathons.filter(h => getEventStatus(h) === 'Upcoming').length;
 
   if (loading) {
@@ -113,6 +153,19 @@ export default function OrganizerDashboard() {
 
   return (
     <div>
+      {/* Navigation Header */}
+      <div className="flex items-center gap-4 mb-6">
+        <Button variant="ghost" size="sm" onClick={() => router.back()}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        <div className="h-4 w-px bg-border" />
+        <Button variant="ghost" size="sm" onClick={() => router.forward()}>
+          <ArrowRightCircle className="mr-2 h-4 w-4" />
+          Forward
+        </Button>
+      </div>
+
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold">Organizer Dashboard</h1>
@@ -126,29 +179,53 @@ export default function OrganizerDashboard() {
         </Button>
       </div>
 
-       <div className="grid gap-4 md:grid-cols-3 mb-8">
+       <div className="grid gap-4 md:grid-cols-4 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Hackathons</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalHackathons}</div>
+            <p className="text-xs text-muted-foreground">
+              {hackathons.filter(h => getEventStatus(h) === 'Ongoing').length} active
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Participants</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+{totalParticipants}</div>
+            <div className="text-2xl font-bold">{totalParticipants}</div>
+            <p className="text-xs text-muted-foreground">
+              Across all events
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming Deadlines</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Teams</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalTeams}</div>
+            <p className="text-xs text-muted-foreground">
+              Registered teams
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{upcomingDeadlines}</div>
+            <p className="text-xs text-muted-foreground">
+              Scheduled events
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -219,7 +296,7 @@ export default function OrganizerDashboard() {
           ) : (
             <div className="space-y-4">
               {filteredHackathons.map((hackathon) => (
-                <div key={hackathon.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div key={hackathon.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-secondary/50 transition-colors">
                   <div className="flex items-center space-x-4">
                     <div className="flex-1">
                       <h3 className="font-semibold">{hackathon.name}</h3>
@@ -229,29 +306,48 @@ export default function OrganizerDashboard() {
                           {getEventStatus(hackathon)}
                         </Badge>
                         <span className="text-sm text-muted-foreground">
-                          {hackathon.registration_count} participants • {hackathon.team_count} teams
+                          {hackathon.registration_count || 0} participants • {hackathon.team_count || 0} teams
                         </span>
+                        {hackathon.prize && (
+                          <span className="text-sm text-muted-foreground">
+                            • ${hackathon.prize.toLocaleString()} prize pool
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/hackathons/${hackathon.id}`}>
-                        <Eye className="mr-2 h-4 w-4"/>
-                        View
-                      </Link>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleViewHackathon(hackathon)}
+                    >
+                      <Eye className="mr-2 h-4 w-4"/>
+                      View
                     </Button>
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/organizer/dashboard/edit/${hackathon.id}`}>
-                        <Edit className="mr-2 h-4 w-4"/>
-                        Edit
-                      </Link>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEditHackathon(hackathon)}
+                    >
+                      <Edit className="mr-2 h-4 w-4"/>
+                      Edit
                     </Button>
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/organizer/dashboard/edit/${hackathon.id}`}>
-                        <ArrowRight className="mr-2 h-4 w-4"/>
-                        Manage
-                      </Link>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleManageHackathon(hackathon)}
+                    >
+                      <ArrowRight className="mr-2 h-4 w-4"/>
+                      Manage
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleDeleteHackathon(hackathon)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4"/>
                     </Button>
                   </div>
                 </div>
