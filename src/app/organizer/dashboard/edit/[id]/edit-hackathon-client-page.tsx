@@ -34,7 +34,7 @@ export default function EditHackathonClientPage({ hackathon }: { hackathon: Hack
             <ParticipantsTab />
         </TabsContent>
          <TabsContent value="submissions">
-            <SubmissionsTab />
+            <SubmissionsTab hackathonId={hackathon.id} />
         </TabsContent>
         <TabsContent value="judging">
             <JudgingPanelTab />
