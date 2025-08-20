@@ -21,13 +21,15 @@ import {
   User,
   Clock,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Heart
 } from "lucide-react";
-import Link from "next/link";
 import { format, isPast, isFuture, parseISO } from "date-fns";
 import { apiService } from "@/lib/api";
 import { getCookie } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { HackathonCard } from "@/components/ui/hackathon-card";
+import { getWishlist, toggleWishlist } from "@/lib/wishlist";
 
 export type Round = { name: string; date: string; description: string };
 export type Hackathon = { 
@@ -79,12 +81,24 @@ const getEventStatus = (hackathon: Hackathon) => {
 export default function MyHackathonsPage() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [hackathons, setHackathons] = useState<Hackathon[]>([]);
+  const [allHackathons, setAllHackathons] = useState<Hackathon[]>([]);
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
     loadHackathons();
+    // Load public hackathons for wishlist view and initialize wishlist
+    (async () => {
+      try {
+        const res = await apiService.listHackathons();
+        setAllHackathons(res.hackathons || []);
+      } catch (e) {
+        setAllHackathons([]);
+      }
+      setWishlistIds(getWishlist());
+    })();
   }, []);
 
   const loadHackathons = async () => {
@@ -132,6 +146,10 @@ export default function MyHackathonsPage() {
   };
 
   const filteredHackathons = useMemo(() => {
+    if (statusFilter === "Wishlist") {
+      // handled separately in render using wishlistHackathons
+      return [];
+    }
     let list = hackathons.slice();
     if (statusFilter !== "All") {
       list = list.filter(h => getEventStatus(h) === statusFilter);
@@ -148,6 +166,25 @@ export default function MyHackathonsPage() {
       return dateB.getTime() - dateA.getTime();
     });
   }, [hackathons, statusFilter, searchTerm]);
+
+  const wishlistHackathons = useMemo(() => {
+    const wl = wishlistIds;
+    let list = allHackathons.filter(h => wl.has(h.id));
+    // Only show upcoming/not started or ongoing
+    list = list.filter(h => {
+      const s = getEventStatus(h);
+      return s === 'Not Started' || s === 'Ongoing';
+    });
+    if (searchTerm) {
+      list = list.filter(h => h.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
+    return list;
+  }, [allHackathons, wishlistIds, searchTerm]);
+
+  const onWishlistToggle = (hackathonId: string, isOn: boolean) => {
+    const updated = toggleWishlist(hackathonId, isOn);
+    setWishlistIds(new Set(updated));
+  };
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -233,10 +270,39 @@ export default function MyHackathonsPage() {
           >
             Ended
           </Button>
+          <Button
+            variant={statusFilter === "Wishlist" ? "default" : "outline"}
+            size="sm"
+            className={statusFilter === "Wishlist" ? "bg-blue-600 hover:bg-blue-700 text-white" : "text-blue-600 border-blue-600 hover:bg-blue-50"}
+            onClick={() => setStatusFilter("Wishlist")}
+          >
+            <Heart className="mr-2 h-4 w-4" /> Wishlist
+          </Button>
         </div>
       </div>
 
-      {filteredHackathons.length === 0 ? (
+      {statusFilter === 'Wishlist' ? (
+        <div>
+          {wishlistHackathons.length === 0 ? (
+            <div className="text-center py-12">
+              <Heart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No wishlisted hackathons</h3>
+              <p className="text-muted-foreground">Add some hackathons to your wishlist from Explore.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {wishlistHackathons.map((hackathon) => (
+                <HackathonCard
+                  key={hackathon.id}
+                  hackathon={hackathon as any}
+                  onWishlistToggle={onWishlistToggle}
+                  isWishlisted={wishlistIds.has(hackathon.id)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : filteredHackathons.length === 0 ? (
         <div className="text-center py-12">
           <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">
@@ -266,7 +332,14 @@ export default function MyHackathonsPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-semibold">{hackathon.name}</h3>
+                        <LoadingButton 
+                          href={`/hackathons/${hackathon.id}`}
+                          variant="link"
+                          className="p-0 h-auto text-xl font-semibold text-primary hover:text-primary"
+                          loadingMessage="Opening hackathon..."
+                        >
+                          {hackathon.name}
+                        </LoadingButton>
                         <Badge className={getStatusColor(status)}>
                           {getStatusIcon(status)}
                           <span className="ml-1">{status}</span>
@@ -289,24 +362,24 @@ export default function MyHackathonsPage() {
 
                 <CardContent>
                   <Tabs defaultValue="overview" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="overview">Overview</TabsTrigger>
-                      <TabsTrigger value="team">Team</TabsTrigger>
-                      <TabsTrigger value="actions">Actions</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-3 bg-muted">
+                      <TabsTrigger className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-primary/10 hover:text-primary" value="overview">Overview</TabsTrigger>
+                      <TabsTrigger className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-primary/10 hover:text-primary" value="team">Team</TabsTrigger>
+                      <TabsTrigger className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-primary/10 hover:text-primary" value="actions">Actions</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="overview" className="mt-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="p-4 rounded-lg bg-secondary/50">
-                          <div className="text-2xl font-bold">{hackathon.registrationStatus || 'Confirmed'}</div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                          <div className="text-2xl font-bold text-primary">{hackathon.registrationStatus || 'Confirmed'}</div>
                           <div className="text-sm text-muted-foreground">Registration Status</div>
                         </div>
-                        <div className="p-4 rounded-lg bg-secondary/50">
-                          <div className="text-2xl font-bold">{hackathon.team?.members?.length || 0}</div>
+                        <div>
+                          <div className="text-2xl font-bold text-primary">{hackathon.team?.members?.length || 0}</div>
                           <div className="text-sm text-muted-foreground">Team Members</div>
                         </div>
-                        <div className="p-4 rounded-lg bg-secondary/50">
-                          <div className="text-2xl font-bold">{hackathon.submissionStatus || 'Not Started'}</div>
+                        <div>
+                          <div className="text-2xl font-bold text-primary">{hackathon.submissionStatus || 'Not Started'}</div>
                           <div className="text-sm text-muted-foreground">Submission Status</div>
                         </div>
                       </div>
@@ -317,10 +390,10 @@ export default function MyHackathonsPage() {
                         <div>
                           <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
-                              <h4 className="font-semibold">{hackathon.team.name}</h4>
-                              <Badge variant="secondary">Code: {hackathon.team.code}</Badge>
+                              <h4 className="font-semibold text-primary">{hackathon.team.name}</h4>
+                              <Badge variant="secondary" className="text-primary bg-primary/10">Code: {hackathon.team.code}</Badge>
                             </div>
-                            <Badge variant="outline">
+                            <Badge variant="outline" className="text-primary border-primary/30">
                               {hackathon.team.members.length} members
                             </Badge>
                           </div>
@@ -368,6 +441,7 @@ export default function MyHackathonsPage() {
                           href={`/hackathons/${hackathon.id}`}
                           variant="outline" 
                           size="sm"
+                          className="text-primary border-primary/30 hover:bg-primary/10"
                           loadingMessage="Opening hackathon..."
                         >
                           <Eye className="mr-2 h-4 w-4"/>
@@ -378,6 +452,7 @@ export default function MyHackathonsPage() {
                             href={`/hackathons/${hackathon.id}/team`}
                             variant="outline" 
                             size="sm"
+                            className="text-primary border-primary/30 hover:bg-primary/10"
                             loadingMessage="Opening team management..."
                           >
                             <Users className="mr-2 h-4 w-4"/>
@@ -387,8 +462,9 @@ export default function MyHackathonsPage() {
                         {getEventStatus(hackathon) === 'Not Started' && !hackathon.team && (
                           <LoadingButton 
                             href={`/hackathons/${hackathon.id}/find-team`}
-                            variant="secondary" 
+                            variant="outline" 
                             size="sm"
+                            className="text-primary border-primary/30 hover:bg-primary/10"
                             loadingMessage="Finding teams..."
                           >
                             <Users className="mr-2 h-4 w-4"/>
@@ -399,6 +475,8 @@ export default function MyHackathonsPage() {
                           <LoadingButton 
                             href={`/hackathons/${hackathon.id}/submission`}
                             size="sm"
+                            variant="outline"
+                            className="text-primary border-primary/30 hover:bg-primary/10"
                             loadingMessage="Opening submission..."
                           >
                             <FileText className="mr-2 h-4 w-4"/>
@@ -409,7 +487,8 @@ export default function MyHackathonsPage() {
                           <LoadingButton 
                             href={`/hackathons/${hackathon.id}/submission`}
                             size="sm" 
-                            variant="secondary"
+                            variant="outline"
+                            className="text-primary border-primary/30 hover:bg-primary/10"
                             loadingMessage="Opening submission..."
                           >
                             <FileText className="mr-2 h-4 w-4"/>

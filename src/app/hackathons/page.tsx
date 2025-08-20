@@ -7,6 +7,7 @@ import { format, parseISO, isPast, isFuture } from "date-fns";
 import { HackathonCard } from "@/components/ui/hackathon-card";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
+import { getWishlist, toggleWishlist } from "@/lib/wishlist";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,6 +46,8 @@ const HackathonsPage = memo(function HackathonsPage() {
 
   useEffect(() => {
     loadHackathons();
+    // initialize wishlist from localStorage on mount
+    setWishlistedHackathons(getWishlist());
   }, []);
 
   const loadHackathons = async () => {
@@ -114,15 +117,8 @@ const HackathonsPage = memo(function HackathonsPage() {
   };
 
   const handleWishlistToggle = (hackathonId: string, isWishlisted: boolean) => {
-    setWishlistedHackathons(prev => {
-      const newSet = new Set(prev);
-      if (isWishlisted) {
-        newSet.add(hackathonId);
-      } else {
-        newSet.delete(hackathonId);
-      }
-      return newSet;
-    });
+    const updated = toggleWishlist(hackathonId, isWishlisted);
+    setWishlistedHackathons(new Set(updated));
   };
 
   const themes = ["All", "Artificial Intelligence", "Sustainability", "Financial Technology", "Healthcare", "Creative Coding", "Data Science"];

@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Trophy, Star, Heart } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { format, parseISO, isPast, isFuture } from "date-fns";
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
+import { isWishlisted as isWishlistedInStorage } from "@/lib/wishlist";
 import Image from "next/image";
 
 interface HackathonCardProps {
@@ -33,6 +34,12 @@ export const HackathonCard = memo(function HackathonCard({
 	isWishlisted = false 
 }: HackathonCardProps) {
 	const [localWishlisted, setLocalWishlisted] = useState(isWishlisted);
+
+	useEffect(() => {
+		const fromStorage = isWishlistedInStorage(hackathon.id);
+		setLocalWishlisted(isWishlisted ?? fromStorage);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [hackathon.id, isWishlisted]);
 
 	const getEventStatus = () => {
 		if (hackathon.rounds && hackathon.rounds.length > 0) {
@@ -105,7 +112,7 @@ export const HackathonCard = memo(function HackathonCard({
 					<p className="text-xs text-muted-foreground mt-1">
 						Date: {hackathon.date ? new Date(hackathon.date).toLocaleDateString() : 'TBA'}
 					</p>
-					<p className="text-sm font-bold text-accent mt-2">
+					<p className="text-sm font-bold text-blue-600 mt-2">
 						Prize: ₹{Number(hackathon.prize || 0).toLocaleString()}
 					</p>
 				</div>
