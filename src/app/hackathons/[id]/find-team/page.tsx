@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
  
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Users, 
@@ -42,6 +45,10 @@ export default function FindTeamPage() {
   const [invitedParticipants, setInvitedParticipants] = useState<string[]>([]);
   const [teamCode, setTeamCode] = useState("");
   const [joiningTeam, setJoiningTeam] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [teamName, setTeamName] = useState("");
+  const [teamDesc, setTeamDesc] = useState("");
+  const [invites, setInvites] = useState<any[]>([]);
   const router = useRouter();
   const params = useParams();
   const hackathonId = params.id as string;
@@ -70,6 +77,14 @@ export default function FindTeamPage() {
       const participantsRes = await resp.json();
       const solo = (participantsRes.participants || []).filter((p: any) => !p.team);
       setSoloParticipants(solo);
+      if (token) {
+        try {
+          const invRes = await apiService.listInvitations(token);
+          setInvites(invRes.invitations || []);
+        } catch {
+          setInvites([]);
+        }
+      }
     } catch (error: any) {
       console.error('Failed to load teams:', error);
       toast({ title: 'Error', description: error.message || 'Failed to load teams' });
@@ -191,7 +206,7 @@ export default function FindTeamPage() {
             </Card>
           </div>
 
-          <div className="flex items-center gap-2 bg-secondary p-1 rounded-lg mb-6 max-w-sm mx-auto">
+          <div className="flex items-center gap-2 bg-secondary p-1 rounded-lg mb-6 max-w-md mx-auto">
             <Button 
               variant={filter === "teams" ? "default" : "ghost"}
               size="sm"
@@ -209,6 +224,15 @@ export default function FindTeamPage() {
             >
               <User className="mr-2 h-4 w-4" />
               Solo ({soloParticipants.length})
+            </Button>
+            <Button 
+              variant={filter === "invitations" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setFilter("invitations")}
+              className="flex-1"
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              Invitations ({invites.length})
             </Button>
           </div>
 
@@ -232,7 +256,12 @@ export default function FindTeamPage() {
                     <p className="text-muted-foreground mb-4">
                       {teams.length === 0 ? "Be the first to create a team!" : "Try adjusting your search criteria."}
                     </p>
-                    {teams.length === 0 && null}
+                    {teams.length === 0 && (
+                      <Button onClick={() => setCreating(true)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create Team
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   filteredTeams.map(team => (
@@ -242,7 +271,6 @@ export default function FindTeamPage() {
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-3">
                               <h3 className="text-xl font-bold">{team.name}</h3>
-                              <Badge variant="outline">Code: {team.code}</Badge>
                             </div>
                             {team.description && (
                               <p className="text-muted-foreground mb-4">{team.description}</p>
@@ -319,11 +347,21 @@ export default function FindTeamPage() {
                           </div>
                         </div>
                         <Button
-                          onClick={() => setInvitedParticipants(prev => [...prev, participant.name])}
-                          disabled={invitedParticipants.includes(participant.name)}
-                          variant={invitedParticipants.includes(participant.name) ? "secondary" : "default"}
+                          onClick={async () => {
+                            try {
+                              const token = getCookie('authToken');
+                              if (!token) { toast({ title: 'Please log in' }); return; }
+                              await apiService.inviteParticipant(token, hackathonId, participant.id);
+                              setInvitedParticipants(prev => [...prev, participant.id]);
+                              toast({ title: 'Invitation sent' });
+                            } catch (e: any) {
+                              toast({ title: 'Failed to invite', description: e?.message || 'Try again' });
+                            }
+                          }}
+                          disabled={invitedParticipants.includes(participant.id)}
+                          variant={invitedParticipants.includes(participant.id) ? "secondary" : "default"}
                         >
-                          {invitedParticipants.includes(participant.name) ? (
+                          {invitedParticipants.includes(participant.id) ? (
                             <>
                               <Check className="mr-2 h-4 w-4" />
                               Invited
@@ -341,9 +379,93 @@ export default function FindTeamPage() {
                 )}
               </div>
             )}
+
+            {filter === 'invitations' && (
+              <div className="space-y-4">
+                {invites.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No invitations</h3>
+                    <p className="text-muted-foreground">Team leaders can invite you to join their teams here.</p>
+                  </div>
+                ) : (
+                  invites.map((inv) => (
+                    <Card key={inv.id} className="bg-secondary/50">
+                      <CardContent className="p-6 flex items-center justify-between">
+                        <div>
+                          <h3 className="text-xl font-bold">{inv.team_name}</h3>
+                          {inv.message && <p className="text-muted-foreground mt-1">{inv.message}</p>}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={async () => {
+                            try {
+                              const token = getCookie('authToken');
+                              if (!token) { toast({ title: 'Please log in' }); return; }
+                              await apiService.respondInvitation(token, inv.id, 'accept');
+                              toast({ title: 'Joined team' });
+                              setInvites(prev => prev.filter(i => i.id !== inv.id));
+                              router.push(`/hackathons/${hackathonId}/team`);
+                            } catch (e: any) {
+                              toast({ title: 'Failed to accept', description: e?.message || 'Try again' });
+                            }
+                          }}>Accept</Button>
+                          <Button size="sm" variant="outline" onClick={async () => {
+                            try {
+                              const token = getCookie('authToken');
+                              if (!token) { toast({ title: 'Please log in' }); return; }
+                              await apiService.respondInvitation(token, inv.id, 'reject');
+                              toast({ title: 'Invitation rejected' });
+                              setInvites(prev => prev.filter(i => i.id !== inv.id));
+                            } catch (e: any) {
+                              toast({ title: 'Failed to reject', description: e?.message || 'Try again' });
+                            }
+                          }}>Reject</Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         </div>
       </main>
+
+      {/* Create Team Dialog */}
+      <Dialog open={creating} onOpenChange={setCreating}>
+        <DialogContent className="sm:max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle>Create a Team</DialogTitle>
+            <DialogDescription>Set your team name and agenda/description.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="teamName">Team Name</Label>
+              <Input id="teamName" value={teamName} onChange={(e) => setTeamName(e.target.value)} placeholder="Awesome Devs" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="teamDesc">Agenda / Description</Label>
+              <Textarea id="teamDesc" value={teamDesc} onChange={(e) => setTeamDesc(e.target.value)} placeholder="What your team aims to build..." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCreating(false)}>Cancel</Button>
+            <Button onClick={async () => {
+              try {
+                const token = getCookie('authToken');
+                if (!token) { toast({ title: 'Please log in' }); return; }
+                if (!teamName.trim()) { toast({ title: 'Team name is required' }); return; }
+                await apiService.createTeam(token, hackathonId, { name: teamName.trim(), description: teamDesc.trim() || undefined });
+                toast({ title: 'Team created' });
+                setCreating(false);
+                router.push(`/hackathons/${hackathonId}/team`);
+              } catch (e: any) {
+                toast({ title: 'Failed to create team', description: e?.message || 'Try again' });
+              }
+            }}>Create</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
     </>
   );
