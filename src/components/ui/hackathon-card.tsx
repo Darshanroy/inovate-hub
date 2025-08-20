@@ -43,16 +43,28 @@ export const HackathonCard = memo(function HackathonCard({
 
 	const getEventStatus = () => {
 		if (hackathon.rounds && hackathon.rounds.length > 0) {
-			const firstRoundDate = parseISO(hackathon.rounds[0].date);
-			const lastRoundDate = parseISO(hackathon.rounds[hackathon.rounds.length - 1].date);
+			const firstRound = hackathon.rounds[0];
+			const lastRound = hackathon.rounds[hackathon.rounds.length - 1];
+
+			if (!firstRound || typeof firstRound.date !== 'string' || !lastRound || typeof lastRound.date !== 'string') {
+				return { status: "Unknown", color: "bg-gray-500" };
+			}
+
+			const firstRoundDate = parseISO(firstRound.date);
+			const lastRoundDate = parseISO(lastRound.date);
 			
 			if (isPast(lastRoundDate)) return { status: "Ended", color: "bg-gray-500" };
 			if (isFuture(firstRoundDate)) return { status: "Upcoming", color: "bg-blue-500" };
 			return { status: "Ongoing", color: "bg-green-500" };
 		}
 		
+		if (typeof hackathon.date !== 'string') {
+			return { status: "Unknown", color: "bg-gray-500" };
+		}
+
 		// Fallback for single-date hackathons
 		const eventDate = parseISO(hackathon.date);
+
 		const eventEndDate = new Date(eventDate);
 		eventEndDate.setDate(eventEndDate.getDate() + 2); // Assume 2 days duration
 
