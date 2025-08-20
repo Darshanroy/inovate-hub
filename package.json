@@ -13,6 +13,7 @@
     "index:code": "node scripts/index-code.mjs"
   },
   "dependencies": {
+    "@genkit-ai/firebase": "^1.16.1",
     "@genkit-ai/googleai": "^1.14.1",
     "@genkit-ai/next": "^1.14.1",
     "@hookform/resolvers": "^4.1.3",
