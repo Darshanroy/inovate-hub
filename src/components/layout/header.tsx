@@ -50,9 +50,9 @@ export function AppHeader() {
            <nav className="hidden items-center gap-8 md:flex">
             <Link 
               href="/hackathons" 
-              className={`text-sm font-medium transition-colors hover:text-accent ${
+              className={`text-sm font-medium transition-colors hover:text-primary ${
                 isActive("/hackathons") && !isActive("/hackathons/my") && !isActive("/organizer") && !isActive("/judge")
-                  ? "text-accent border-b-2 border-accent pb-1"
+                  ? "text-primary border-b-2 border-primary pb-1"
                   : "text-muted-foreground"
               }`}
             >
@@ -61,9 +61,9 @@ export function AppHeader() {
             {isLoggedIn && userType === 'participant' && (
               <Link 
                 href="/hackathons/my" 
-                className={`text-sm font-medium transition-colors hover:text-accent ${
+                className={`text-sm font-medium transition-colors hover:text-primary ${
                   isActive("/hackathons/my")
-                    ? "text-accent border-b-2 border-accent pb-1"
+                    ? "text-primary border-b-2 border-primary pb-1"
                     : "text-muted-foreground"
                 }`}
               >
@@ -74,9 +74,9 @@ export function AppHeader() {
               <>
                 <Link 
                   href="/organizer/dashboard" 
-                  className={`text-sm font-medium transition-colors hover:text-accent ${
+                  className={`text-sm font-medium transition-colors hover:text-primary ${
                     isActive("/organizer/dashboard") && !isActive("/organizer/dashboard/create")
-                      ? "text-accent border-b-2 border-accent pb-1"
+                      ? "text-primary border-b-2 border-primary pb-1"
                       : "text-muted-foreground"
                   }`}
                 >
@@ -84,9 +84,9 @@ export function AppHeader() {
                 </Link>
                  <Link 
                    href="/organizer/dashboard/create" 
-                   className={`text-sm font-medium transition-colors hover:text-accent ${
+                   className={`text-sm font-medium transition-colors hover:text-primary ${
                      isActive("/organizer/dashboard/create")
-                       ? "text-accent border-b-2 border-accent pb-1"
+                       ? "text-primary border-b-2 border-primary pb-1"
                        : "text-muted-foreground"
                    }`}
                  >
@@ -97,9 +97,9 @@ export function AppHeader() {
              {isLoggedIn && userType === 'judge' && (
                 <Link 
                   href="/judge/dashboard" 
-                  className={`text-sm font-medium transition-colors hover:text-accent ${
+                  className={`text-sm font-medium transition-colors hover:text-primary ${
                     isActive("/judge/dashboard")
-                      ? "text-accent border-b-2 border-accent pb-1"
+                      ? "text-primary border-b-2 border-primary pb-1"
                       : "text-muted-foreground"
                   }`}
                 >
