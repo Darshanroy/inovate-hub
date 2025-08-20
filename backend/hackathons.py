@@ -203,6 +203,14 @@ def register(hackathon_id: str):
     motivation = (details.get('motivation') or '').strip()
     team_code = (details.get('teamCode') or '').strip()
     portfolio_link = (details.get('portfolio') or '').strip()
+    # Optional richer participant profile
+    full_name = (details.get('fullName') or '').strip()
+    role = (details.get('role') or '').strip()
+    skills = details.get('skills') or []
+    experience_level = (details.get('experienceLevel') or '').strip()
+    github = (details.get('github') or '').strip()
+    linkedin = (details.get('linkedin') or '').strip()
+    resume_link = (details.get('resumeLink') or '').strip()
 
     res = registrations_col.update_one(
         {'hackathon_id': ObjectId(hackathon_id), 'user_id': ObjectId(decoded['sub'])},
@@ -215,6 +223,13 @@ def register(hackathon_id: str):
                 'looking_for_team': looking_for_team,
                 'team_code': team_code,
                 'portfolio_link': portfolio_link,
+                'full_name': full_name,
+                'role': role,
+                'skills': skills,
+                'experience_level': experience_level,
+                'github': github,
+                'linkedin': linkedin,
+                'resume_link': resume_link,
                 'status': 'Confirmed',
                 'updated_at': now,
             },
@@ -287,6 +302,14 @@ def create_team(hackathon_id: str):
         code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
     now = datetime.utcnow()
+    # Use hackathon-specific team size if provided
+    try:
+        hack = hackathons_col.find_one({'_id': ObjectId(hackathon_id)})
+    except Exception:
+        hack = None
+    max_members = int(hack.get('team_size', 4) or 4) if hack else 4
+    if max_members <= 0:
+        max_members = 4
     team_doc = {
         'hackathon_id': ObjectId(hackathon_id),
         'name': name,
@@ -294,7 +317,7 @@ def create_team(hackathon_id: str):
         'code': code,
         'leader_id': ObjectId(decoded['sub']),
         'members': [ObjectId(decoded['sub'])],  # Leader is first member
-        'max_members': 4,  # Default, can be made configurable
+        'max_members': max_members,
         'created_at': now,
         'updated_at': now,
     }
@@ -378,8 +401,15 @@ def join_team(hackathon_id: str):
     if ObjectId(decoded['sub']) in team.get('members', []):
         return jsonify({'message': 'You are already a member of this team'}), 400
 
-    # Check if team is full
-    if len(team.get('members', [])) >= team.get('max_members', 4):
+    # Check if team is full (prefer team's saved max_members; fallback to hackathon team_size)
+    try:
+        hack = hackathons_col.find_one({'_id': ObjectId(hackathon_id)})
+    except Exception:
+        hack = None
+    effective_max = int(team.get('max_members') or hack.get('team_size', 4) if hack else 4)
+    if effective_max <= 0:
+        effective_max = 4
+    if len(team.get('members', [])) >= effective_max:
         return jsonify({'message': 'Team is full'}), 400
 
     # Add user to team
@@ -636,17 +666,67 @@ def organizer_participants(hackathon_id: str):
         
         participant_info = {
             'id': str(reg['user_id']),
-            'name': user.get('name', 'Unknown'),
+            'name': reg.get('full_name') or user.get('name', 'Unknown'),
             'email': user.get('email', ''),
             'motivation': reg.get('motivation', ''),
             'portfolio_link': reg.get('portfolio_link', ''),
             'looking_for_team': reg.get('looking_for_team', True),
             'team_code': reg.get('team_code', ''),
+            'role': reg.get('role', ''),
+            'skills': reg.get('skills', []),
+            'experience_level': reg.get('experience_level', ''),
+            'github': reg.get('github', ''),
+            'linkedin': reg.get('linkedin', ''),
+            'resume_link': reg.get('resume_link', ''),
             'registration_date': reg.get('created_at', ''),
             'team': team_info,
         }
         participant_list.append(participant_info)
     
+    return jsonify({'participants': participant_list}), 200
+
+
+@hackathons_bp.route('/participants/public/<hackathon_id>', methods=['GET'])
+def participants_public(hackathon_id: str):
+    """Public-safe list of participants for a hackathon used by Find Team page.
+    Does not require organizer privileges and returns limited fields.
+    """
+    try:
+        registrations = list(registrations_col.find({'hackathon_id': ObjectId(hackathon_id)}))
+    except Exception:
+        registrations = []
+
+    # user details
+    user_ids = [reg.get('user_id') for reg in registrations if reg.get('user_id')]
+    users = list(users_col.find({'_id': {'$in': user_ids}})) if user_ids else []
+    user_map = {str(u['_id']): u for u in users}
+
+    # team info map
+    teams = list(teams_col.find({'hackathon_id': ObjectId(hackathon_id)}))
+    team_map = {}
+    for team in teams:
+        for member_id in team.get('members', []):
+            team_map[str(member_id)] = {
+                'team_id': str(team['_id']),
+                'team_name': team.get('name', ''),
+                'team_code': team.get('code', ''),
+            }
+
+    participant_list = []
+    for reg in registrations:
+        uid = str(reg.get('user_id')) if reg.get('user_id') else ''
+        user = user_map.get(uid, {})
+        team_info = team_map.get(uid)
+        participant_info = {
+            'id': uid,
+            'name': reg.get('full_name') or user.get('name', 'Unknown'),
+            'looking_for_team': reg.get('looking_for_team', True),
+            'skills': reg.get('skills', []),
+            'role': reg.get('role', ''),
+            'team': team_info,
+        }
+        participant_list.append(participant_info)
+
     return jsonify({'participants': participant_list}), 200
 
 

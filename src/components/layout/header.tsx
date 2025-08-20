@@ -17,11 +17,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogoutButton } from "./logout-button";
 import { useAuth } from "@/hooks/use-auth";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 export function AppHeader() {
   const { isLoggedIn, userType, checkLoginStatus } = useAuth();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const from = searchParams?.get('from');
 
   useEffect(() => {
     // This now gets called on component mount and whenever the user navigates
@@ -51,7 +53,7 @@ export function AppHeader() {
             <Link 
               href="/hackathons" 
               className={`text-sm font-medium transition-colors hover:text-primary ${
-                isActive("/hackathons") && !isActive("/hackathons/my") && !isActive("/organizer") && !isActive("/judge")
+                (isActive("/hackathons") && !isActive("/hackathons/my") && from !== 'my' && !isActive("/organizer") && !isActive("/judge"))
                   ? "text-primary border-b-2 border-primary pb-1"
                   : "text-muted-foreground"
               }`}
@@ -62,7 +64,7 @@ export function AppHeader() {
               <Link 
                 href="/hackathons/my" 
                 className={`text-sm font-medium transition-colors hover:text-primary ${
-                  isActive("/hackathons/my")
+                  (isActive("/hackathons/my") || (pathname.startsWith("/hackathons/") && from === 'my'))
                     ? "text-primary border-b-2 border-primary pb-1"
                     : "text-muted-foreground"
                 }`}

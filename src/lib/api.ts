@@ -259,7 +259,19 @@ class ApiService {
   async registerForHackathon(
     token: string,
     id: string,
-    details?: { motivation?: string; hasTeam?: boolean; teamCode?: string; portfolio?: string }
+    details?: {
+      motivation?: string;
+      hasTeam?: boolean;
+      teamCode?: string;
+      portfolio?: string;
+      fullName?: string;
+      role?: string;
+      skills?: string[];
+      experienceLevel?: string;
+      github?: string;
+      linkedin?: string;
+      resumeLink?: string;
+    }
   ): Promise<{ message: string }> {
     return this.request<{ message: string }>(`/hackathons/register/${id}`, {
       method: 'POST',
@@ -308,9 +320,9 @@ class ApiService {
   }
 
   async respondToTeamRequest(token: string, hackathonId: string, requestId: string, response: 'accept' | 'reject'): Promise<{ message: string }> {
-    return this.request<{ message: string }>(`/hackathons/teams/requests/respond/${hackathonId}`, {
+    return this.request<{ message: string }>(`/hackathons/teams/requests/respond`, {
       method: 'POST',
-      body: JSON.stringify({ token, request_id: requestId, response }),
+      body: JSON.stringify({ token, request_id: requestId, action: response === 'accept' ? 'approve' : 'reject' }),
     });
   }
 

@@ -6,9 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+ 
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -17,7 +15,7 @@ import {
   Search, 
   Mail, 
   Crown, 
-  UserPlus,
+  
   ArrowLeft,
   Copy,
   Check,
@@ -31,102 +29,12 @@ import { getCookie } from "@/hooks/use-auth";
 import Link from "next/link";
 import { Team, SoloParticipant } from "@/lib/data";
 
-const CreateTeamDialog = ({ open, onOpenChange, hackathonId }: { open: boolean, onOpenChange: (open: boolean) => void, hackathonId: string }) => {
-  const [teamName, setTeamName] = useState("");
-  const [description, setDescription] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const { toast } = useToast();
-  const router = useRouter();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!teamName.trim()) {
-      toast({ title: 'Team name required', description: 'Please enter a team name.' });
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      const token = getCookie('authToken');
-      if (!token) {
-        toast({ title: 'Please log in', description: 'You need to be logged in to create a team.' });
-        return;
-      }
-
-      const res = await apiService.createTeam(token, hackathonId, {
-        name: teamName.trim(),
-        description: description.trim()
-      });
-
-      toast({ 
-        title: 'Team created successfully!', 
-        description: `Your team code is: ${res.code}. Redirecting to team dashboard...` 
-      });
-      onOpenChange(false);
-      setTeamName("");
-      setDescription("");
-      
-      // Redirect to team dashboard immediately
-      router.push(`/hackathons/${hackathonId}/team`);
-    } catch (error: any) {
-      console.error('Create team error:', error);
-      toast({ 
-        title: 'Failed to create team', 
-        description: error.message || 'Something went wrong. Please try again.' 
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create a New Team</DialogTitle>
-          <DialogDescription>
-            Create a team and invite other participants to join.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="team-name">Team Name</Label>
-            <Input
-              id="team-name"
-              placeholder="Enter team name..."
-              value={teamName}
-              onChange={(e) => setTeamName(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Description (Optional)</Label>
-            <Textarea
-              id="description"
-              placeholder="Describe your team's focus or goals..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? 'Creating...' : 'Create Team'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-};
+ 
 
 export default function FindTeamPage() {
   const [filter, setFilter] = useState("teams");
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
-  const [isCreateTeamOpen, setIsCreateTeamOpen] = useState(false);
   const [teams, setTeams] = useState<any[]>([]);
   const [soloParticipants, setSoloParticipants] = useState<SoloParticipant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -155,9 +63,12 @@ export default function FindTeamPage() {
       const teamsRes = await apiService.listTeams(hackathonId);
       setTeams(teamsRes.teams || []);
 
-      // Load participants to find solo ones
-      const participantsRes = await apiService.getHackathonParticipants(token, hackathonId);
-      const solo = (participantsRes.participants || []).filter(p => !p.team);
+      // Load participants (public-safe) scoped to this hackathon
+      const base = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+      const url = new URL(`/hackathons/participants/public/${encodeURIComponent(hackathonId)}`, base).toString();
+      const resp = await fetch(url, { cache: 'no-store' });
+      const participantsRes = await resp.json();
+      const solo = (participantsRes.participants || []).filter((p: any) => !p.team);
       setSoloParticipants(solo);
     } catch (error: any) {
       console.error('Failed to load teams:', error);
@@ -259,10 +170,7 @@ export default function FindTeamPage() {
         </div>
         
         <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            <Button onClick={() => setIsCreateTeamOpen(true)} size="lg" className="w-full">
-              <UserPlus className="mr-2 h-5 w-5" /> Create a New Team
-            </Button>
+          <div className="mb-8">
             <Card className="bg-secondary/50">
               <CardContent className="p-4">
                 <form className="flex items-center gap-2" onSubmit={handleJoinWithCode}>
@@ -324,12 +232,7 @@ export default function FindTeamPage() {
                     <p className="text-muted-foreground mb-4">
                       {teams.length === 0 ? "Be the first to create a team!" : "Try adjusting your search criteria."}
                     </p>
-                    {teams.length === 0 && (
-                      <Button onClick={() => setIsCreateTeamOpen(true)}>
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        Create First Team
-                      </Button>
-                    )}
+                    {teams.length === 0 && null}
                   </div>
                 ) : (
                   filteredTeams.map(team => (
@@ -441,7 +344,7 @@ export default function FindTeamPage() {
           </div>
         </div>
       </main>
-      <CreateTeamDialog open={isCreateTeamOpen} onOpenChange={setIsCreateTeamOpen} hackathonId={hackathonId} />
+      
     </>
   );
 }

@@ -101,7 +101,7 @@ export const HackathonCard = memo(function HackathonCard({
 				{/* Content */}
 				<div className="text-center">
 					<LoadingButton 
-						href={`/hackathons/${hackathon.id}`}
+						href={`/hackathons/${hackathon.id}?from=explore`}
 						variant="ghost"
 						className="p-0 h-auto text-lg font-bold leading-tight hover:text-blue-600"
 						loadingMessage="Opening hackathon..."
@@ -128,7 +128,7 @@ export const HackathonCard = memo(function HackathonCard({
 
 				{/* Action Button */}
 				<LoadingButton 
-					href={`/hackathons/${hackathon.id}`}
+					href={`/hackathons/${hackathon.id}?from=explore`}
 					loadingMessage="Opening hackathon..."
 					className="w-full bg-blue-600 hover:bg-blue-700 text-white"
 				>

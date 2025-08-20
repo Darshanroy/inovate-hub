@@ -333,7 +333,7 @@ export default function MyHackathonsPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <LoadingButton 
-                          href={`/hackathons/${hackathon.id}`}
+                          href={`/hackathons/${hackathon.id}?from=my`}
                           variant="link"
                           className="p-0 h-auto text-xl font-semibold text-primary hover:text-primary"
                           loadingMessage="Opening hackathon..."
@@ -438,7 +438,7 @@ export default function MyHackathonsPage() {
                     <TabsContent value="actions" className="mt-4">
                       <div className="flex flex-col sm:flex-row gap-2">
                         <LoadingButton 
-                          href={`/hackathons/${hackathon.id}`}
+                          href={`/hackathons/${hackathon.id}?from=my`}
                           variant="outline" 
                           size="sm"
                           className="text-primary border-primary/30 hover:bg-primary/10"

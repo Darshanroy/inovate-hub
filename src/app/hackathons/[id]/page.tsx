@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import HackathonDetailClientPage from "./hackathon-detail-client";
-import { apiService } from "@/lib/api";
+// Server-side fetch is preferred here to avoid client-only dependencies
 
 export async function generateStaticParams() {
   try {
@@ -15,9 +15,18 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function HackathonDetailPage({ params }: { params: { id: string } }) {
+export const dynamic = 'force-dynamic';
+
+export default async function HackathonDetailPage({ params }: { params: Promise<{ id: string }> }) {
   try {
-    const hackathon = await apiService.getHackathon(params.id);
+    const { id } = await params;
+    const base = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+    const url = new URL(`/hackathons/get/${encodeURIComponent(id)}`, base).toString();
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) {
+      notFound();
+    }
+    const hackathon = await res.json();
     if (!hackathon || !hackathon.id) notFound();
     return <HackathonDetailClientPage hackathon={hackathon} />;
   } catch {

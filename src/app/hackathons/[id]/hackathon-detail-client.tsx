@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 type Round = { name: string; date: string; description: string };
 type Hackathon = { id: string; name: string; theme: string; date: string; rounds?: Round[]; prize: number; locationType: 'online'|'offline'; image: string; hint: string; description: string; tracks?: string[]; rules?: string; prizes?: string; sponsors?: any[]; faq?: any[] };
 type Submission = { title: string; description: string; techStack: string[]; githubUrl: string; videoUrl: string; status: 'draft'|'submitted' };
@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { apiService } from "@/lib/api";
 import { getCookie } from "@/hooks/use-auth";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -40,6 +40,13 @@ const JoinHackathonDialog = ({ open, onOpenChange, hackathonId }: { open: boolea
   const [motivation, setMotivation] = useState('');
   const [teamCode, setTeamCode] = useState('');
   const [portfolio, setPortfolio] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [role, setRole] = useState('');
+  const [skills, setSkills] = useState('');
+  const [experienceLevel, setExperienceLevel] = useState('');
+  const [github, setGithub] = useState('');
+  const [linkedin, setLinkedin] = useState('');
+  const [resumeLink, setResumeLink] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,6 +63,13 @@ const JoinHackathonDialog = ({ open, onOpenChange, hackathonId }: { open: boolea
         hasTeam: !lookingForTeam,
         teamCode: teamCode || undefined,
         portfolio: portfolio || undefined,
+        fullName: fullName || undefined,
+        role: role || undefined,
+        skills: skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : undefined,
+        experienceLevel: experienceLevel || undefined,
+        github: github || undefined,
+        linkedin: linkedin || undefined,
+        resumeLink: resumeLink || undefined,
       });
       toast({ title: res.message || 'Registration Submitted!' });
       onOpenChange(false);
@@ -75,17 +89,37 @@ const JoinHackathonDialog = ({ open, onOpenChange, hackathonId }: { open: boolea
   
   return (
      <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[640px]">
         <DialogHeader>
-          <DialogTitle>Join Hackathon</DialogTitle>
+          <DialogTitle>Join HackHub Hackathon</DialogTitle>
           <DialogDescription>
             Complete your registration to join this event.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input id="fullName" placeholder="Jane Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Input id="role" placeholder="Frontend Developer" value={role} onChange={(e) => setRole(e.target.value)} required />
+            </div>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="motivation">Why do you want to join this hackathon?</Label>
-            <Textarea id="motivation" placeholder="I'm excited to build..." required value={motivation} onChange={(e) => setMotivation(e.target.value)} />
+            <Textarea id="motivation" placeholder="I'm excited to build impactful solutions at HackHub..." required value={motivation} onChange={(e) => setMotivation(e.target.value)} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="skills">Skills</Label>
+              <Input id="skills" placeholder="React, Node.js, MongoDB" value={skills} onChange={(e) => setSkills(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="experience">Experience Level</Label>
+              <Input id="experience" placeholder="Beginner / Intermediate / Advanced" value={experienceLevel} onChange={(e) => setExperienceLevel(e.target.value)} />
+            </div>
           </div>
            <div className="space-y-2">
             <Label>Do you have a team?</Label>
@@ -106,9 +140,25 @@ const JoinHackathonDialog = ({ open, onOpenChange, hackathonId }: { open: boolea
               <Input id="teamCode" placeholder="Enter your team code" value={teamCode} onChange={(e) => setTeamCode(e.target.value)} />
             </div>
           )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="github">GitHub (Optional)</Label>
+              <Input id="github" placeholder="https://github.com/username" value={github} onChange={(e) => setGithub(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="linkedin">LinkedIn (Optional)</Label>
+              <Input id="linkedin" placeholder="https://linkedin.com/in/username" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="portfolio">Portfolio/Website (Optional)</Label>
+              <Input id="portfolio" placeholder="https://myportfolio.site" value={portfolio} onChange={(e) => setPortfolio(e.target.value)} />
+            </div>
            <div className="space-y-2">
-            <Label htmlFor="portfolio">Portfolio/Resume Link (Optional)</Label>
-            <Input id="portfolio" placeholder="https://linkedin.com/in/..." value={portfolio} onChange={(e) => setPortfolio(e.target.value)} />
+              <Label htmlFor="resume">Resume Link (Optional)</Label>
+              <Input id="resume" placeholder="https://drive.google.com/..." value={resumeLink} onChange={(e) => setResumeLink(e.target.value)} />
+            </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
@@ -121,49 +171,28 @@ const JoinHackathonDialog = ({ open, onOpenChange, hackathonId }: { open: boolea
 }
 
 const OverviewTab = ({ hackathon }: { hackathon: Hackathon }) => {
-   const progressSteps = ["Register", "Team", "Submit", "Judge", "Results"];
-   const sponsors = [
-    { name: "Sponsor 1", image: "https://placehold.co/200x80.png", hint: "company logo" },
-    { name: "Sponsor 2", image: "https://placehold.co/200x80.png", hint: "company logo" },
-    { name: "Sponsor 3", image: "https://placehold.co/200x80.png", hint: "company logo" },
-    { name: "Sponsor 4", image: "https://placehold.co/200x80.png", hint: "company logo" },
-  ]
   return (
-    <div className="space-y-12">
-       <div className="pt-12">
-          <h2 className="text-2xl font-semibold text-foreground">Hackathon Progress</h2>
-          <div className="mt-6 flex items-center space-x-4">
-             {progressSteps.map((step, index) => (
-                <React.Fragment key={step}>
-                <div className={`flex flex-col items-center ${index === 0 ? 'text-primary' : 'text-muted-foreground'}`}>
-                    <div className={`flex size-10 items-center justify-center rounded-full ${index === 0 ? 'bg-primary text-primary-foreground' : 'border-2 border-border'}`}>
-                    {index === 0 ? <Check className="h-5 w-5" /> : index + 1}
-                    </div>
-                    <div className="mt-2 text-sm font-medium">{step}</div>
-                </div>
-                {index < progressSteps.length - 1 && <div className="flex-1 border-t-2 border-dashed border-border"></div>}
-                </React.Fragment>
-            ))}
-          </div>
-        </div>
+    <div className="space-y-10 pt-8">
+      {hackathon.description && (
         <div>
           <h2 className="text-2xl font-semibold text-foreground">About the Challenge</h2>
-          <p className="mt-4 text-base text-muted-foreground">
-           {hackathon.description}
-          </p>
+          <p className="mt-4 text-base text-muted-foreground">{hackathon.description}</p>
         </div>
+      )}
+      {hackathon.sponsors && hackathon.sponsors.length > 0 && (
         <div>
           <h2 className="text-2xl font-semibold text-foreground">Sponsors</h2>
           <div className="mt-6 grid grid-cols-2 gap-8 md:grid-cols-4">
-            {sponsors.map(sponsor => (
-                 <div key={sponsor.name} className="bg-secondary rounded-lg flex items-center justify-center p-4">
-                    <Image src={sponsor.image} alt={sponsor.name} width={200} height={80} className="object-contain saturate-0" data-ai-hint={sponsor.hint}/>
-                </div>
+            {hackathon.sponsors.map((s: any, idx: number) => (
+              <div key={`${s.name || idx}`} className="bg-secondary rounded-lg flex items-center justify-center p-4">
+                <span className="text-sm text-muted-foreground">{s.name || 'Sponsor'}</span>
+              </div>
             ))}
           </div>
         </div>
+      )}
     </div>
-  )
+  );
 }
 
 const TimelineTab = ({ rounds }: { rounds: Round[] }) => (
@@ -193,101 +222,52 @@ const TimelineTab = ({ rounds }: { rounds: Round[] }) => (
 );
 
 const RulesTab = ({ rules }: { rules?: string }) => (
-  <div className="space-y-6">
-    <Card>
-      <CardContent className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Hackathon Rules</h3>
-        <div className="prose prose-sm max-w-none">
-          {rules ? (
+  !rules ? null : (
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Hackathon Rules</h3>
+          <div className="prose prose-sm max-w-none">
             <div className="whitespace-pre-wrap">{rules}</div>
-          ) : (
-            <div className="space-y-4">
-              <p>Standard hackathon rules apply:</p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>All code must be written during the hackathon period</li>
-                <li>Teams can consist of 1-4 members</li>
-                <li>Use of open-source libraries is allowed</li>
-                <li>Projects must be original and not previously submitted</li>
-                <li>All team members must be registered participants</li>
-                <li>Submissions must include source code and documentation</li>
-              </ul>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
 );
 
 const TracksTab = ({ tracks }: { tracks?: string[] }) => (
-  <div className="space-y-6">
-    <Card>
-      <CardContent className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Hackathon Tracks</h3>
-        <div className="grid gap-4">
-          {tracks && tracks.length > 0 ? (
-            tracks.map((track, index) => (
+  !tracks || tracks.length === 0 ? null : (
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Hackathon Tracks</h3>
+          <div className="grid gap-4">
+            {tracks.map((track, index) => (
               <div key={index} className="p-4 border rounded-lg">
                 <h4 className="font-medium">{track}</h4>
               </div>
-            ))
-          ) : (
-            <div className="grid gap-4">
-              <div className="p-4 border rounded-lg">
-                <h4 className="font-medium">Web Development</h4>
-                <p className="text-sm text-muted-foreground mt-1">Build innovative web applications</p>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <h4 className="font-medium">Mobile Development</h4>
-                <p className="text-sm text-muted-foreground mt-1">Create mobile apps for iOS/Android</p>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <h4 className="font-medium">AI/ML</h4>
-                <p className="text-sm text-muted-foreground mt-1">Leverage artificial intelligence and machine learning</p>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <h4 className="font-medium">Blockchain</h4>
-                <p className="text-sm text-muted-foreground mt-1">Build decentralized applications</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
 );
 
 const PrizesTab = ({ prizes }: { prizes?: string }) => (
-  <div className="space-y-6">
-    <Card>
-      <CardContent className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Prizes</h3>
-        <div className="prose prose-sm max-w-none">
-          {prizes ? (
+  !prizes ? null : (
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Prizes</h3>
+          <div className="prose prose-sm max-w-none">
             <div className="whitespace-pre-wrap">{prizes}</div>
-          ) : (
-            <div className="grid gap-6">
-              <div className="text-center p-6 border rounded-lg">
-                <h4 className="text-2xl font-bold text-primary mb-2">🥇 1st Place</h4>
-                <p className="text-lg font-semibold">₹8,30,000</p>
-                <p className="text-sm text-muted-foreground">Plus mentorship and resources</p>
-              </div>
-              <div className="text-center p-6 border rounded-lg">
-                <h4 className="text-2xl font-bold text-primary mb-2">🥈 2nd Place</h4>
-                <p className="text-lg font-semibold">₹4,15,000</p>
-                <p className="text-sm text-muted-foreground">Plus mentorship opportunities</p>
-              </div>
-              <div className="text-center p-6 border rounded-lg">
-                <h4 className="text-2xl font-bold text-primary mb-2">🥉 3rd Place</h4>
-                <p className="text-lg font-semibold">₹2,07,500</p>
-                <p className="text-sm text-muted-foreground">Plus networking opportunities</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
 );
 
 const SponsorsTab = ({ sponsors }: { sponsors?: any[] }) => (
@@ -326,42 +306,23 @@ const SponsorsTab = ({ sponsors }: { sponsors?: any[] }) => (
 );
 
 const FAQTab = ({ faq }: { faq?: any[] }) => (
-  <div className="space-y-6">
-    <Card>
-      <CardContent className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Frequently Asked Questions</h3>
-        <div className="space-y-4">
-          {faq && faq.length > 0 ? (
-            faq.map((item, index) => (
+  !faq || faq.length === 0 ? null : (
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Frequently Asked Questions</h3>
+          <div className="space-y-4">
+            {faq.map((item, index) => (
               <div key={index} className="border-b pb-4 last:border-b-0">
                 <h4 className="font-medium mb-2">{item.question}</h4>
                 <p className="text-sm text-muted-foreground">{item.answer}</p>
               </div>
-            ))
-          ) : (
-            <div className="space-y-4">
-              <div className="border-b pb-4">
-                <h4 className="font-medium mb-2">When does the hackathon start?</h4>
-                <p className="text-sm text-muted-foreground">The hackathon starts on the date specified in the timeline.</p>
-              </div>
-              <div className="border-b pb-4">
-                <h4 className="font-medium mb-2">How many people can be in a team?</h4>
-                <p className="text-sm text-muted-foreground">Teams can have 1-4 members.</p>
-              </div>
-              <div className="border-b pb-4">
-                <h4 className="font-medium mb-2">What technologies can I use?</h4>
-                <p className="text-sm text-muted-foreground">You can use any programming language, framework, or technology stack.</p>
-              </div>
-              <div className="border-b pb-4">
-                <h4 className="font-medium mb-2">How do I submit my project?</h4>
-                <p className="text-sm text-muted-foreground">Submit your project through the submission portal with source code and documentation.</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
 );
 
 const MySubmissionTab = ({ submission, hackathonId }: { submission: Submission, hackathonId: string }) => {
@@ -419,14 +380,21 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
   const [isRegistered, setIsRegistered] = useState(false);
   const [hasTeam, setHasTeam] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const from = searchParams.get('from');
 
-  const getTargetDate = () => {
-    if (hackathon.rounds && hackathon.rounds.length > 0) {
-        // Use the first round's date for countdown
-        return new Date(hackathon.rounds[0].date);
-    }
+  const firstRoundDate = useMemo(() => {
+    if (hackathon.rounds && hackathon.rounds.length > 0) return new Date(hackathon.rounds[0].date);
     return new Date(hackathon.date);
-  }
+  }, [hackathon]);
+  const lastRoundDate = useMemo(() => {
+    if (hackathon.rounds && hackathon.rounds.length > 0) return new Date(hackathon.rounds[hackathon.rounds.length - 1].date);
+    const end = new Date(hackathon.date); end.setDate(end.getDate() + 2); return end;
+  }, [hackathon]);
+  const now = new Date();
+  const isStarted = now >= firstRoundDate;
+  const isEnded = now > lastRoundDate;
 
   useEffect(() => {
     if (!hackathon) return;
@@ -454,7 +422,7 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
   useEffect(() => {
     if (!hackathon) return;
 
-    const targetDate = getTargetDate();
+    const targetDate = firstRoundDate; // Use first round date for countdown
 
     const calculateTimeLeft = () => {
       const difference = +targetDate - +new Date();
@@ -481,8 +449,13 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
     return () => clearInterval(timer);
   }, [hackathon]);
 
-  const navLinks = ["Rules", "Tracks", "Prizes", "Sponsors", "FAQ"];
-  const hasTimeline = hackathon.rounds && hackathon.rounds.length > 0;
+  const navLinks = [
+    hackathon.rules ? "Rules" : null,
+    hackathon.tracks && hackathon.tracks.length > 0 ? "Tracks" : null,
+    (hackathon as any).prizes ? "Prizes" : null,
+    (hackathon as any).sponsors && (hackathon as any).sponsors.length > 0 ? "Sponsors" : null,
+    (hackathon as any).faq && (hackathon as any).faq.length > 0 ? "FAQ" : null,
+  ].filter(Boolean) as string[];
 
   return (
     <main className="container mx-auto max-w-7xl flex-1 px-4 py-8">
@@ -502,13 +475,28 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
         </div>
         <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
+            <div className="text-sm text-muted-foreground">
+              <Link href={from === 'my' ? '/hackathons/my' : '/hackathons'} className="hover:underline">
+                {from === 'my' ? 'My Hackathons' : 'Explore'}
+              </Link>
+              <span className="mx-2">/</span>
+              <span className="text-foreground">{hackathon.name}</span>
+            </div>
             {isRegistered ? (
               <div className="flex items-center gap-2">
-                <Button asChild className="h-10 px-6 text-sm font-bold">
-                  <Link href={`/hackathons/${hackathon.id}/submission`}>
-                    <FileText className="mr-2 h-4 w-4" />
-                    Go to Submission
-                  </Link>
+                <Button className="h-10 px-6 text-sm font-bold" onClick={() => {
+                  if (!isStarted) {
+                    toast({ title: 'Submissions not open', description: 'Submissions will open when the hackathon starts.' });
+                    return;
+                  }
+                  if (isEnded) {
+                    toast({ title: 'Submissions closed', description: 'The submission window has closed.' });
+                    return;
+                  }
+                  router.push(`/hackathons/${hackathon.id}/submission`);
+                }}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Go to Submission
                 </Button>
                 {hasTeam ? (
                   <Button onClick={() => router.push(`/hackathons/${hackathon.id}/team`)} variant="outline" className="h-10 px-6 text-sm font-bold">
@@ -523,9 +511,9 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
                 )}
               </div>
             ) : (
-                <Button onClick={async () => { try { const t = getCookie('authToken'); if (!t) return setIsJoinDialogOpen(true); setIsJoinDialogOpen(true); } catch {} }} className="h-10 px-6 text-sm font-bold">
-                  Join Now
-                </Button>
+              <Button onClick={async () => { try { const t = getCookie('authToken'); if (!t) return setIsJoinDialogOpen(true); setIsJoinDialogOpen(true); } catch {} }} className="h-10 px-6 text-sm font-bold">
+                Join Now
+              </Button>
             )}
             <Button variant="secondary" className="h-10 px-6 text-sm font-bold">
               <Share className="mr-2 h-4 w-4" />
@@ -557,13 +545,13 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
          <Tabs defaultValue="overview" className="mt-8">
            <TabsList className="border-b border-border w-full justify-start rounded-none bg-transparent p-0">
             <TabsTrigger value="overview" className="relative rounded-none border-b-2 border-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Overview</TabsTrigger>
-             {hasTimeline && (
+            {hackathon.rounds && hackathon.rounds.length > 0 && (
                 <TabsTrigger value="timeline" className="relative rounded-none border-b-2 border-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Timeline</TabsTrigger>
-             )}
-             {navLinks.map(link => (
+            )}
+            {navLinks.map(link => (
                  <TabsTrigger key={link} value={link.toLowerCase()} className="relative rounded-none border-b-2 border-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">{link}</TabsTrigger>
             ))}
-             {isRegistered && (
+            {isRegistered && isStarted && !isEnded && (
                  <TabsTrigger value="submission" className="relative rounded-none border-b-2 border-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">My Submission</TabsTrigger>
             )}
              {isRegistered && hasTeam && (
@@ -573,7 +561,7 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
             <TabsContent value="overview">
                 <OverviewTab hackathon={hackathon} />
             </TabsContent>
-             {hasTimeline && (
+            {hackathon.rounds && hackathon.rounds.length > 0 && (
                 <TabsContent value="timeline">
                     <TimelineTab rounds={hackathon.rounds!} />
                 </TabsContent>
@@ -593,7 +581,7 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
             <TabsContent value="faq">
                 <FAQTab faq={hackathon.faq} />
             </TabsContent>
-            {isRegistered && (
+            {isRegistered && isStarted && !isEnded && (
                 <TabsContent value="submission">
                     <MySubmissionTab submission={mySubmission} hackathonId={hackathon.id} />
                 </TabsContent>

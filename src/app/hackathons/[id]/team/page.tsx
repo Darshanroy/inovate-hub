@@ -390,6 +390,16 @@ export default function TeamPage() {
                 <div className="flex items-center justify-between pb-4 border-b border-gray-700">
                   <h2 className="text-xl font-semibold text-white">Team Chat</h2>
                   <div className="flex items-center gap-2">
+                    {isLeader && (
+                      <div className="relative">
+                        <button className="p-2 rounded-full hover:bg-gray-700 text-[var(--text-secondary)]" onClick={() => setIsEditDialogOpen(true)}>
+                          <Bell className="w-5 h-5" />
+                        </button>
+                        {requests.length > 0 && (
+                          <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-[var(--accent-color)] text-white text-xs w-5 h-5">{requests.length}</span>
+                        )}
+                      </div>
+                    )}
                     <button className="p-2 rounded-full hover:bg-gray-700 text-[var(--text-secondary)]">
                       <Settings className="w-5 h-5" />
                     </button>
@@ -511,29 +521,30 @@ export default function TeamPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Team</DialogTitle>
-            <DialogDescription>
-              Update your team information.
-            </DialogDescription>
+            <DialogTitle>Team Requests</DialogTitle>
+            <DialogDescription>Approve or reject pending join requests for your team.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Describe your team's focus or goals..."
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-              />
-            </div>
+            {requests.length === 0 ? (
+              <p className="text-sm text-[var(--text-secondary)]">No pending requests.</p>
+            ) : (
+              requests.map((req) => (
+                <div key={req.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-800">
+                  <div>
+                    <p className="font-medium text-white">{req.user_name}</p>
+                    <p className="text-xs text-[var(--text-secondary)]">{req.user_email}</p>
+                    {req.message && <p className="text-xs text-[var(--text-secondary)] mt-1">“{req.message}”</p>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="outline" onClick={() => handleRespondToRequest(req.id, 'accept')}>Accept</Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleRespondToRequest(req.id, 'reject')}>Reject</Button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleEditDescription} disabled={submitting}>
-              {submitting ? 'Saving...' : 'Save Changes'}
-            </Button>
+            <Button type="button" onClick={() => setIsEditDialogOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
