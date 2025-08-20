@@ -21,6 +21,7 @@ hackathons_col = db['hackathons']
 registrations_col = db['registrations']
 teams_col = db['teams']
 team_requests_col = db['team_requests']
+submissions_col = db['submissions']
 
 # Create indexes
 hackathons_col.create_index([('created_at', DESCENDING)])
@@ -29,6 +30,8 @@ teams_col.create_index([('hackathon_id', ASCENDING), ('name', ASCENDING)], uniqu
 teams_col.create_index([('hackathon_id', ASCENDING), ('code', ASCENDING)], unique=True)
 team_requests_col.create_index([('team_id', ASCENDING), ('user_id', ASCENDING)], unique=True)
 team_requests_col.create_index([('hackathon_id', ASCENDING), ('user_id', ASCENDING)])
+submissions_col.create_index([('hackathon_id', ASCENDING)])
+submissions_col.create_index([('team_id', ASCENDING)])
 
 # Add team messages collection
 team_messages_col = db['team_messages']
@@ -77,6 +80,8 @@ def get_hackathon(hackathon_id: str):
     if not doc:
         return jsonify({'message': 'Hackathon not found'}), 404
     # Return public-safe fields only
+    reg_count = registrations_col.count_documents({'hackathon_id': ObjectId(hackathon_id)})
+    team_count = teams_col.count_documents({'hackathon_id': ObjectId(hackathon_id)})
     public = {
         'id': str(doc['_id']),
         'name': doc.get('name', ''),
@@ -92,6 +97,11 @@ def get_hackathon(hackathon_id: str):
         'tracks': doc.get('tracks', []),
         'rules': doc.get('rules', ''),
         'team_size': doc.get('team_size', 0),
+        'prizes': doc.get('prizes', ''),
+        'sponsors': doc.get('sponsors', []),
+        'faq': doc.get('faq', []),
+        'registration_count': reg_count,
+        'team_count': team_count,
     }
     return jsonify(public), 200
 
@@ -582,6 +592,90 @@ def respond_to_request():
         return jsonify({'message': 'Request rejected'}), 200
 
 
+@hackathons_bp.route('/teams/invitations/list', methods=['POST'])
+def list_invitations():
+    data = request.get_json(force=True) or {}
+    token = data.get('token')
+    decoded = decode_jwt(token or '')
+    if not decoded:
+        return jsonify({'message': 'Unauthorized'}), 401
+
+    # Find pending invitations for the user
+    requests = list(team_requests_col.find({
+        'user_id': ObjectId(decoded['sub']),
+        'status': 'pending',
+        'invited_by_leader': True,
+    }).sort('created_at', DESCENDING))
+
+    # Load team info
+    team_ids = [req['team_id'] for req in requests]
+    teams = list(teams_col.find({'_id': {'$in': team_ids}})) if team_ids else []
+    team_map = {str(t['_id']): t for t in teams}
+
+    invitation_list = []
+    for req in requests:
+        team = team_map.get(str(req['team_id'])) or {}
+        invitation_list.append({
+            'id': str(req['_id']),
+            'hackathon_id': str(req.get('hackathon_id', '')),
+            'team_id': str(req['team_id']),
+            'team_name': team.get('name', ''),
+            'team_code': team.get('code', ''),
+            'message': req.get('message', ''),
+            'created_at': req.get('created_at', ''),
+        })
+
+    return jsonify({'invitations': invitation_list}), 200
+
+
+@hackathons_bp.route('/teams/invitations/respond', methods=['POST'])
+def respond_invitation():
+    data = request.get_json(force=True) or {}
+    token = data.get('token')
+    request_id = data.get('request_id')
+    action = data.get('action')  # 'accept' or 'reject'
+    decoded = decode_jwt(token or '')
+    if not decoded:
+        return jsonify({'message': 'Unauthorized'}), 401
+
+    if not request_id or action not in ['accept', 'reject']:
+        return jsonify({'message': 'Invalid request'}), 400
+
+    req = team_requests_col.find_one({'_id': ObjectId(request_id)})
+    if not req or str(req.get('user_id')) != decoded.get('sub'):
+        return jsonify({'message': 'Forbidden'}), 403
+
+    team = teams_col.find_one({'_id': req['team_id']})
+    if not team:
+        return jsonify({'message': 'Team not found'}), 404
+
+    if action == 'accept':
+        # Ensure user not already in another team for this hackathon
+        existing = teams_col.find_one({'hackathon_id': team['hackathon_id'], 'members': ObjectId(decoded['sub'])})
+        if existing:
+            return jsonify({'message': 'You are already in a team for this hackathon'}), 400
+        # Check capacity
+        if len(team.get('members', [])) >= team.get('max_members', 4):
+            return jsonify({'message': 'Team is full'}), 400
+        # Add member
+        teams_col.update_one(
+            {'_id': team['_id']},
+            {'$addToSet': {'members': ObjectId(decoded['sub'])}, '$set': {'updated_at': datetime.utcnow()}}
+        )
+        # Mark as approved
+        team_requests_col.update_one(
+            {'_id': ObjectId(request_id)},
+            {'$set': {'status': 'approved', 'updated_at': datetime.utcnow()}}
+        )
+        return jsonify({'message': 'Invitation accepted'}), 200
+    else:
+        team_requests_col.update_one(
+            {'_id': ObjectId(request_id)},
+            {'$set': {'status': 'rejected', 'updated_at': datetime.utcnow()}}
+        )
+        return jsonify({'message': 'Invitation rejected'}), 200
+
+
 # Organizer Dashboard Routes
 @hackathons_bp.route('/organizer/hackathons', methods=['POST'])
 def organizer_hackathons():
@@ -678,7 +772,7 @@ def organizer_participants(hackathon_id: str):
             'github': reg.get('github', ''),
             'linkedin': reg.get('linkedin', ''),
             'resume_link': reg.get('resume_link', ''),
-            'registration_date': reg.get('created_at', ''),
+            'registration_date': (reg.get('created_at').isoformat() if hasattr(reg.get('created_at'), 'isoformat') else str(reg.get('created_at') or '')),
             'team': team_info,
         }
         participant_list.append(participant_info)
@@ -723,11 +817,78 @@ def participants_public(hackathon_id: str):
             'looking_for_team': reg.get('looking_for_team', True),
             'skills': reg.get('skills', []),
             'role': reg.get('role', ''),
+            'motivation': reg.get('motivation', ''),
+            'portfolio_link': reg.get('portfolio_link', ''),
             'team': team_info,
         }
         participant_list.append(participant_info)
 
     return jsonify({'participants': participant_list}), 200
+
+
+@hackathons_bp.route('/teams/invite/<hackathon_id>', methods=['POST'])
+def invite_participant(hackathon_id: str):
+    data = request.get_json(force=True) or {}
+    token = data.get('token')
+    user_id = data.get('user_id')
+    message = (data.get('message') or '').strip()
+    decoded = decode_jwt(token or '')
+    if not decoded:
+        return jsonify({'message': 'Unauthorized'}), 401
+
+    if not user_id:
+        return jsonify({'message': 'User ID is required'}), 400
+
+    # Ensure inviter is leader of a team in this hackathon
+    leader_team = teams_col.find_one({
+        'hackathon_id': ObjectId(hackathon_id),
+        'leader_id': ObjectId(decoded['sub'])
+    })
+    if not leader_team:
+        return jsonify({'message': 'Only team leaders can invite participants'}), 403
+
+    # Ensure the invited user is registered for this hackathon
+    reg = registrations_col.find_one({
+        'hackathon_id': ObjectId(hackathon_id),
+        'user_id': ObjectId(user_id)
+    })
+    if not reg:
+        return jsonify({'message': 'User is not registered for this hackathon'}), 400
+
+    # Prevent inviting users already in a team in this hackathon
+    existing_team = teams_col.find_one({
+        'hackathon_id': ObjectId(hackathon_id),
+        'members': ObjectId(user_id)
+    })
+    if existing_team:
+        return jsonify({'message': 'User is already in a team'}), 400
+
+    # Create or upsert an invitation request (reuse team_requests)
+    now = datetime.utcnow()
+    try:
+        team_requests_col.update_one(
+            {
+                'team_id': leader_team['_id'],
+                'user_id': ObjectId(user_id)
+            },
+            {
+                '$setOnInsert': {
+                    'hackathon_id': ObjectId(hackathon_id),
+                    'created_at': now,
+                },
+                '$set': {
+                    'message': message or 'Team invitation',
+                    'status': 'pending',  # pending until user accepts/leader approves
+                    'invited_by_leader': True,
+                    'updated_at': now,
+                }
+            },
+            upsert=True,
+        )
+    except Exception as e:
+        return jsonify({'message': f'Failed to send invitation: {str(e)}'}), 500
+
+    return jsonify({'message': 'Invitation sent'}), 200
 
 
 # Team Messages and Updates
@@ -930,3 +1091,122 @@ def remove_team_member(hackathon_id: str):
     return jsonify({'message': 'Member removed'}), 200
 
 
+
+# Submissions (minimal endpoints for organizer manage and view pages)
+@hackathons_bp.route('/submissions/list/<hackathon_id>', methods=['POST'])
+def list_submissions(hackathon_id: str):
+    data = request.get_json(force=True) or {}
+    token = data.get('token')
+    decoded = decode_jwt(token or '')
+    if not decoded:
+        return jsonify({'message': 'Unauthorized'}), 401
+
+    # Ensure requester is the organizer of this hackathon
+    try:
+        hack = hackathons_col.find_one({'_id': ObjectId(hackathon_id)})
+    except Exception:
+        hack = None
+    if not hack:
+        return jsonify({'message': 'Hackathon not found'}), 404
+    if str(hack.get('organizer_id')) != decoded.get('sub'):
+        return jsonify({'message': 'Forbidden'}), 403
+
+    docs = list(submissions_col.find({'hackathon_id': ObjectId(hackathon_id)}).sort('created_at', DESCENDING))
+
+    def to_public(s):
+        def to_iso(val):
+            return (val.isoformat() if hasattr(val, 'isoformat') else (val or ''))
+        return {
+            'id': str(s['_id']),
+            'hackathon_id': str(s.get('hackathon_id', '')),
+            'team_id': str(s.get('team_id', '')),
+            'team_name': s.get('team_name', ''),
+            'project_title': s.get('project_title', ''),
+            'project_description': s.get('project_description', ''),
+            'tech_stack': s.get('tech_stack', []),
+            'github_link': s.get('github_link'),
+            'video_link': s.get('video_link'),
+            'files': s.get('files', []),
+            'status': s.get('status', 'draft'),
+            'score': s.get('score'),
+            'feedback': s.get('feedback'),
+            'submitted_at': to_iso(s.get('submitted_at') or s.get('created_at') or ''),
+            'updated_at': to_iso(s.get('updated_at') or ''),
+            'created_at': to_iso(s.get('created_at') or ''),
+        }
+
+    return jsonify({'submissions': [to_public(s) for s in docs]}), 200
+
+
+@hackathons_bp.route('/submissions/get/<submission_id>', methods=['GET'])
+def get_submission(submission_id: str):
+    try:
+        s = submissions_col.find_one({'_id': ObjectId(submission_id)})
+    except Exception:
+        s = None
+    if not s:
+        return jsonify({'message': 'Submission not found'}), 404
+
+    def to_iso(val):
+        return (val.isoformat() if hasattr(val, 'isoformat') else (val or ''))
+    public = {
+        'id': str(s['_id']),
+        'hackathon_id': str(s.get('hackathon_id', '')),
+        'team_id': str(s.get('team_id', '')),
+        'team_name': s.get('team_name', ''),
+        'project_title': s.get('project_title', ''),
+        'project_description': s.get('project_description', ''),
+        'tech_stack': s.get('tech_stack', []),
+        'github_link': s.get('github_link'),
+        'video_link': s.get('video_link'),
+        'files': s.get('files', []),
+        'status': s.get('status', 'draft'),
+        'score': s.get('score'),
+        'feedback': s.get('feedback'),
+        'submitted_at': to_iso(s.get('submitted_at') or s.get('created_at') or ''),
+        'updated_at': to_iso(s.get('updated_at') or ''),
+        'created_at': to_iso(s.get('created_at') or ''),
+    }
+    return jsonify({'submission': public}), 200
+
+
+@hackathons_bp.route('/submissions/my/<hackathon_id>', methods=['POST'])
+def my_submission(hackathon_id: str):
+    data = request.get_json(force=True) or {}
+    token = data.get('token')
+    decoded = decode_jwt(token or '')
+    if not decoded:
+        return jsonify({'message': 'Unauthorized'}), 401
+
+    # find user's team in this hackathon
+    user_id = ObjectId(decoded['sub'])
+    team = teams_col.find_one({'hackathon_id': ObjectId(hackathon_id), 'members': user_id})
+    if not team:
+        return jsonify({'submission': None}), 200
+
+    # find submission by team
+    s = submissions_col.find_one({'hackathon_id': ObjectId(hackathon_id), 'team_id': team['_id']})
+    if not s:
+        return jsonify({'submission': None}), 200
+
+    def to_iso(val):
+        return (val.isoformat() if hasattr(val, 'isoformat') else (val or ''))
+    public = {
+        'id': str(s['_id']),
+        'hackathon_id': str(s.get('hackathon_id', '')),
+        'team_id': str(s.get('team_id', '')),
+        'team_name': s.get('team_name', ''),
+        'project_title': s.get('project_title', ''),
+        'project_description': s.get('project_description', ''),
+        'tech_stack': s.get('tech_stack', []),
+        'github_link': s.get('github_link'),
+        'video_link': s.get('video_link'),
+        'files': s.get('files', []),
+        'status': s.get('status', 'draft'),
+        'score': s.get('score'),
+        'feedback': s.get('feedback'),
+        'submitted_at': to_iso(s.get('submitted_at') or s.get('created_at') or ''),
+        'updated_at': to_iso(s.get('updated_at') or ''),
+        'created_at': to_iso(s.get('created_at') or ''),
+    }
+    return jsonify({'submission': public}), 200

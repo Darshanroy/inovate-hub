@@ -362,6 +362,27 @@ class ApiService {
     });
   }
 
+  async inviteParticipant(token: string, hackathonId: string, userId: string, message?: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/teams/invite/${hackathonId}`, {
+      method: 'POST',
+      body: JSON.stringify({ token, user_id: userId, message }),
+    });
+  }
+
+  async listInvitations(token: string): Promise<{ invitations: Array<{ id: string; team_id: string; team_name: string; team_code: string; message: string; created_at: string; hackathon_id: string }> }> {
+    return this.request<{ invitations: Array<{ id: string; team_id: string; team_name: string; team_code: string; message: string; created_at: string; hackathon_id: string }> }>(`/hackathons/teams/invitations/list`, {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  async respondInvitation(token: string, requestId: string, action: 'accept' | 'reject'): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/hackathons/teams/invitations/respond`, {
+      method: 'POST',
+      body: JSON.stringify({ token, request_id: requestId, action }),
+    });
+  }
+
   // Organizer Dashboard
   async getOrganizerHackathons(token: string): Promise<{ hackathons: any[] }> {
     return this.request<{ hackathons: any[] }>(`/hackathons/organizer/hackathons`, {

@@ -132,10 +132,13 @@ export default function TeamPage() {
         console.error('Failed to load team messages:', error);
       }
 
-      // Load solo participants for invite dialog
+      // Load solo participants for invite dialog (public-safe list)
       try {
-        const participantsRes = await apiService.getHackathonParticipants(token, hackathonId);
-        const solo = (participantsRes.participants || []).filter(p => !p.team);
+        const base = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+        const url = new URL(`/hackathons/participants/public/${encodeURIComponent(hackathonId)}`, base).toString();
+        const resp = await fetch(url, { cache: 'no-store' });
+        const data = await resp.json();
+        const solo = (data.participants || []).filter((p: any) => !p.team);
         setSoloParticipants(solo);
       } catch (error) {
         console.error('Failed to load participants:', error);
@@ -287,8 +290,7 @@ export default function TeamPage() {
         return;
       }
 
-      // This would be a new API call to invite a participant
-      // For now, we'll just show a toast
+      await apiService.inviteParticipant(token, hackathonId, participantId);
       setInvitedParticipants(prev => [...prev, participantId]);
       toast({ title: 'Invitation sent', description: 'Invitation has been sent to the participant.' });
     } catch (error: any) {

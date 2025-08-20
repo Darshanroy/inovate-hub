@@ -27,10 +27,14 @@ interface Participant {
   id: string;
   name: string;
   email: string;
-  avatar: string;
-  team?: string;
+  avatar?: string;
+  team?: {
+    team_id: string;
+    team_name: string;
+    team_code: string;
+  };
   registration_date: string;
-  skills: string[];
+  skills?: string[];
 }
 
 interface Submission {
@@ -158,6 +162,18 @@ export default function ManageHackathonPage() {
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const safeFormatDate = (value?: string) => {
+    if (!value) return '—';
+    const d = parseISO(value);
+    return isNaN(d.getTime()) ? '—' : format(d, 'MMM dd, yyyy');
+  };
+
+  const safeFormatDateTime = (value?: string) => {
+    if (!value) return '—';
+    const d = parseISO(value);
+    return isNaN(d.getTime()) ? '—' : format(d, 'MMM dd, yyyy HH:mm');
   };
 
   if (loading) {
@@ -305,14 +321,14 @@ export default function ManageHackathonPage() {
                           <p className="font-medium">{participant.name}</p>
                           <p className="text-sm text-muted-foreground">{participant.email}</p>
                           {participant.team && (
-                            <Badge variant="secondary" className="text-xs mt-1">Team: {participant.team}</Badge>
+                            <Badge variant="secondary" className="text-xs mt-1">
+                              Team: {participant.team.team_name || participant.team.team_code}
+                            </Badge>
                           )}
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-muted-foreground">
-                          {format(parseISO(participant.registration_date), 'MMM dd, yyyy')}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{safeFormatDate(participant.registration_date)}</p>
                         {participant.skills && participant.skills.length > 0 && (
                           <div className="flex gap-1 mt-1">
                             {participant.skills.slice(0, 2).map((skill) => (
@@ -372,7 +388,7 @@ export default function ManageHackathonPage() {
                           <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
                             <span className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              Submitted: {format(parseISO(submission.submitted_at), 'MMM dd, yyyy HH:mm')}
+                              Submitted: {safeFormatDateTime(submission.submitted_at)}
                             </span>
                             {submission.score && <span>Score: {submission.score}/100</span>}
                           </div>

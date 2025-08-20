@@ -3,8 +3,8 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 type Round = { name: string; date: string; description: string };
-type Hackathon = { id: string; name: string; theme: string; date: string; rounds?: Round[]; prize: number; locationType: 'online'|'offline'; image: string; hint: string; description: string; tracks?: string[]; rules?: string; prizes?: string; sponsors?: any[]; faq?: any[] };
-type Submission = { title: string; description: string; techStack: string[]; githubUrl: string; videoUrl: string; status: 'draft'|'submitted' };
+type Hackathon = { id: string; name: string; theme: string; date: string; rounds?: Round[]; prize: number; locationType: 'online'|'offline'; image: string; hint: string; description: string; tracks?: string[]; rules?: string; prizes?: string; sponsors?: { name?: string; description?: string }[]; faq?: { question: string; answer: string }[] };
+import type { Submission } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Check, Edit, FileText, Link as LinkIcon, Share, Youtube, CalendarDays, Users } from "lucide-react";
 import Image from "next/image";
@@ -23,15 +23,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
-// Mock data for mySubmission
-const mySubmission: Submission = {
-  title: "My Awesome Project",
-  description: "A revolutionary application that solves real-world problems...",
-  techStack: ["React", "Node.js", "MongoDB"],
-  githubUrl: "https://github.com/myuser/myproject",
-  videoUrl: "https://youtube.com/watch?v=example",
-  status: 'draft'
-};
+// Removed dummy submission; will fetch real submission if available
 
 const JoinHackathonDialog = ({ open, onOpenChange, hackathonId }: { open: boolean, onOpenChange: (open: boolean) => void, hackathonId: string }) => {
   const { toast } = useToast();
@@ -210,7 +202,10 @@ const TimelineTab = ({ rounds }: { rounds: Round[] }) => (
                 <p className="text-muted-foreground mb-2">{round.description}</p>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CalendarDays className="h-4 w-4" />
-                  {format(new Date(round.date), "PPP")}
+                  {(() => {
+                    const d = new Date(round.date);
+                    return isNaN(d.getTime()) ? '—' : format(d, "PPP");
+                  })()}
                 </div>
               </div>
             </div>
@@ -270,40 +265,28 @@ const PrizesTab = ({ prizes }: { prizes?: string }) => (
   )
 );
 
-const SponsorsTab = ({ sponsors }: { sponsors?: any[] }) => (
-  <div className="space-y-6">
-    <Card>
-      <CardContent className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Sponsors</h3>
-        <div className="grid gap-4">
-          {sponsors && sponsors.length > 0 ? (
-            sponsors.map((sponsor, index) => (
+const SponsorsTab = ({ sponsors }: { sponsors?: { name?: string; description?: string }[] }) => {
+  if (!sponsors || sponsors.length === 0) return null;
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Sponsors</h3>
+          <div className="grid gap-4">
+            {sponsors.map((sponsor, index) => (
               <div key={index} className="p-4 border rounded-lg">
                 <h4 className="font-medium">{sponsor.name}</h4>
-                <p className="text-sm text-muted-foreground">{sponsor.description}</p>
+                {sponsor.description && (
+                  <p className="text-sm text-muted-foreground">{sponsor.description}</p>
+                )}
               </div>
-            ))
-          ) : (
-            <div className="grid gap-4">
-              <div className="p-4 border rounded-lg">
-                <h4 className="font-medium">TechCorp</h4>
-                <p className="text-sm text-muted-foreground">Leading technology company</p>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <h4 className="font-medium">InnovateHub</h4>
-                <p className="text-sm text-muted-foreground">Innovation platform</p>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <h4 className="font-medium">StartupFund</h4>
-                <p className="text-sm text-muted-foreground">Venture capital firm</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  </div>
-);
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
 
 const FAQTab = ({ faq }: { faq?: any[] }) => (
   !faq || faq.length === 0 ? null : (
@@ -325,49 +308,7 @@ const FAQTab = ({ faq }: { faq?: any[] }) => (
   )
 );
 
-const MySubmissionTab = ({ submission, hackathonId }: { submission: Submission, hackathonId: string }) => {
-    return (
-        <div className="pt-12">
-            <h2 className="text-2xl font-semibold text-foreground mb-6">My Submission</h2>
-             <Card className="bg-secondary/50">
-                <CardContent className="p-8 space-y-6">
-                     <div className="flex justify-between items-center">
-                        <h3 className="text-xl font-bold">{submission.title}</h3>
-                        <Badge variant={submission.status === 'draft' ? 'secondary' : 'default'} className="capitalize">{submission.status}</Badge>
-                    </div>
-                    <p className="text-muted-foreground">{submission.description}</p>
-                    <div>
-                        <h4 className="font-semibold mb-2">Tech Stack</h4>
-                        <div className="flex flex-wrap gap-2">
-                           {submission.techStack.map(tech => <Badge key={tech} variant="outline">{tech}</Badge>)}
-                        </div>
-                    </div>
-                    <div className="space-y-4">
-                         <h4 className="font-semibold">Links</h4>
-                        <div className="flex items-center gap-2">
-                             <LinkIcon className="h-4 w-4 text-muted-foreground" />
-                             <Link href={submission.githubUrl} className="text-sm text-accent hover:underline" target="_blank">{submission.githubUrl}</Link>
-                        </div>
-                         <div className="flex items-center gap-2">
-                             <Youtube className="h-4 w-4 text-muted-foreground" />
-                              <Link href={submission.videoUrl} className="text-sm text-accent hover:underline" target="_blank">{submission.videoUrl}</Link>
-                        </div>
-                    </div>
-                     {submission.status === 'draft' && (
-                        <div className="border-t border-border pt-6 flex justify-end">
-                            <Button asChild>
-                                <Link href={`/hackathons/${hackathonId}/submission`}>
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    Edit Submission
-                                </Link>
-                            </Button>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-        </div>
-    )
-}
+// Removed MySubmissionTab component with dummy data; will render real data inline when available
 
 export default function HackathonDetailClientPage({ hackathon }: { hackathon: Hackathon }) {
   const [timeLeft, setTimeLeft] = useState({
@@ -379,6 +320,10 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [hasTeam, setHasTeam] = useState(false);
+  const [mySubmission, setMySubmission] = useState<Submission | null>(null);
+  const [creatingTeam, setCreatingTeam] = useState(false);
+  const [teamName, setTeamName] = useState("");
+  const [teamDesc, setTeamDesc] = useState("");
   const router = useRouter();
   const { toast } = useToast();
   const searchParams = useSearchParams();
@@ -413,6 +358,17 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
             setHasTeam(!!teamRes.team);
           } catch (error) {
             setHasTeam(false);
+          }
+          // Load my submission if window is open
+          try {
+            if (now >= firstRoundDate && now <= lastRoundDate) {
+              const subRes = await apiService.getMySubmission(token, hackathon.id);
+              setMySubmission(subRes.submission || null);
+            } else {
+              setMySubmission(null);
+            }
+          } catch {
+            setMySubmission(null);
           }
         }
       } catch {}
@@ -475,26 +431,11 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
         </div>
         <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <div className="text-sm text-muted-foreground">
-              <Link href={from === 'my' ? '/hackathons/my' : '/hackathons'} className="hover:underline">
-                {from === 'my' ? 'My Hackathons' : 'Explore'}
-              </Link>
-              <span className="mx-2">/</span>
-              <span className="text-foreground">{hackathon.name}</span>
-            </div>
             {isRegistered ? (
               <div className="flex items-center gap-2">
-                <Button className="h-10 px-6 text-sm font-bold" onClick={() => {
-                  if (!isStarted) {
-                    toast({ title: 'Submissions not open', description: 'Submissions will open when the hackathon starts.' });
-                    return;
-                  }
-                  if (isEnded) {
-                    toast({ title: 'Submissions closed', description: 'The submission window has closed.' });
-                    return;
-                  }
+                <Button className="h-10 px-6 text-sm font-bold" disabled={!isStarted || isEnded} onClick={() => {
                   router.push(`/hackathons/${hackathon.id}/submission`);
-                }}>
+                }} title={!isStarted ? 'Submissions open when the hackathon starts' : (isEnded ? 'Submissions are closed' : undefined)}>
                   <FileText className="mr-2 h-4 w-4" />
                   Go to Submission
                 </Button>
@@ -507,6 +448,11 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
                   <Button onClick={() => router.push(`/hackathons/${hackathon.id}/find-team`)} variant="outline" className="h-10 px-6 text-sm font-bold">
                     <Users className="mr-2 h-4 w-4" />
                     Find Team
+                  </Button>
+                )}
+                {!hasTeam && (
+                  <Button variant="secondary" className="h-10 px-6 text-sm font-bold" onClick={() => setCreatingTeam(true)}>
+                    Create Team
                   </Button>
                 )}
               </div>
@@ -583,7 +529,62 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
             </TabsContent>
             {isRegistered && isStarted && !isEnded && (
                 <TabsContent value="submission">
-                    <MySubmissionTab submission={mySubmission} hackathonId={hackathon.id} />
+                  <div className="pt-12">
+                    <h2 className="text-2xl font-semibold text-foreground mb-6">My Submission</h2>
+                    {mySubmission ? (
+                      <Card className="bg-secondary/50">
+                        <CardContent className="p-8 space-y-6">
+                          <div className="flex justify-between items-center">
+                            <h3 className="text-xl font-bold">{mySubmission.project_title}</h3>
+                            <Badge variant={mySubmission.status === 'draft' ? 'secondary' : 'default'} className="capitalize">{mySubmission.status}</Badge>
+                          </div>
+                          <p className="text-muted-foreground">{mySubmission.project_description}</p>
+                          {mySubmission.tech_stack && mySubmission.tech_stack.length > 0 && (
+                            <div>
+                              <h4 className="font-semibold mb-2">Tech Stack</h4>
+                              <div className="flex flex-wrap gap-2">
+                                {mySubmission.tech_stack.map(tech => <Badge key={tech} variant="outline">{tech}</Badge>)}
+                              </div>
+                            </div>
+                          )}
+                          <div className="space-y-2">
+                            {mySubmission.github_link && (
+                              <div className="flex items-center gap-2">
+                                <LinkIcon className="h-4 w-4 text-muted-foreground" />
+                                <Link href={mySubmission.github_link} className="text-sm text-accent hover:underline" target="_blank">{mySubmission.github_link}</Link>
+                              </div>
+                            )}
+                            {mySubmission.video_link && (
+                              <div className="flex items-center gap-2">
+                                <Youtube className="h-4 w-4 text-muted-foreground" />
+                                <Link href={mySubmission.video_link} className="text-sm text-accent hover:underline" target="_blank">{mySubmission.video_link}</Link>
+                              </div>
+                            )}
+                          </div>
+                          <div className="border-t border-border pt-6 flex justify-end">
+                            <Button asChild>
+                              <Link href={`/hackathons/${hackathon.id}/submission`}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit Submission
+                              </Link>
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <div className="text-center py-8">
+                        <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">No Submission Yet</h3>
+                        <p className="text-muted-foreground mb-4">When submissions open, you can create and manage your project here.</p>
+                        <Button asChild disabled={!isStarted || isEnded} title={!isStarted ? 'Submissions open when the hackathon starts' : (isEnded ? 'Submissions are closed' : undefined)}>
+                          <Link href={`/hackathons/${hackathon.id}/submission`}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Create Submission
+                          </Link>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </TabsContent>
             )}
             {isRegistered && hasTeam && (
@@ -605,6 +606,44 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
         </Tabs>
       </div>
       <JoinHackathonDialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen} hackathonId={hackathon.id} />
+
+      {/* Create Team Dialog */}
+      {isRegistered && !hasTeam && (
+        <Dialog open={creatingTeam} onOpenChange={setCreatingTeam}>
+          <DialogContent className="sm:max-w-[520px]">
+            <DialogHeader>
+              <DialogTitle>Create a Team</DialogTitle>
+              <DialogDescription>Set your team name and agenda/description.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="teamName">Team Name</Label>
+                <Input id="teamName" value={teamName} onChange={(e) => setTeamName(e.target.value)} placeholder="Awesome Devs" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="teamDesc">Agenda / Description</Label>
+                <Textarea id="teamDesc" value={teamDesc} onChange={(e) => setTeamDesc(e.target.value)} placeholder="What your team aims to build..." />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setCreatingTeam(false)}>Cancel</Button>
+              <Button onClick={async () => {
+                try {
+                  const token = getCookie('authToken');
+                  if (!token) { toast({ title: 'Please log in' }); return; }
+                  if (!teamName.trim()) { toast({ title: 'Team name is required' }); return; }
+                  await apiService.createTeam(token, hackathon.id, { name: teamName.trim(), description: teamDesc.trim() || undefined });
+                  toast({ title: 'Team created' });
+                  setCreatingTeam(false);
+                  router.push(`/hackathons/${hackathon.id}/team`);
+                } catch (e: any) {
+                  toast({ title: 'Failed to create team', description: e?.message || 'Try again' });
+                }
+              }}>Create</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </main>
   );
 }
