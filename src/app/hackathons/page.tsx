@@ -195,10 +195,26 @@ const HackathonsPage = memo(function HackathonsPage() {
              </span>
            </div>
            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-             {ongoingHackathons.map((hackathon) => (
+             {ongoingHackathons
+               .filter(hackathon => {
+                 // Filter out hackathons with invalid or missing date data
+                 if (Array.isArray(hackathon.rounds) && hackathon.rounds.length > 0) {
+                   return typeof hackathon.rounds[0]?.date === 'string' && typeof hackathon.rounds[hackathon.rounds.length - 1]?.date === 'string';
+                 }
+                 return typeof hackathon.date === 'string';
+               })
+               .map((hackathon) => (
                <HackathonCard 
                  key={hackathon.id} 
-                 hackathon={hackathon}
+                 hackathon={{
+                   ...hackathon,
+                   // Provide default values if rounds or dates are missing
+                   rounds: Array.isArray(hackathon.rounds) && hackathon.rounds.length > 0
+                     ? hackathon.rounds.map(round => ({ ...round, date: round.date || '' }))
+                     : [{ name: 'Main', date: hackathon.date || '', description: '' }],
+                   date: hackathon.date || '', // Ensure hackathon.date is also not undefined
+                 }}
+
                  onWishlistToggle={handleWishlistToggle}
                  isWishlisted={wishlistedHackathons.has(hackathon.id)}
                />
@@ -217,10 +233,24 @@ const HackathonsPage = memo(function HackathonsPage() {
              </span>
            </div>
            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-             {upcomingHackathons.map((hackathon) => (
+             {upcomingHackathons
+               .filter(hackathon => {
+                 if (Array.isArray(hackathon.rounds) && hackathon.rounds.length > 0) {
+                   return typeof hackathon.rounds[0]?.date === 'string' && typeof hackathon.rounds[hackathon.rounds.length - 1]?.date === 'string';
+                 }
+                 return typeof hackathon.date === 'string';
+               })
+               .map((hackathon) => (
                <HackathonCard 
                  key={hackathon.id} 
-                 hackathon={hackathon}
+                 hackathon={{
+                   ...hackathon,
+                   rounds: Array.isArray(hackathon.rounds) && hackathon.rounds.length > 0
+                     ? hackathon.rounds.map(round => ({ ...round, date: round.date || '' }))
+                     : [{ name: 'Main', date: hackathon.date || '', description: '' }],
+                   date: hackathon.date || '',
+                 }}
+
                  onWishlistToggle={handleWishlistToggle}
                  isWishlisted={wishlistedHackathons.has(hackathon.id)}
                />
@@ -239,10 +269,24 @@ const HackathonsPage = memo(function HackathonsPage() {
              </span>
            </div>
            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-             {endedHackathons.map((hackathon) => (
+             {endedHackathons
+               .filter(hackathon => {
+                 if (Array.isArray(hackathon.rounds) && hackathon.rounds.length > 0) {
+                   return typeof hackathon.rounds[0]?.date === 'string' && typeof hackathon.rounds[hackathon.rounds.length - 1]?.date === 'string';
+                 }
+                 return typeof hackathon.date === 'string';
+               })
+               .map((hackathon) => (
                <HackathonCard 
                  key={hackathon.id} 
-                 hackathon={hackathon}
+                 hackathon={{
+                   ...hackathon,
+                   rounds: Array.isArray(hackathon.rounds) && hackathon.rounds.length > 0
+                     ? hackathon.rounds.map(round => ({ ...round, date: round.date || '' }))
+                     : [{ name: 'Main', date: hackathon.date || '', description: '' }],
+                   date: hackathon.date || '',
+                 }}
+
                  onWishlistToggle={handleWishlistToggle}
                  isWishlisted={wishlistedHackathons.has(hackathon.id)}
                />
