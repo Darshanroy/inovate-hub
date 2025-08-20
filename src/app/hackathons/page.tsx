@@ -64,13 +64,18 @@ const HackathonsPage = memo(function HackathonsPage() {
   };
 
   const getEventStatus = (hackathon: Hackathon) => {
-    if (hackathon.rounds && hackathon.rounds.length > 0 && typeof hackathon.rounds[0].date === 'string' && typeof hackathon.rounds[hackathon.rounds.length - 1].date === 'string') {
-      const firstRoundDate = parseISO(hackathon.rounds[0].date);
-      const lastRoundDate = parseISO(hackathon.rounds[hackathon.rounds.length - 1].date);
+    try {
+      if (hackathon.rounds && hackathon.rounds.length > 0 && typeof hackathon.rounds[0].date === 'string' && typeof hackathon.rounds[hackathon.rounds.length - 1].date === 'string') {
+        const firstRoundDate = parseISO(hackathon.rounds[0].date);
+        const lastRoundDate = parseISO(hackathon.rounds[hackathon.rounds.length - 1].date);
 
-      if (isPast(lastRoundDate)) return "Ended";
-      if (isFuture(firstRoundDate)) return "Upcoming";
-      return "Ongoing";
+        if (isPast(lastRoundDate)) return "Ended";
+        if (isFuture(firstRoundDate)) return "Upcoming";
+        return "Ongoing";
+      }
+    } catch (error) {
+      console.error("Error parsing round dates:", error);
+      return "Date Invalid";
     }
 
     if (typeof hackathon.date !== 'string') {
@@ -78,13 +83,18 @@ const HackathonsPage = memo(function HackathonsPage() {
     }
     
     // Fallback for single-date hackathons
-    const eventDate = parseISO(hackathon.date);
-    const eventEndDate = new Date(eventDate);
-    eventEndDate.setDate(eventEndDate.getDate() + 2); // Assume 2 days duration
+    try {
+      const eventDate = parseISO(hackathon.date);
+      const eventEndDate = new Date(eventDate);
+      eventEndDate.setDate(eventEndDate.getDate() + 2); // Assume 2 days duration
 
-    if (isPast(eventEndDate)) return "Ended";
-    if (isPast(eventDate)) return "Ongoing";
-    return "Upcoming";
+      if (isPast(eventEndDate)) return "Ended";
+      if (isPast(eventDate)) return "Ongoing";
+      return "Upcoming";
+    } catch (error) {
+      console.error("Error parsing hackathon date:", error);
+      return "Date Invalid";
+    }
   };
 
   const filteredHackathons = useMemo(() => {
@@ -115,7 +125,7 @@ const HackathonsPage = memo(function HackathonsPage() {
   const ongoingHackathons = filteredHackathons.filter(h => getEventStatus(h) === "Ongoing");
   const upcomingHackathons = filteredHackathons.filter(h => getEventStatus(h) === "Upcoming");
   const endedHackathons = filteredHackathons.filter(h => getEventStatus(h) === "Ended");
-
+ 
   const handleFilterChange = (type: string, value: string) => {
     setFilters((prev) => ({ ...prev, [type]: value }));
   };
@@ -195,25 +205,10 @@ const HackathonsPage = memo(function HackathonsPage() {
              </span>
            </div>
            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-             {ongoingHackathons
-               .filter(hackathon => {
-                 // Filter out hackathons with invalid or missing date data
-                 if (Array.isArray(hackathon.rounds) && hackathon.rounds.length > 0) {
-                   return typeof hackathon.rounds[0]?.date === 'string' && typeof hackathon.rounds[hackathon.rounds.length - 1]?.date === 'string';
-                 }
-                 return typeof hackathon.date === 'string';
-               })
-               .map((hackathon) => (
-               <HackathonCard 
-                 key={hackathon.id} 
-                 hackathon={{
-                   ...hackathon,
-                   // Provide default values if rounds or dates are missing
-                   rounds: Array.isArray(hackathon.rounds) && hackathon.rounds.length > 0
-                     ? hackathon.rounds.map(round => ({ ...round, date: round.date || '' }))
-                     : [{ name: 'Main', date: hackathon.date || '', description: '' }],
-                   date: hackathon.date || '', // Ensure hackathon.date is also not undefined
-                 }}
+             {ongoingHackathons.map((hackathon) => (
+               <HackathonCard
+                 key={hackathon.id}
+                 hackathon={hackathon}
 
                  onWishlistToggle={handleWishlistToggle}
                  isWishlisted={wishlistedHackathons.has(hackathon.id)}
@@ -233,23 +228,10 @@ const HackathonsPage = memo(function HackathonsPage() {
              </span>
            </div>
            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-             {upcomingHackathons
-               .filter(hackathon => {
-                 if (Array.isArray(hackathon.rounds) && hackathon.rounds.length > 0) {
-                   return typeof hackathon.rounds[0]?.date === 'string' && typeof hackathon.rounds[hackathon.rounds.length - 1]?.date === 'string';
-                 }
-                 return typeof hackathon.date === 'string';
-               })
-               .map((hackathon) => (
-               <HackathonCard 
-                 key={hackathon.id} 
-                 hackathon={{
-                   ...hackathon,
-                   rounds: Array.isArray(hackathon.rounds) && hackathon.rounds.length > 0
-                     ? hackathon.rounds.map(round => ({ ...round, date: round.date || '' }))
-                     : [{ name: 'Main', date: hackathon.date || '', description: '' }],
-                   date: hackathon.date || '',
-                 }}
+             {upcomingHackathons.map((hackathon) => (
+               <HackathonCard
+                 key={hackathon.id}
+                 hackathon={hackathon}
 
                  onWishlistToggle={handleWishlistToggle}
                  isWishlisted={wishlistedHackathons.has(hackathon.id)}
@@ -269,23 +251,10 @@ const HackathonsPage = memo(function HackathonsPage() {
              </span>
            </div>
            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-             {endedHackathons
-               .filter(hackathon => {
-                 if (Array.isArray(hackathon.rounds) && hackathon.rounds.length > 0) {
-                   return typeof hackathon.rounds[0]?.date === 'string' && typeof hackathon.rounds[hackathon.rounds.length - 1]?.date === 'string';
-                 }
-                 return typeof hackathon.date === 'string';
-               })
-               .map((hackathon) => (
-               <HackathonCard 
-                 key={hackathon.id} 
-                 hackathon={{
-                   ...hackathon,
-                   rounds: Array.isArray(hackathon.rounds) && hackathon.rounds.length > 0
-                     ? hackathon.rounds.map(round => ({ ...round, date: round.date || '' }))
-                     : [{ name: 'Main', date: hackathon.date || '', description: '' }],
-                   date: hackathon.date || '',
-                 }}
+             {endedHackathons.map((hackathon) => (
+               <HackathonCard
+                 key={hackathon.id}
+                 hackathon={hackathon}
 
                  onWishlistToggle={handleWishlistToggle}
                  isWishlisted={wishlistedHackathons.has(hackathon.id)}
