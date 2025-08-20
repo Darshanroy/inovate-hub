@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { format, isPast, isFuture, parseISO } from "date-fns"
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
+import { LoadingButton } from "@/components/ui/loading-button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -240,15 +241,6 @@ export default function OrganizerDashboard() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Input
-                placeholder="Search hackathons..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
-              />
-              <ListFilter className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="w-full sm:w-auto">
@@ -285,12 +277,10 @@ export default function OrganizerDashboard() {
                 )}
               </div>
               {hackathons.length === 0 && (
-                <Button asChild>
-                  <Link href="/organizer/dashboard/create">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Create Your First Hackathon
-                  </Link>
-                </Button>
+                <LoadingButton href="/organizer/dashboard/create" loadingMessage="Opening creator...">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Create Your First Hackathon
+                </LoadingButton>
               )}
             </div>
           ) : (
@@ -317,30 +307,33 @@ export default function OrganizerDashboard() {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Button 
+                    <LoadingButton 
                       variant="outline" 
                       size="sm"
                       onClick={() => handleViewHackathon(hackathon)}
+                      loadingMessage="Opening hackathon..."
                     >
                       <Eye className="mr-2 h-4 w-4"/>
                       View
-                    </Button>
-                    <Button 
+                    </LoadingButton>
+                    <LoadingButton 
                       variant="outline" 
                       size="sm"
                       onClick={() => handleEditHackathon(hackathon)}
+                      loadingMessage="Opening editor..."
                     >
                       <Edit className="mr-2 h-4 w-4"/>
                       Edit
-                    </Button>
-                    <Button 
+                    </LoadingButton>
+                    <LoadingButton 
                       variant="outline" 
                       size="sm"
                       onClick={() => handleManageHackathon(hackathon)}
+                      loadingMessage="Opening management..."
                     >
                       <ArrowRight className="mr-2 h-4 w-4"/>
                       Manage
-                    </Button>
+                    </LoadingButton>
                     <Button 
                       variant="outline" 
                       size="sm"

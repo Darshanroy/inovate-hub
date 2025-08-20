@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { 
   Eye, 
   Users, 
@@ -176,14 +178,7 @@ export default function MyHackathonsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your hackathons...</p>
-        </div>
-      </div>
-    );
+    return <LoadingOverlay message="Loading your hackathons..." />;
   }
 
   return (
@@ -248,11 +243,9 @@ export default function MyHackathonsPage() {
             }
           </p>
           {hackathons.length === 0 && (
-            <Button asChild>
-              <Link href="/hackathons">
-                Browse Hackathons
-              </Link>
-            </Button>
+            <LoadingButton href="/hackathons" loadingMessage="Opening hackathons...">
+              Browse Hackathons
+            </LoadingButton>
           )}
         </div>
       ) : (
@@ -362,58 +355,73 @@ export default function MyHackathonsPage() {
                         <div className="text-center py-8">
                           <User className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                           <p className="text-muted-foreground mb-4">You're not part of a team yet</p>
-                          <Button asChild>
-                            <Link href={`/hackathons/${hackathon.id}/find-team`}>
-                              Find a Team
-                            </Link>
-                          </Button>
+                          <LoadingButton 
+                            href={`/hackathons/${hackathon.id}/find-team`}
+                            loadingMessage="Finding teams..."
+                          >
+                            Find a Team
+                          </LoadingButton>
                         </div>
                       )}
                     </TabsContent>
 
                     <TabsContent value="actions" className="mt-4">
                       <div className="flex flex-col sm:flex-row gap-2">
-                        <Button asChild variant="outline" size="sm">
-                          <Link href={`/hackathons/${hackathon.id}`}>
-                            <Eye className="mr-2 h-4 w-4"/>
-                            View Details
-                          </Link>
-                        </Button>
+                        <LoadingButton 
+                          href={`/hackathons/${hackathon.id}`}
+                          variant="outline" 
+                          size="sm"
+                          loadingMessage="Opening hackathon..."
+                        >
+                          <Eye className="mr-2 h-4 w-4"/>
+                          View Details
+                        </LoadingButton>
                         
                         {status === 'Not Started' && hackathon.team && (
-                          <Button asChild variant="outline" size="sm">
-                            <Link href={`/hackathons/${hackathon.id}/team`}>
-                              <Users className="mr-2 h-4 w-4"/>
-                              Manage Team
-                            </Link>
-                          </Button>
+                          <LoadingButton 
+                            href={`/hackathons/${hackathon.id}/team`}
+                            variant="outline" 
+                            size="sm"
+                            loadingMessage="Opening team management..."
+                          >
+                            <Users className="mr-2 h-4 w-4"/>
+                            Manage Team
+                          </LoadingButton>
                         )}
                         
                         {status === 'Not Started' && !hackathon.team && (
-                          <Button asChild variant="secondary" size="sm">
-                            <Link href={`/hackathons/${hackathon.id}/find-team`}>
-                              <Users className="mr-2 h-4 w-4"/>
-                              Join a Team
-                            </Link>
-                          </Button>
+                          <LoadingButton 
+                            href={`/hackathons/${hackathon.id}/find-team`}
+                            variant="secondary" 
+                            size="sm"
+                            loadingMessage="Finding teams..."
+                          >
+                            <Users className="mr-2 h-4 w-4"/>
+                            Join a Team
+                          </LoadingButton>
                         )}
                         
                         {status === 'Ongoing' && (!hackathon.submissionStatus || hackathon.submissionStatus === 'Not Started') && (
-                          <Button asChild size="sm">
-                            <Link href={`/hackathons/${hackathon.id}/submission`}>
-                              <FileText className="mr-2 h-4 w-4"/>
-                              Submit Project
-                            </Link>
-                          </Button>
+                          <LoadingButton 
+                            href={`/hackathons/${hackathon.id}/submission`}
+                            size="sm"
+                            loadingMessage="Opening submission..."
+                          >
+                            <FileText className="mr-2 h-4 w-4"/>
+                            Submit Project
+                          </LoadingButton>
                         )}
                         
                         {status === 'Ongoing' && hackathon.submissionStatus === 'Draft' && (
-                          <Button asChild size="sm" variant="secondary">
-                            <Link href={`/hackathons/${hackathon.id}/submission`}>
-                              <FileText className="mr-2 h-4 w-4"/>
-                              Edit Submission
-                            </Link>
-                          </Button>
+                          <LoadingButton 
+                            href={`/hackathons/${hackathon.id}/submission`}
+                            size="sm" 
+                            variant="secondary"
+                            loadingMessage="Opening submission..."
+                          >
+                            <FileText className="mr-2 h-4 w-4"/>
+                            Edit Submission
+                          </LoadingButton>
                         )}
                       </div>
                     </TabsContent>

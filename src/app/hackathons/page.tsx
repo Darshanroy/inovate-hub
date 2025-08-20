@@ -1,12 +1,12 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useState, useMemo, useEffect, memo } from "react";
 import { apiService } from "@/lib/api";
+import { format, parseISO, isPast, isFuture } from "date-fns";
+import { HackathonCard } from "@/components/ui/hackathon-card";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,40 +16,71 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ListFilter } from "lucide-react";
-import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ListFilter, Clock, Play, CheckCircle } from "lucide-react";
 
-export default function HackathonsPage() {
-  const [searchTerm, setSearchTerm] = useState("");
+interface Hackathon {
+  id: string;
+  name: string;
+  theme: string;
+  date: string;
+  rounds?: Array<{ name: string; date: string; description: string }>;
+  prize: number;
+  locationType: 'online' | 'offline';
+  image: string;
+  hint: string;
+  description: string;
+  sponsors?: string[];
+}
+
+const HackathonsPage = memo(function HackathonsPage() {
+  const [hackathons, setHackathons] = useState<Hackathon[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     theme: "All",
-    date: "All",
     prize: "All",
     location: "All",
   });
-  const [hackathons, setHackathons] = useState<any[]>([]);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await apiService.listHackathons();
-        setHackathons(res.hackathons || []);
-      } catch {
-        setHackathons([]);
-      }
-    })();
+    loadHackathons();
   }, []);
+
+  const loadHackathons = async () => {
+    try {
+      setLoading(true);
+      const res = await apiService.listHackathons();
+      setHackathons(res.hackathons || []);
+    } catch (error) {
+      console.error('Failed to load hackathons:', error);
+      setHackathons([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getEventStatus = (hackathon: Hackathon) => {
+    if (hackathon.rounds && hackathon.rounds.length > 0) {
+      const firstRoundDate = parseISO(hackathon.rounds[0].date);
+      const lastRoundDate = parseISO(hackathon.rounds[hackathon.rounds.length - 1].date);
+      
+      if (isPast(lastRoundDate)) return "Ended";
+      if (isFuture(firstRoundDate)) return "Upcoming";
+      return "Ongoing";
+    }
+    
+    // Fallback for single-date hackathons
+    const eventDate = parseISO(hackathon.date);
+    const eventEndDate = new Date(eventDate);
+    eventEndDate.setDate(eventEndDate.getDate() + 2); // Assume 2 days duration
+
+    if (isPast(eventEndDate)) return "Ended";
+    if (isPast(eventDate)) return "Ongoing";
+    return "Upcoming";
+  };
 
   const filteredHackathons = useMemo(() => {
     let list = hackathons.slice();
-
-    // Search filter
-    if (searchTerm) {
-      list = list.filter((h) =>
-        (h.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (h.theme || "").toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
 
     // Theme filter
     if (filters.theme !== "All") {
@@ -69,43 +100,36 @@ export default function HackathonsPage() {
         return 0;
       });
     }
-    
-     // Date filter
-    if (filters.date !== 'All') {
-      list = list.sort((a, b) => {
-        const dateA = new Date(a.date || 0).getTime();
-        const dateB = new Date(b.date || 0).getTime();
-        if (filters.date === 'Newest') return dateB - dateA;
-        if (filters.date === 'Oldest') return dateA - dateB;
-        return 0;
-      });
-    }
 
     return list;
-  }, [hackathons, searchTerm, filters]);
+  }, [hackathons, filters]);
+
+  const ongoingHackathons = filteredHackathons.filter(h => getEventStatus(h) === "Ongoing");
+  const upcomingHackathons = filteredHackathons.filter(h => getEventStatus(h) === "Upcoming");
+  const endedHackathons = filteredHackathons.filter(h => getEventStatus(h) === "Ended");
 
   const handleFilterChange = (type: string, value: string) => {
     setFilters((prev) => ({ ...prev, [type]: value }));
   };
 
   const themes = ["All", "Artificial Intelligence", "Sustainability", "Financial Technology", "Healthcare", "Creative Coding", "Data Science"];
-  const dates = ["All", "Newest", "Oldest"];
   const prizes = ["All", "Highest", "Lowest"];
   const locations = ["All", "Online", "Offline"];
 
+  if (loading) {
+    return <LoadingOverlay message="Loading hackathons..." />;
+  }
+
   return (
     <main className="container mx-auto flex flex-1 flex-col px-4 py-8 sm:px-6 lg:px-8">
+      {/* Filters */}
       <div className="mb-8">
-        <Input
-          placeholder="Search for hackathons by name or theme..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="h-12 text-base"
-        />
-        <div className="flex flex-wrap gap-3 mt-4">
+        <div className="flex flex-wrap gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="secondary" className="rounded-full">Theme: {filters.theme} <ListFilter className="ml-2 h-4 w-4" /></Button>
+              <Button variant="secondary" className="rounded-full">
+                Theme: {filters.theme} <ListFilter className="ml-2 h-4 w-4" />
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuLabel>Filter by Theme</DropdownMenuLabel>
@@ -116,22 +140,11 @@ export default function HackathonsPage() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="secondary" className="rounded-full">Date: {filters.date} <ListFilter className="ml-2 h-4 w-4" /></Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuLabel>Sort by Date</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuRadioGroup value={filters.date} onValueChange={(v) => handleFilterChange("date", v)}>
-                 {dates.map(d => <DropdownMenuRadioItem key={d} value={d}>{d}</DropdownMenuRadioItem>)}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="secondary" className="rounded-full">Prize Pool: {filters.prize} <ListFilter className="ml-2 h-4 w-4" /></Button>
+              <Button variant="secondary" className="rounded-full">
+                Prize Pool: {filters.prize} <ListFilter className="ml-2 h-4 w-4" />
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuLabel>Sort by Prize</DropdownMenuLabel>
@@ -142,54 +155,86 @@ export default function HackathonsPage() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-           <DropdownMenu>
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="secondary" className="rounded-full">Location: {filters.location} <ListFilter className="ml-2 h-4 w-4" /></Button>
+              <Button variant="secondary" className="rounded-full">
+                Location: {filters.location} <ListFilter className="ml-2 h-4 w-4" />
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuLabel>Filter by Location</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuRadioGroup value={filters.location} onValueChange={(v) => handleFilterChange("location", v)}>
-                 {locations.map(l => <DropdownMenuRadioItem key={l} value={l}>{l}</DropdownMenuRadioItem>)}
+                {locations.map(l => <DropdownMenuRadioItem key={l} value={l}>{l}</DropdownMenuRadioItem>)}
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
-       {filteredHackathons.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredHackathons.map((hackathon, index) => (
-            <Card key={index} className="bg-secondary border-white/10 flex transform flex-col justify-between transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/20">
-                <CardContent className="p-4 flex flex-col gap-3">
-                <Image
-                    src={hackathon.image}
-                    alt={hackathon.name}
-                    width={600}
-                    height={400}
-                    className="mb-4 w-full h-auto aspect-video rounded-lg object-cover"
-                    data-ai-hint={hackathon.hint}
-                />
-                <div>
-                    <h3 className="text-lg font-bold leading-tight">{hackathon.name}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">Theme: {hackathon.theme}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Date: {hackathon.date ? new Date(hackathon.date).toLocaleDateString() : 'TBA'}</p>
-                    <p className="text-sm font-bold text-accent mt-2">Prize: ${Number(hackathon.prize || 0).toLocaleString()}</p>
-                </div>
-                </CardContent>
-                <div className="p-4 pt-0">
-                    <Button asChild className="w-full">
-                      <Link href={`/hackathons/${hackathon.id}`}>View Details</Link>
-                    </Button>
-                </div>
-            </Card>
+
+      {/* Ongoing Hackathons Section */}
+      {ongoingHackathons.length > 0 && (
+        <section className="mb-12">
+          <div className="flex items-center gap-3 mb-6">
+            <Play className="h-6 w-6 text-green-500" />
+            <h2 className="text-2xl font-bold">Ongoing Hackathons</h2>
+            <span className="bg-green-100 text-green-800 text-sm px-2 py-1 rounded-full">
+              {ongoingHackathons.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {ongoingHackathons.map((hackathon) => (
+              <HackathonCard key={hackathon.id} hackathon={hackathon} />
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Upcoming Hackathons Section */}
+      {upcomingHackathons.length > 0 && (
+        <section className="mb-12">
+          <div className="flex items-center gap-3 mb-6">
+            <Clock className="h-6 w-6 text-blue-500" />
+            <h2 className="text-2xl font-bold">Upcoming Hackathons</h2>
+            <span className="bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded-full">
+              {upcomingHackathons.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {upcomingHackathons.map((hackathon) => (
+              <HackathonCard key={hackathon.id} hackathon={hackathon} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Ended Hackathons Section */}
+      {endedHackathons.length > 0 && (
+        <section className="mb-12">
+          <div className="flex items-center gap-3 mb-6">
+            <CheckCircle className="h-6 w-6 text-gray-500" />
+            <h2 className="text-2xl font-bold">Ended Hackathons</h2>
+            <span className="bg-gray-100 text-gray-800 text-sm px-2 py-1 rounded-full">
+              {endedHackathons.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {endedHackathons.map((hackathon) => (
+              <HackathonCard key={hackathon.id} hackathon={hackathon} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* No Hackathons Found */}
+      {filteredHackathons.length === 0 && (
+        <div className="text-center py-16">
+          <h3 className="text-2xl font-bold">No Hackathons Found</h3>
+          <p className="text-muted-foreground mt-2">Try adjusting your filters.</p>
         </div>
-        ) : (
-             <div className="text-center py-16">
-                <h3 className="text-2xl font-bold">No Hackathons Found</h3>
-                <p className="text-muted-foreground mt-2">Try adjusting your search or filters.</p>
-            </div>
-        )}
+      )}
     </main>
   );
-}
+});
+
+export default HackathonsPage;

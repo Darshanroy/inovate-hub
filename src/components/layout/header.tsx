@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
-import { Bell, Search, User, Rocket } from "lucide-react";
+import { Bell, User, Rocket } from "lucide-react";
 import { Input } from "../ui/input";
 import {
   DropdownMenu,
@@ -17,9 +17,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogoutButton } from "./logout-button";
 import { useAuth } from "@/hooks/use-auth";
+import { usePathname } from "next/navigation";
 
 export function AppHeader() {
   const { isLoggedIn, userType, checkLoginStatus } = useAuth();
+  const pathname = usePathname();
 
   useEffect(() => {
     // This now gets called on component mount and whenever the user navigates
@@ -28,6 +30,14 @@ export function AppHeader() {
   }, [checkLoginStatus]);
   
   const profileUrl = userType === "organizer" ? "/organizer/profile" : userType === 'judge' ? '/judge/profile' : "/profile";
+
+  // Helper function to check if a link is active
+  const isActive = (href: string) => {
+    if (href === "/") {
+      return pathname === "/";
+    }
+    return pathname.startsWith(href);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-sm border-b border-border">
@@ -38,26 +48,61 @@ export function AppHeader() {
             <h2 className="text-2xl font-bold font-headline">HackHub</h2>
           </Link>
            <nav className="hidden items-center gap-8 md:flex">
-            <Link href="/hackathons" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
+            <Link 
+              href="/hackathons" 
+              className={`text-sm font-medium transition-colors hover:text-accent ${
+                isActive("/hackathons") && !isActive("/hackathons/my") && !isActive("/organizer") && !isActive("/judge")
+                  ? "text-accent border-b-2 border-accent pb-1"
+                  : "text-muted-foreground"
+              }`}
+            >
               Explore
             </Link>
             {isLoggedIn && userType === 'participant' && (
-              <Link href="/hackathons/my" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
+              <Link 
+                href="/hackathons/my" 
+                className={`text-sm font-medium transition-colors hover:text-accent ${
+                  isActive("/hackathons/my")
+                    ? "text-accent border-b-2 border-accent pb-1"
+                    : "text-muted-foreground"
+                }`}
+              >
                 My Hackathons
               </Link>
             )}
              {isLoggedIn && userType === 'organizer' && (
               <>
-                <Link href="/organizer/dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
+                <Link 
+                  href="/organizer/dashboard" 
+                  className={`text-sm font-medium transition-colors hover:text-accent ${
+                    isActive("/organizer/dashboard") && !isActive("/organizer/dashboard/create")
+                      ? "text-accent border-b-2 border-accent pb-1"
+                      : "text-muted-foreground"
+                  }`}
+                >
                   Dashboard
                 </Link>
-                 <Link href="/organizer/dashboard/create" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
+                 <Link 
+                   href="/organizer/dashboard/create" 
+                   className={`text-sm font-medium transition-colors hover:text-accent ${
+                     isActive("/organizer/dashboard/create")
+                       ? "text-accent border-b-2 border-accent pb-1"
+                       : "text-muted-foreground"
+                   }`}
+                 >
                   Create
                 </Link>
               </>
             )}
              {isLoggedIn && userType === 'judge' && (
-                <Link href="/judge/dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-accent">
+                <Link 
+                  href="/judge/dashboard" 
+                  className={`text-sm font-medium transition-colors hover:text-accent ${
+                    isActive("/judge/dashboard")
+                      ? "text-accent border-b-2 border-accent pb-1"
+                      : "text-muted-foreground"
+                  }`}
+                >
                   Judging Dashboard
                 </Link>
             )}
@@ -65,10 +110,6 @@ export function AppHeader() {
         </div>
        
         <div className="flex flex-1 justify-end items-center gap-4">
-           <div className="relative hidden sm:block w-full max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search for hackathons" className="pl-9 h-11" />
-          </div>
           {isLoggedIn ? (
             <>
               <DropdownMenu>
