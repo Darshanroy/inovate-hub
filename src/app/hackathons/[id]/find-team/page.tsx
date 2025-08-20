@@ -45,6 +45,11 @@ export default function FindTeamPage() {
   const [invitedParticipants, setInvitedParticipants] = useState<string[]>([]);
   const [teamCode, setTeamCode] = useState("");
   const [joiningTeam, setJoiningTeam] = useState(false);
+  // AI matcher state
+  const [aiSkills, setAiSkills] = useState("");
+  const [aiInterests, setAiInterests] = useState("");
+  const [aiMatches, setAiMatches] = useState<SoloParticipant[]>([]);
+  const [aiSearching, setAiSearching] = useState(false);
   const [creating, setCreating] = useState(false);
   const [teamName, setTeamName] = useState("");
   const [teamDesc, setTeamDesc] = useState("");
@@ -161,6 +166,40 @@ export default function FindTeamPage() {
     p.skills?.some((s: string) => s.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const tokenize = (s: string) => (s || "").toLowerCase().split(/[^a-z0-9+#]+/).filter(Boolean);
+  const jaccard = (a: string[], b: string[]) => {
+    const sa = new Set(a), sb = new Set(b);
+    const inter = [...sa].filter(x => sb.has(x)).length;
+    const union = new Set([...a, ...b]).size || 1;
+    return inter / union;
+  };
+
+  const handleAiMatch = () => {
+    setAiSearching(true);
+    try {
+      const desiredSkills = tokenize(aiSkills);
+      const desiredInterests = tokenize(aiInterests);
+      const results = [...soloParticipants]
+        .map(p => {
+          const pSkills = (p.skills || []).map((x: any) => String(x).toLowerCase());
+          const scoreSkills = jaccard(desiredSkills, pSkills);
+          const scoreInterests = desiredInterests.length ? jaccard(desiredInterests, pSkills) : 0;
+          const score = scoreSkills * 0.7 + scoreInterests * 0.3;
+          return { p, score };
+        })
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 8)
+        .map(x => x.p);
+      setAiMatches(results);
+      if (results.length === 0) {
+        toast({ title: 'No close matches', description: 'Try adding a few more skills or interests.' });
+      }
+    } finally {
+      setAiSearching(false);
+    }
+  };
+
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
@@ -185,6 +224,61 @@ export default function FindTeamPage() {
         </div>
         
         <div className="max-w-4xl mx-auto">
+          {/* AI Team Matcher (hackathon-specific) */}
+          <Card className="bg-secondary/50 mb-8">
+            <CardHeader>
+              <CardTitle className="text-lg">AI Team Matcher</CardTitle>
+              <CardDescription>Enter your skills and interests to discover participants in this hackathon who are a good fit.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="ai-skills">Your skills (comma separated)</Label>
+                  <Input id="ai-skills" placeholder="React, Node.js, MongoDB" value={aiSkills} onChange={(e) => setAiSkills(e.target.value)} />
+                </div>
+                <div>
+                  <Label htmlFor="ai-interests">Interests (optional)</Label>
+                  <Input id="ai-interests" placeholder="AI, FinTech, Web" value={aiInterests} onChange={(e) => setAiInterests(e.target.value)} />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button onClick={handleAiMatch} disabled={aiSearching}> {aiSearching ? 'Finding…' : 'Find Matches'} </Button>
+                {aiMatches.length > 0 && (
+                  <span className="text-sm text-muted-foreground">Top matches: {aiMatches.length}</span>
+                )}
+              </div>
+              {aiMatches.length > 0 && (
+                <div className="grid gap-3 md:grid-cols-2 mt-2">
+                  {aiMatches.map((participant) => (
+                    <Card key={participant.id} className="bg-background">
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={participant.avatar} />
+                            <AvatarFallback>{getInitials(participant.name)}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <h4 className="font-semibold">{participant.name}</h4>
+                            {participant.skills && participant.skills.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {participant.skills.slice(0, 6).map((skill: string) => (
+                                  <Badge key={skill} variant="secondary" className="text-xs">{skill}</Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <Button size="sm" onClick={() => setInvitedParticipants(prev => [...prev, participant.id])} disabled={invitedParticipants.includes(participant.id)}>
+                          {invitedParticipants.includes(participant.id) ? 'Invited' : 'Invite'}
+            </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <div className="mb-8">
             <Card className="bg-secondary/50">
               <CardContent className="p-4">

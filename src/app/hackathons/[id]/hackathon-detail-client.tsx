@@ -178,7 +178,7 @@ const OverviewTab = ({ hackathon }: { hackathon: Hackathon }) => {
             {hackathon.sponsors.map((s: any, idx: number) => (
               <div key={`${s.name || idx}`} className="bg-secondary rounded-lg flex items-center justify-center p-4">
                 <span className="text-sm text-muted-foreground">{s.name || 'Sponsor'}</span>
-              </div>
+                </div>
             ))}
           </div>
         </div>
@@ -218,50 +218,50 @@ const TimelineTab = ({ rounds }: { rounds: Round[] }) => (
 
 const RulesTab = ({ rules }: { rules?: string }) => (
   !rules ? null : (
-    <div className="space-y-6">
-      <Card>
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Hackathon Rules</h3>
-          <div className="prose prose-sm max-w-none">
+  <div className="space-y-6">
+    <Card>
+      <CardContent className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Hackathon Rules</h3>
+        <div className="prose prose-sm max-w-none">
             <div className="whitespace-pre-wrap">{rules}</div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
   )
 );
 
 const TracksTab = ({ tracks }: { tracks?: string[] }) => (
   !tracks || tracks.length === 0 ? null : (
-    <div className="space-y-6">
-      <Card>
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Hackathon Tracks</h3>
-          <div className="grid gap-4">
+  <div className="space-y-6">
+    <Card>
+      <CardContent className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Hackathon Tracks</h3>
+        <div className="grid gap-4">
             {tracks.map((track, index) => (
               <div key={index} className="p-4 border rounded-lg">
                 <h4 className="font-medium">{track}</h4>
               </div>
             ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
   )
 );
 
 const PrizesTab = ({ prizes }: { prizes?: string }) => (
   !prizes ? null : (
-    <div className="space-y-6">
-      <Card>
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Prizes</h3>
-          <div className="prose prose-sm max-w-none">
+  <div className="space-y-6">
+    <Card>
+      <CardContent className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Prizes</h3>
+        <div className="prose prose-sm max-w-none">
             <div className="whitespace-pre-wrap">{prizes}</div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
   )
 );
 
@@ -290,21 +290,21 @@ const SponsorsTab = ({ sponsors }: { sponsors?: { name?: string; description?: s
 
 const FAQTab = ({ faq }: { faq?: any[] }) => (
   !faq || faq.length === 0 ? null : (
-    <div className="space-y-6">
-      <Card>
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Frequently Asked Questions</h3>
-          <div className="space-y-4">
+  <div className="space-y-6">
+    <Card>
+      <CardContent className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Frequently Asked Questions</h3>
+        <div className="space-y-4">
             {faq.map((item, index) => (
               <div key={index} className="border-b pb-4 last:border-b-0">
                 <h4 className="font-medium mb-2">{item.question}</h4>
                 <p className="text-sm text-muted-foreground">{item.answer}</p>
               </div>
             ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
   )
 );
 
@@ -436,8 +436,8 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
                 <Button className="h-10 px-6 text-sm font-bold" disabled={!isStarted || isEnded} onClick={() => {
                   router.push(`/hackathons/${hackathon.id}/submission`);
                 }} title={!isStarted ? 'Submissions open when the hackathon starts' : (isEnded ? 'Submissions are closed' : undefined)}>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Go to Submission
+                    <FileText className="mr-2 h-4 w-4" />
+                    Go to Submission
                 </Button>
                 {hasTeam ? (
                   <Button onClick={() => router.push(`/hackathons/${hackathon.id}/team`)} variant="outline" className="h-10 px-6 text-sm font-bold">
@@ -457,9 +457,9 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
                 )}
               </div>
             ) : (
-              <Button onClick={async () => { try { const t = getCookie('authToken'); if (!t) return setIsJoinDialogOpen(true); setIsJoinDialogOpen(true); } catch {} }} className="h-10 px-6 text-sm font-bold">
-                Join Now
-              </Button>
+                <Button onClick={async () => { try { const t = getCookie('authToken'); if (!t) return setIsJoinDialogOpen(true); setIsJoinDialogOpen(true); } catch {} }} className="h-10 px-6 text-sm font-bold">
+                  Join Now
+                </Button>
             )}
             <Button variant="secondary" className="h-10 px-6 text-sm font-bold">
               <Share className="mr-2 h-4 w-4" />
@@ -493,8 +493,8 @@ export default function HackathonDetailClientPage({ hackathon }: { hackathon: Ha
             <TabsTrigger value="overview" className="relative rounded-none border-b-2 border-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Overview</TabsTrigger>
             {hackathon.rounds && hackathon.rounds.length > 0 && (
                 <TabsTrigger value="timeline" className="relative rounded-none border-b-2 border-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">Timeline</TabsTrigger>
-            )}
-            {navLinks.map(link => (
+             )}
+             {navLinks.map(link => (
                  <TabsTrigger key={link} value={link.toLowerCase()} className="relative rounded-none border-b-2 border-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none">{link}</TabsTrigger>
             ))}
             {isRegistered && isStarted && !isEnded && (

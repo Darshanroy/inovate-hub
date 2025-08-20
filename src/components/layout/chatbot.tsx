@@ -24,21 +24,34 @@ export function Chatbot() {
   ])
   const [input, setInput] = useState("")
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (input.trim() === "") return
     const userMessage: Message = { id: Date.now().toString(), text: input, isUser: true }
     setMessages(prev => [...prev, userMessage])
+    const question = input
     setInput("")
 
-    // Mock AI response
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: question })
+      })
+      const data = await res.json()
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: `I'm still learning, but I've noted your question about "${input}". I'll be able to answer this soon!`,
+        text: String(data.reply || 'Sorry, I could not find that.'),
         isUser: false,
       }
       setMessages(prev => [...prev, aiResponse])
-    }, 1000)
+    } catch {
+      const aiResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        text: 'Sorry, something went wrong. Please try again.',
+        isUser: false,
+      }
+      setMessages(prev => [...prev, aiResponse])
+    }
   }
 
   return (
