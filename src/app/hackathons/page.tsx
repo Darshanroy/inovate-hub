@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ListFilter, Clock, Play, CheckCircle } from "lucide-react";
+import { ListFilter } from "lucide-react";
 
 interface Hackathon {
   id: string;
@@ -41,6 +41,7 @@ const HackathonsPage = memo(function HackathonsPage() {
     prize: "All",
     location: "All",
   });
+  const [wishlistedHackathons, setWishlistedHackathons] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadHackathons();
@@ -112,6 +113,18 @@ const HackathonsPage = memo(function HackathonsPage() {
     setFilters((prev) => ({ ...prev, [type]: value }));
   };
 
+  const handleWishlistToggle = (hackathonId: string, isWishlisted: boolean) => {
+    setWishlistedHackathons(prev => {
+      const newSet = new Set(prev);
+      if (isWishlisted) {
+        newSet.add(hackathonId);
+      } else {
+        newSet.delete(hackathonId);
+      }
+      return newSet;
+    });
+  };
+
   const themes = ["All", "Artificial Intelligence", "Sustainability", "Financial Technology", "Healthcare", "Creative Coding", "Data Science"];
   const prizes = ["All", "Highest", "Lowest"];
   const locations = ["All", "Online", "Offline"];
@@ -172,59 +185,71 @@ const HackathonsPage = memo(function HackathonsPage() {
         </div>
       </div>
 
-      {/* Ongoing Hackathons Section */}
-      {ongoingHackathons.length > 0 && (
-        <section className="mb-12">
-          <div className="flex items-center gap-3 mb-6">
-            <Play className="h-6 w-6 text-green-500" />
-            <h2 className="text-2xl font-bold">Ongoing Hackathons</h2>
-            <span className="bg-green-100 text-green-800 text-sm px-2 py-1 rounded-full">
-              {ongoingHackathons.length}
-            </span>
-          </div>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {ongoingHackathons.map((hackathon) => (
-              <HackathonCard key={hackathon.id} hackathon={hackathon} />
-            ))}
-          </div>
-        </section>
-      )}
+             {/* Ongoing Hackathons Section */}
+       {ongoingHackathons.length > 0 && (
+         <section className="mb-12">
+           <div className="flex items-center gap-3 mb-6">
+             <h2 className="text-2xl font-bold">Ongoing Hackathons</h2>
+             <span className="bg-green-100 text-green-800 text-sm px-2 py-1 rounded-full">
+               {ongoingHackathons.length}
+             </span>
+           </div>
+           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+             {ongoingHackathons.map((hackathon) => (
+               <HackathonCard 
+                 key={hackathon.id} 
+                 hackathon={hackathon}
+                 onWishlistToggle={handleWishlistToggle}
+                 isWishlisted={wishlistedHackathons.has(hackathon.id)}
+               />
+             ))}
+           </div>
+         </section>
+       )}
 
-      {/* Upcoming Hackathons Section */}
-      {upcomingHackathons.length > 0 && (
-        <section className="mb-12">
-          <div className="flex items-center gap-3 mb-6">
-            <Clock className="h-6 w-6 text-blue-500" />
-            <h2 className="text-2xl font-bold">Upcoming Hackathons</h2>
-            <span className="bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded-full">
-              {upcomingHackathons.length}
-            </span>
-          </div>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {upcomingHackathons.map((hackathon) => (
-              <HackathonCard key={hackathon.id} hackathon={hackathon} />
-            ))}
-          </div>
-        </section>
-      )}
+             {/* Upcoming Hackathons Section */}
+       {upcomingHackathons.length > 0 && (
+         <section className="mb-12">
+           <div className="flex items-center gap-3 mb-6">
+             <h2 className="text-2xl font-bold">Upcoming Hackathons</h2>
+             <span className="bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded-full">
+               {upcomingHackathons.length}
+             </span>
+           </div>
+           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+             {upcomingHackathons.map((hackathon) => (
+               <HackathonCard 
+                 key={hackathon.id} 
+                 hackathon={hackathon}
+                 onWishlistToggle={handleWishlistToggle}
+                 isWishlisted={wishlistedHackathons.has(hackathon.id)}
+               />
+             ))}
+           </div>
+         </section>
+       )}
 
-      {/* Ended Hackathons Section */}
-      {endedHackathons.length > 0 && (
-        <section className="mb-12">
-          <div className="flex items-center gap-3 mb-6">
-            <CheckCircle className="h-6 w-6 text-gray-500" />
-            <h2 className="text-2xl font-bold">Ended Hackathons</h2>
-            <span className="bg-gray-100 text-gray-800 text-sm px-2 py-1 rounded-full">
-              {endedHackathons.length}
-            </span>
-          </div>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {endedHackathons.map((hackathon) => (
-              <HackathonCard key={hackathon.id} hackathon={hackathon} />
-            ))}
-          </div>
-        </section>
-      )}
+             {/* Ended Hackathons Section */}
+       {endedHackathons.length > 0 && (
+         <section className="mb-12">
+           <div className="flex items-center gap-3 mb-6">
+             <h2 className="text-2xl font-bold">Ended Hackathons</h2>
+             <span className="bg-gray-100 text-gray-800 text-sm px-2 py-1 rounded-full">
+               {endedHackathons.length}
+             </span>
+           </div>
+           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+             {endedHackathons.map((hackathon) => (
+               <HackathonCard 
+                 key={hackathon.id} 
+                 hackathon={hackathon}
+                 onWishlistToggle={handleWishlistToggle}
+                 isWishlisted={wishlistedHackathons.has(hackathon.id)}
+               />
+             ))}
+           </div>
+         </section>
+       )}
 
       {/* No Hackathons Found */}
       {filteredHackathons.length === 0 && (

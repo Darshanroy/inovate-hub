@@ -5,28 +5,28 @@ const hackathons = [
   {
     name: "AI Innovation Challenge",
     deadline: "July 15th",
-    prize: "$10,000",
+    prize: "₹8,30,000",
     image: "https://placehold.co/600x400.png",
     hint: "AI innovation"
   },
   {
     name: "Sustainable Solutions Hack",
     deadline: "August 20th",
-    prize: "$15,000",
+    prize: "₹12,45,000",
     image: "https://placehold.co/600x400.png",
     hint: "sustainable solutions"
   },
   {
     name: "FinTech Disruptors",
     deadline: "September 5th",
-    prize: "$20,000",
+    prize: "₹16,60,000",
     image: "https://placehold.co/600x400.png",
     hint: "fintech"
   },
   {
     name: "HealthTech Revolution",
     deadline: "October 1st",
-    prize: "$12,000",
+    prize: "₹9,96,000",
     image: "https://placehold.co/600x400.png",
     hint: "healthtech"
   },

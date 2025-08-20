@@ -206,7 +206,7 @@ export default function CreateHackathonPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="prizes">Prizes Description</Label>
-              <Textarea id="prizes" placeholder="Describe the prize structure, e.g., 1st Place: $10,000, 2nd Place: $5,000" rows={4} value={prizesDetail} onChange={e => setPrizesDetail(e.target.value)} />
+              <Textarea id="prizes" placeholder="Describe the prize structure, e.g., 1st Place: ₹8,30,000, 2nd Place: ₹4,15,000" rows={4} value={prizesDetail} onChange={e => setPrizesDetail(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="sponsors">Sponsors (comma-separated)</Label>

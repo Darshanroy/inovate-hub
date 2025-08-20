@@ -1,9 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Trophy, Star, Heart } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { format, parseISO, isPast, isFuture } from "date-fns";
-import { memo } from "react";
+import { memo, useState } from "react";
+import Image from "next/image";
 
 interface HackathonCardProps {
   hackathon: {
@@ -20,9 +22,18 @@ interface HackathonCardProps {
     sponsors?: string[];
   };
   showStatus?: boolean;
+  onWishlistToggle?: (hackathonId: string, isWishlisted: boolean) => void;
+  isWishlisted?: boolean;
 }
 
-export const HackathonCard = memo(function HackathonCard({ hackathon, showStatus = true }: HackathonCardProps) {
+export const HackathonCard = memo(function HackathonCard({ 
+  hackathon, 
+  showStatus = true, 
+  onWishlistToggle,
+  isWishlisted = false 
+}: HackathonCardProps) {
+  const [localWishlisted, setLocalWishlisted] = useState(isWishlisted);
+
   const getEventStatus = () => {
     if (hackathon.rounds && hackathon.rounds.length > 0) {
       const firstRoundDate = parseISO(hackathon.rounds[0].date);
@@ -43,111 +54,79 @@ export const HackathonCard = memo(function HackathonCard({ hackathon, showStatus
     return { status: "Upcoming", color: "bg-blue-500" };
   };
 
+  const handleWishlistToggle = () => {
+    const newWishlistedState = !localWishlisted;
+    setLocalWishlisted(newWishlistedState);
+    onWishlistToggle?.(hackathon.id, newWishlistedState);
+  };
+
   const status = getEventStatus();
   const registrationEndDate = hackathon.rounds?.[0]?.date || hackathon.date;
 
   return (
     <Card className="overflow-hidden bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-      {/* Top Banner Section - Dark Theme */}
-      <div className="relative h-48 bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
-        {/* Grid Pattern Background */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)`,
-            backgroundSize: '20px 20px'
-          }} />
-        </div>
-        
-        {/* Branding Bar */}
-        <div className="absolute top-4 left-4 right-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center">
-              <span className="text-white text-xs font-bold">SO</span>
-            </div>
-            <span className="text-white text-sm font-semibold">SuperOps</span>
-          </div>
-          <div className="flex items-center gap-2 text-white text-xs">
-            <span>Powered by</span>
-            <div className="w-6 h-6 bg-orange-500 rounded flex items-center justify-center">
-              <span className="text-white text-xs font-bold">A</span>
-            </div>
-            <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center">
-              <span className="text-white text-xs font-bold">H</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Title */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-          <div className="text-gray-400 text-sm mb-2 font-mono">2025</div>
-          <div className="relative">
-            <div className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-500 font-mono mb-2">
-              {hackathon.name.toUpperCase()}
-            </div>
-            {/* Decorative frames */}
-            <div className="absolute inset-0 border-2 border-pink-400 rounded-lg -m-2"></div>
-            <div className="absolute inset-0 border border-pink-400 rounded-lg -m-4"></div>
-            <div className="absolute inset-0 border border-pink-400 rounded-lg -m-6"></div>
-            {/* Corner stars */}
-            <Star className="absolute -top-3 -left-3 h-3 w-3 text-pink-400" />
-            <Star className="absolute -top-3 -right-3 h-3 w-3 text-pink-400" />
-            <Star className="absolute -bottom-3 -left-3 h-3 w-3 text-pink-400" />
-            <Star className="absolute -bottom-3 -right-3 h-3 w-3 text-pink-400" />
-          </div>
-          <div className="text-gray-400 text-sm font-mono mt-2">SUPEROPS</div>
-          <div className="text-white text-sm mt-2 max-w-xs">
-            {hackathon.description.substring(0, 60)}...
-          </div>
-        </div>
-
-        {/* Prize Pool Badge */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-          <div className="bg-pink-500 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-            <span className="text-sm">Prize pool of</span>
-            <Trophy className="h-4 w-4" />
-            <span className="font-bold">${hackathon.prize.toLocaleString()}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Details Section - White */}
-      <CardContent className="p-6 bg-white">
-        <div className="text-center">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">{hackathon.name}</h3>
-          
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <Badge variant="secondary" className="text-xs">
-              FREE
-            </Badge>
-            <span className="text-gray-400">|</span>
-            <Badge variant="outline" className="text-xs font-semibold">
-              {hackathon.locationType.toUpperCase()}
-            </Badge>
-          </div>
-
-          <div className="text-sm text-gray-900 mb-2">
-            Registration Ends on
-          </div>
-          <div className="text-sm text-gray-500 mb-4">
-            {format(parseISO(registrationEndDate), 'EEE MMM dd yyyy')}
-          </div>
-
-          {showStatus && (
-            <div className="mb-4">
-              <Badge className={`${status.color} text-white text-xs`}>
-                {status.status}
-              </Badge>
-            </div>
+      <CardContent className="p-4 flex flex-col gap-3">
+        {/* Image */}
+        <div className="relative">
+          <Image
+            src={hackathon.image}
+            alt={hackathon.name}
+            width={600}
+            height={400}
+            className="w-full h-auto aspect-video rounded-lg object-cover"
+            data-ai-hint={hackathon.hint}
+          />
+          {/* Wishlist Button */}
+          {onWishlistToggle && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute top-2 right-2 bg-white/80 hover:bg-white text-gray-700 rounded-full w-8 h-8 p-0"
+              onClick={handleWishlistToggle}
+            >
+              <Heart 
+                className={`h-4 w-4 ${localWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
+              />
+            </Button>
           )}
-
-          <LoadingButton 
-            href={`/hackathons/${hackathon.id}`}
-            loadingMessage="Opening hackathon..."
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            Register Now
-          </LoadingButton>
         </div>
+
+                 {/* Content */}
+         <div>
+           <LoadingButton 
+             href={`/hackathons/${hackathon.id}`}
+             variant="ghost"
+             className="p-0 h-auto text-lg font-bold leading-tight text-left hover:text-blue-600"
+             loadingMessage="Opening hackathon..."
+           >
+             {hackathon.name}
+           </LoadingButton>
+          <p className="text-sm text-muted-foreground mt-1">Theme: {hackathon.theme}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Date: {hackathon.date ? new Date(hackathon.date).toLocaleDateString() : 'TBA'}
+          </p>
+          <p className="text-sm font-bold text-accent mt-2">
+            Prize: ₹{Number(hackathon.prize || 0).toLocaleString()}
+          </p>
+        </div>
+
+        {/* Status Badge */}
+        {showStatus && (
+          <div className="mt-2">
+            <Badge className={`${status.color} text-white text-xs`}>
+              {status.status}
+            </Badge>
+          </div>
+        )}
+
+        {/* Action Button */}
+        <LoadingButton 
+          href={`/hackathons/${hackathon.id}`}
+          loadingMessage="Opening hackathon..."
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          View Details
+        </LoadingButton>
       </CardContent>
     </Card>
   );

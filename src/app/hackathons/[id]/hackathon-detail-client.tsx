@@ -269,17 +269,17 @@ const PrizesTab = ({ prizes }: { prizes?: string }) => (
             <div className="grid gap-6">
               <div className="text-center p-6 border rounded-lg">
                 <h4 className="text-2xl font-bold text-primary mb-2">🥇 1st Place</h4>
-                <p className="text-lg font-semibold">$10,000</p>
+                <p className="text-lg font-semibold">₹8,30,000</p>
                 <p className="text-sm text-muted-foreground">Plus mentorship and resources</p>
               </div>
               <div className="text-center p-6 border rounded-lg">
                 <h4 className="text-2xl font-bold text-primary mb-2">🥈 2nd Place</h4>
-                <p className="text-lg font-semibold">$5,000</p>
+                <p className="text-lg font-semibold">₹4,15,000</p>
                 <p className="text-sm text-muted-foreground">Plus mentorship opportunities</p>
               </div>
               <div className="text-center p-6 border rounded-lg">
                 <h4 className="text-2xl font-bold text-primary mb-2">🥉 3rd Place</h4>
-                <p className="text-lg font-semibold">$2,500</p>
+                <p className="text-lg font-semibold">₹2,07,500</p>
                 <p className="text-sm text-muted-foreground">Plus networking opportunities</p>
               </div>
             </div>

@@ -15,7 +15,7 @@ export function LogoutButton() {
     try { await apiService.logout(); } catch {}
     document.cookie = "authToken=; path=/; max-age=0";
     setAuthStatus(false, undefined);
-    router.push("/hackathons");
+    router.push("/");
     router.refresh();
   };
 
