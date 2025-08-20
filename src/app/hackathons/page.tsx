@@ -64,13 +64,17 @@ const HackathonsPage = memo(function HackathonsPage() {
   };
 
   const getEventStatus = (hackathon: Hackathon) => {
-    if (hackathon.rounds && hackathon.rounds.length > 0) {
+    if (hackathon.rounds && hackathon.rounds.length > 0 && typeof hackathon.rounds[0].date === 'string' && typeof hackathon.rounds[hackathon.rounds.length - 1].date === 'string') {
       const firstRoundDate = parseISO(hackathon.rounds[0].date);
       const lastRoundDate = parseISO(hackathon.rounds[hackathon.rounds.length - 1].date);
-      
+
       if (isPast(lastRoundDate)) return "Ended";
       if (isFuture(firstRoundDate)) return "Upcoming";
       return "Ongoing";
+    }
+
+    if (typeof hackathon.date !== 'string') {
+      return "Unknown"; // Handle case where hackathon.date is not a string
     }
     
     // Fallback for single-date hackathons
